@@ -14,22 +14,12 @@ function puedeInstalar() {
 }
 async function instalar() {
   const modo = puedeInstalar();
-  if (modo === 'android') { Instalacion.evento.prompt(); const r = await Instalacion.evento.userChoice; Instalacion.evento = null; if (r.outcome === 'accepted') avisar('Fiao quedó en su celular'); mostrarRuta(); return; }
+  if (modo === 'android') { Instalacion.evento.prompt(); const r = await Instalacion.evento.userChoice; Instalacion.evento = null; if (r.outcome === 'accepted') avisar('Fiao quedó en su celular.'); mostrarRuta(); return; }
   abrirHoja(`${cabHoja('Instalar Fiao en el iPhone')}<ol style="margin:0;padding-left:1.25rem;font-size:1.125rem;line-height:1.6;display:flex;flex-direction:column;gap:.375rem"><li>Toque <b>Compartir</b> en Safari: el cuadrito con la flecha.</li><li>Elija <b>Agregar a inicio</b>.</li><li>Toque <b>Agregar</b>.</li></ol><p class="ayuda">Así Safari no borra su libreta si pasa días sin abrirla.</p><button type="button" class="btn" data-cerrar>Entendido</button>`);
 }
 
 /* ───── Primer acceso ───── */
 const Borrador = { letra: null, nombre: '', yo: '' };
-const ILUS = {
-  anotar: `<svg width="220" height="140" viewBox="0 0 220 140" aria-hidden="true"><rect x="40" y="10" width="120" height="120" rx="14" fill="#FFFFFF" stroke="#DDE2EA" stroke-width="2"/><path d="M62 30V112" stroke="#F28C5B" stroke-width="3" stroke-linecap="round"/><path d="M74 44H140M74 64H140M74 84H118" stroke="#C9D4EE" stroke-width="5" stroke-linecap="round"/><rect x="118" y="70" width="84" height="44" rx="12" fill="#2346A0"/><text x="160" y="99" text-anchor="middle" font-family="Atkinson Hyperlegible Next, sans-serif" font-size="18" font-weight="800" fill="#FFFFFF">$5.000</text><circle cx="186" cy="34" r="16" fill="#E7F4EC"/><path d="M179 34l5 5 9-10" stroke="#17703F" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
-  vecino: `<svg width="220" height="140" viewBox="0 0 220 140" aria-hidden="true"><rect x="70" y="6" width="80" height="128" rx="14" fill="#16213E"/><rect x="76" y="16" width="68" height="108" rx="8" fill="#FFFFFF"/><text x="110" y="44" text-anchor="middle" font-family="Atkinson Hyperlegible Next, sans-serif" font-size="11" fill="#4A5366">Su cuenta</text><text x="110" y="66" text-anchor="middle" font-family="Atkinson Hyperlegible Next, sans-serif" font-size="18" font-weight="800" fill="#16213E">$23.000</text><path d="M86 84H134M86 96H124M86 108H130" stroke="#DDE2EA" stroke-width="4" stroke-linecap="round"/><path d="M28 70c10-22 26-30 38-30" stroke="#F28C5B" stroke-width="3" fill="none" stroke-linecap="round" stroke-dasharray="2 7"/><circle cx="26" cy="78" r="12" fill="#FDEEE5"/><path d="M20 78h12M26 72v12" stroke="#B93C0B" stroke-width="3" stroke-linecap="round"/><path d="M160 46c12 6 22 18 26 32" stroke="#2346A0" stroke-width="3" fill="none" stroke-linecap="round" stroke-dasharray="2 7"/><circle cx="190" cy="92" r="14" fill="#E8EEFB"/><path d="M184 92l4 4 8-8" stroke="#2346A0" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
-  cobrar: `<svg width="220" height="140" viewBox="0 0 220 140" aria-hidden="true"><rect x="36" y="24" width="112" height="100" rx="14" fill="#FFFFFF" stroke="#DDE2EA" stroke-width="2"/><rect x="36" y="24" width="112" height="26" rx="14" fill="#2346A0"/><rect x="36" y="38" width="112" height="12" fill="#2346A0"/><path d="M62 16v18M122 16v18" stroke="#16213E" stroke-width="5" stroke-linecap="round"/>${[0, 1, 2, 3].map(i => `<rect x="${50 + i * 22}" y="62" width="14" height="14" rx="3" fill="${i === 2 ? '#F28C5B' : '#E9EDF2'}"/>`).join('')}${[0, 1, 2, 3].map(i => `<rect x="${50 + i * 22}" y="86" width="14" height="14" rx="3" fill="#E9EDF2"/>`).join('')}<circle cx="168" cy="92" r="30" fill="#FFFFFF" stroke="#2346A0" stroke-width="4"/><path d="M168 76v16l10 7" stroke="#2346A0" stroke-width="4" fill="none" stroke-linecap="round"/></svg>`
-};
-const COMO = [
-  ['anotar', 'Anote el fiado en segundos', 'El nombre, el monto y listo. Como en el cuaderno.'],
-  ['vecino', 'Su vecino ve su cuenta', 'Se la muestra aquí o le llega por WhatsApp.'],
-  ['cobrar', 'Cobre sin pena', 'Fiao le dice a quién recordar y cuándo se puede.']
-];
 function soloVolver(href) { return `<header class="barra sin-volver" style="box-shadow:none;background:transparent;padding-left:.5rem"><a class="btn-icono" href="#${href}" data-volver aria-label="Volver">${ic('volver', 28, 2.4)}</a></header>`; }
 function puntos(n, i) { return `<div class="puntos" aria-hidden="true">${Array.from({ length: n }, (_, k) => `<span class="${k === i ? 'activo' : ''}"></span>`).join('')}</div>`; }
 
@@ -74,15 +64,16 @@ function pantallaLetra() {
 /** "Así funciona": tres tarjetas cortas que se pueden saltar. */
 function pantallaComo(destino) {
   let i = 0;
-  const tarjeta = k => `<div class="ilustracion">${ILUS[COMO[k][0]]}</div><h1 tabindex="-1" style="font-size:1.75rem;line-height:2.25rem">${COMO[k][1]}</h1><p>${COMO[k][2]}</p>${puntos(COMO.length, k)}`;
+  const tarjeta = k => `<div class="ilustracion como-ilus">${ILUS[COMO[k][0]]}</div><div class="como-texto"><h1 tabindex="-1">${COMO[k][1]}</h1><p>${COMO[k][2]}</p></div>`;
   const volver = destino === 'bienvenida-camino' ? 'bienvenida-letra' : 'ajustes';
   return {
     titulo: 'Así funciona',
-    html: `<div class="pantalla blanca">${soloVolver(volver)}<main class="intro" style="justify-content:flex-start;padding-top:1rem"><div id="tarjeta" class="entra" style="display:flex;flex-direction:column;align-items:center;gap:1.25rem" aria-live="polite">${tarjeta(0)}</div></main>
+    html: `<div class="pantalla blanca">${soloVolver(volver)}<main class="intro como"><div id="tarjeta" class="entra como-tarjeta" aria-live="polite">${tarjeta(0)}</div><div id="puntos">${puntos(COMO.length, 0)}</div></main>
       <div class="pie" role="region" aria-label="Acciones"><button type="button" class="btn" data-accion="sigue">Siguiente</button><a class="btn-link" href="#${destino}">Saltar</a></div></div>`,
     montar(r) {
       const caja = r.querySelector('#tarjeta'), btn = r.querySelector('[data-accion="sigue"]');
-      const pintar = () => { caja.innerHTML = tarjeta(i); caja.classList.remove('entra'); void caja.offsetWidth; caja.classList.add('entra'); btn.textContent = i === COMO.length - 1 ? (destino === 'bienvenida-camino' ? 'Empezar' : 'Listo') : 'Siguiente'; r.querySelector('.btn-link').hidden = i === COMO.length - 1; caja.querySelector('h1').focus({ preventScroll: true }); };
+      const pintar = () => { caja.innerHTML = tarjeta(i); caja.classList.remove('entra'); void caja.offsetWidth; caja.classList.add('entra'); r.querySelector('#puntos').innerHTML = puntos(COMO.length, i); btn.textContent = i === COMO.length - 1 ? (destino === 'bienvenida-camino' ? 'Empezar' : 'Listo') : 'Siguiente';
+        const saltar = r.querySelector('.btn-link'), fin = i === COMO.length - 1; saltar.style.visibility = fin ? 'hidden' : ''; saltar.tabIndex = fin ? -1 : 0; caja.querySelector('h1').focus({ preventScroll: true }); };
       btn.addEventListener('click', () => { if (i < COMO.length - 1) { i++; pintar(); } else ir(destino); });
       let x0 = null;
       caja.addEventListener('pointerdown', e => { x0 = e.clientX; });
@@ -174,7 +165,7 @@ V.restaurar = () => {
       btn.addEventListener('click', async () => {
         if (!copia) return;
         if (copia.tienda) copia.tienda.guia = 'hecha';
-        await reemplazarLibreta(copia); aplicarPreferencias(); avisar('Su libreta quedó recuperada'); ir('inicio');
+        await reemplazarLibreta(copia); aplicarPreferencias(); avisar('Su libreta quedó recuperada.'); ir('inicio');
       });
     }
   };
@@ -201,7 +192,7 @@ V.tienda = () => {
       <h2 class="titulo-seccion" style="margin-top:.5rem">Cómo le pagan</h2>
       <div class="campo"><label for="t-llave">Llave Bre-B ${opc}</label><input class="entrada" id="t-llave" value="${esc(t.llave || '')}" placeholder="Como sale en su banco" autocomplete="off"></div>
       <div class="campo"><label for="t-nequi">Nequi o Daviplata ${opc}</label><input class="entrada" id="t-nequi" type="tel" inputmode="tel" value="${esc(celLegible(t.nequi || ''))}" placeholder="10 dígitos"></div>
-      <div class="campo"><label for="t-wa">WhatsApp de la tienda ${opc}</label><input class="entrada" id="t-wa" type="tel" inputmode="tel" value="${esc(celLegible(t.whatsapp || ''))}" placeholder="10 dígitos" aria-describedby="t-wa-a"><span class="ayuda" id="t-wa-a">Para que el vecino le avise "ya pagué".</span></div>
+      <div class="campo"><label for="t-wa">WhatsApp de la tienda ${opc}</label><input class="entrada" id="t-wa" type="tel" inputmode="tel" value="${esc(celLegible(t.whatsapp || ''))}" placeholder="10 dígitos" aria-describedby="t-wa-a"><span class="ayuda" id="t-wa-a">Para que el vecino le avise «ya pagué».</span></div>
       <p id="t-error" class="error" role="alert" hidden></p>
     </form></main>
     <div class="pie" role="region" aria-label="Acciones"><button type="submit" form="form-tienda" class="btn">Guardar cambios</button></div></div>`,
@@ -227,7 +218,7 @@ V.tienda = () => {
         const atienden = [yo, ...otros];
         await guardarTienda({ ...t, nombre, atienden, atiendeAhora: atienden.includes(t.atiendeAhora) ? t.atiendeAhora : yo,
           llave: r.querySelector('#t-llave').value.trim(), nequi: r.querySelector('#t-nequi').value.replace(/\D/g, ''), whatsapp: r.querySelector('#t-wa').value.replace(/\D/g, ''), preguntoPagos: true });
-        avisar('Datos de la tienda guardados'); ir('ajustes');
+        avisar('Datos de la tienda guardados.'); ir('ajustes');
       });
     }
   };
@@ -283,7 +274,7 @@ V.inicio = () => {
         const q = normalizar(b.value); let n = 0;
         ul.querySelectorAll('li').forEach((li, i) => { const si = !q || normalizar(lista[i].c.nombre).includes(q); li.hidden = !si; if (si) n++; });
         cuantos.textContent = q ? `${n} de ${lista.length}` : lista.length;
-        sin.hidden = n > 0; sin.innerHTML = n ? '' : `Nadie se llama "${esc(b.value)}". <a href="#nuevo" data-prefill>Agregarlo</a>`;
+        sin.hidden = n > 0; sin.innerHTML = n ? '' : `Nadie se llama «${esc(b.value)}». <a href="#nuevo" data-prefill>Agregarlo</a>`;
       });
       sin.addEventListener('click', ev => { if (ev.target.closest('[data-prefill]')) Vista.prefill = b.value.trim(); });
     }
@@ -300,7 +291,7 @@ function montarInicio(r) {
   r.querySelector('[data-accion="anotar"]').addEventListener('click', () => abrirAnotar());
   r.querySelector('[data-accion="instalar"]')?.addEventListener('click', instalar);
   r.querySelector('[data-accion="copia"]')?.addEventListener('click', async () => { if (await guardarCopia()) mostrarRuta({ animar: false }); });
-  r.querySelector('[data-accion="ocultar-pasos"]')?.addEventListener('click', async () => { const t = tienda(); t.ocultarPasos = true; await guardarTienda(t); mostrarRuta({ animar: false }); avisar('Lista oculta. La puede ver en Ajustes.', { icono: null }); });
+  r.querySelector('[data-accion="ocultar-pasos"]')?.addEventListener('click', async () => { const t = tienda(); t.ocultarPasos = true; await guardarTienda(t); mostrarRuta({ animar: false }); avisar('Lista oculta. Puede volver a verla en Ajustes.', { icono: null }); });
   r.querySelector('[data-accion="salir-demo"]')?.addEventListener('click', async () => {
     const si = await confirmar({ titulo: '¿Empezar con su tienda?', texto: 'Se borra la tienda de ejemplo y empieza con su libreta vacía.', si: 'Sí, empezar con la mía' });
     if (si) { const letra = tienda().letra; await borrarLibreta(); Borrador.letra = letra; Borrador.nombre = ''; Borrador.yo = ''; aplicarPreferencias(); document.documentElement.dataset.letra = letra || 'normal'; ir('bienvenida-tienda'); }
@@ -349,7 +340,7 @@ function formCliente(c) {
           if (!ct) return;
           if (ct.tel?.[0]) cel.value = celLegible(ct.tel[0].replace(/^\+?57/, ''));
           const n = r.querySelector('#c-nombre'); if (!n.value && ct.name?.[0]) n.value = ct.name[0];
-        } catch (e) { avisar('No se pudo abrir la lista de contactos', { icono: 'atencion' }); }
+        } catch (e) { avisar('No se pudo abrir la lista de contactos.', { icono: 'atencion' }); }
       });
       r.querySelector('#form-cliente').addEventListener('submit', async ev => {
         ev.preventDefault();
@@ -361,7 +352,7 @@ function formCliente(c) {
         if (celD && (celD.length !== 10 || (!/^3/.test(celD) && !tienda().demo))) return fallo('El celular tiene 10 números y empieza por 3.', '#c-cel');
         const cupoV = leer('cupo');
         const cupo = cupoV === 'sin' ? null : cupoV === 'otro' ? leerPesos(r.querySelector('#c-cupo').value) : Number(cupoV);
-        if (cupoV === 'otro' && !cupo) return fallo('Escriba el cupo o elija "Sin límite".', '#c-cupo');
+        if (cupoV === 'otro' && !cupo) return fallo('Escriba el cupo o elija «Sin límite».', '#c-cupo');
         const lista = r.querySelector('#c-lista').value.trim();
         const datos = { nombre, cel: celD, cupo, pago: leer('pago'), recibos: leer('recibos'), recordar: leer('recordar'), detalle: r.querySelector('#c-detalle').value.trim(),
           lista: lista ? { nombre: c.lista?.nombre || 'Lo de siempre', productos: lista, ultimoMonto: c.lista?.ultimoMonto } : null };
@@ -370,14 +361,14 @@ function formCliente(c) {
           await guardarCliente(nc);
           const saldo = leerPesos(r.querySelector('#c-saldo').value);
           if (saldo > 0) await registrarFiado({ c: nc, monto: saldo, que: 'Lo que venía del cuaderno', tipo: 'saldo' });
-          avisar(`${nombreCorto(nombre)} quedó en su libreta`);
+          avisar(`${nombreCorto(nombre)} quedó en su libreta.`);
           ir(`cliente-${nc.id}`);
         } else {
           const p = leer('permiso');
           Object.assign(c, datos);
           if (p && p !== c.permiso?.estado) c.permiso = { estado: p, fecha: new Date().toISOString() };
           await _ajustarFecha(c);
-          avisar('Cambios guardados'); ir(`cliente-${c.id}`);
+          avisar('Cambios guardados.'); ir(`cliente-${c.id}`);
         }
       });
     }

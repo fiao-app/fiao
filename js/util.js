@@ -52,7 +52,10 @@ function fechaLarga(d) { const x = new Date(d); return `${DIAS[x.getDay()]} ${x.
 function diaMes(d) { const x = new Date(d); return `${x.getDate()} de ${MESES[x.getMonth()]}`; }
 /** Fecha cercana en palabras: "el viernes 13"; si es de otro mes, "el viernes 13 de diciembre". */
 function elDia(d, hoy = new Date()) {
-  const x = new Date(d);
+  const x = new Date(d), n = diasEntre(hoy, x);
+  if (n === 0) return 'hoy';
+  if (n === 1) return 'mañana';
+  if (n === -1) return 'ayer';
   return `el ${Math.abs(diasEntre(hoy, x)) <= 6 || x.getMonth() === new Date(hoy).getMonth() ? fechaCorta(x) : fechaLarga(x)}`;
 }
 /** 4:10 p. m. */

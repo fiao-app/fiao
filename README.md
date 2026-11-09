@@ -22,10 +22,12 @@ Fiao es una aplicación web instalable (PWA) para anotar, mostrar y cobrar el fi
 ## Primer uso guiado
 
 - Dos preguntas para empezar: el nombre de la tienda y el del tendero. Lo demás se pide justo cuando hace falta (el celular, el permiso y la forma de pago, al enviar el primer recibo).
-- Antes, el tendero elige el tamaño de la letra viendo cómo se ve, y puede ver tres tarjetas de "así funciona" o saltarlas.
+- Antes, el tendero elige el tamaño de la letra viendo cómo se ve, y puede ver cinco tarjetas de «Así funciona» o saltarlas.
 - Una práctica guiada le señala dónde tocar para anotar su primer fiado de verdad. Con la tienda de ejemplo, un recorrido de cuatro pasos.
 - "Primeros pasos" en la libreta, consejos de una línea la primera vez que abre cada sección y un botón **Ayuda** en cada pantalla, con la opción de escucharla en voz alta.
-- Las razones y las leyes quedan detrás de un "¿Por qué?", no en la pantalla.
+- Las razones y las leyes quedan detrás de un «¿Por qué?», no en la pantalla.
+
+El ícono: el toldo rayado de la tienda de barrio forma el brazo de la F, y la moneda naranja es el fiado que se anota y se paga.
 
 ## Decisiones que sostienen la confianza
 
@@ -92,6 +94,7 @@ js/mensajes.js          Mensajes de WhatsApp en tres tonos, editables
 js/demo.js              Tienda de ejemplo, ficticia
 js/ui.js                Íconos, hojas, avisos con Deshacer, ayuda, animaciones
 js/guia.js              Guía del primer uso: práctica, recorrido y primeros pasos
+js/ilustraciones.js     Ilustraciones del primer acceso, con un mismo sistema de composición
 js/vistas-*.js          Las pantallas y las hojas (anotar, pagó, permiso)
 js/app.js               Rutas y arranque
 js/vecino.js            Pantalla del vecino

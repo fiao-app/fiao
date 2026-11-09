@@ -14,8 +14,8 @@ function avisoCalendario(hoy = new Date()) {
   }
   if (!porFecha.size) return '';
   const [, x] = [...porFecha.entries()].sort()[0];
-  const dia = x.d.getDay() === 0 ? elDia(x.d) : `${elDia(x.d)}, que es festivo`;
-  return `<div class="info">${ic('calendario', 22)}<p>${x.n} ${x.n === 1 ? 'cuenta vence' : 'cuentas vencen'} ${dia}. Ese día no se puede recordar. Si alguien se atrasa, Fiao le avisa ${elDia(proximoDiaLegal(x.d))}. ${porQue('horario')}</p></div>`;
+  const dia = x.d.getDay() === 0 ? `el ${fechaCorta(x.d)}` : `el ${fechaCorta(x.d)}, que es festivo`;
+  return `<div class="info">${ic('calendario', 22)}<p>${x.n} ${x.n === 1 ? 'cuenta vence' : 'cuentas vencen'} ${dia}. Ese día no se puede recordar. Si alguien se atrasa, podrá recordarle ${elDia(proximoDiaLegal(x.d))}. ${porQue('horario')}</p></div>`;
 }
 function accionCobro(c, e, ahora) {
   if (!c.cel) return `<span class="ayuda" style="flex-shrink:0">Sin celular</span>`;
@@ -40,7 +40,7 @@ V.cobros = () => {
   const pend = resumenesPendientes();
   const primero = [...atrasados, ...deHoy].find(x => necesitaRecordatorio(x.c, x.e) && permisoOk(x.c) && !recordadoHoy(x.c.id, ahora));
   const fila = ({ c, e }, detalle) => `<li><div class="fila" style="padding-right:.75rem"><a href="#cliente-${c.id}" class="medio" style="text-decoration:none;color:inherit;min-height:3rem;justify-content:center"><span class="nombre">${esc(c.nombre)}</span>${detalle}</a>${accionCobro(c, e, ahora)}</div></li>`;
-  const sub = puedeRecordarAhora(ahora) ? `Recordar hasta las ${horarioLegal(ahora).hasta - 12}:00 p. m.` : 'Hoy ya no se puede recordar';
+  const sub = puedeRecordarAhora(ahora) ? `Puede recordar hasta las ${horarioLegal(ahora).hasta - 12}:00 p. m.` : '';
   return {
     titulo: 'Cobros',
     html: `<div class="pantalla">${barra({ titulo: 'Cobros', sub })}<main class="contenido" style="gap:.875rem">
@@ -106,14 +106,14 @@ V.resumen = mesParam => {
   return {
     titulo: 'Resumen',
     html: `<div class="pantalla">${barra({ titulo: 'Resumen', sub: `${mayuscula(MESES[mm - 1])}${esActual ? ', hasta hoy' : ` de ${y}`}` })}<main class="contenido" style="gap:.875rem">
-      ${consejo('resumen', 'Cuánto le deben, cuánto recuperó y a quién revisar.')}
+      ${consejo('resumen', 'Aquí ve cuánto le deben, cuánto recuperó y a quién revisar.')}
       ${meses.length > 1 ? `<div class="campo"><label for="r-mes" class="vh">Mes</label><select id="r-mes" class="entrada" style="appearance:auto">${meses.map(k => { const [a, b] = k.split('-').map(Number); return `<option value="${k}"${k === mesSel ? ' selected' : ''}>${mayuscula(MESES[b - 1])} de ${a}</option>`; }).join('')}</select></div>` : ''}
       <div class="kpis"><div class="kpi principal"><span>En la calle</span><b id="k-calle">${monto(total)}</b><span>${alDia} de ${Datos.clientes.size} clientes están al día</span></div>
         <div class="kpi verde"><span>Recuperó</span><b>${monto(res.recuperado)}</b></div><div class="kpi"><span>Fió</span><b>${monto(res.fiado)}</b></div></div>
       <section class="tarjeta" aria-labelledby="t-mas"><h2 class="titulo-seccion" id="t-mas">Quién debe más</h2>
-        ${top.length ? top.map(x => `<div class="dato"><span class="par"><a href="#cliente-${x.c.id}" style="color:inherit">${esc(x.c.nombre)}</a><b>${monto(x.s)}</b></span><div class="barra-dato" aria-hidden="true"><span style="width:${Math.max(4, x.s / max * 100)}%"></span></div></div>`).join('') : '<p class="ayuda">Nadie le debe. ¡Libreta al día!</p>'}</section>
+        ${top.length ? top.map(x => `<a class="dato" href="#cliente-${x.c.id}"><span class="par"><span class="nombre-dato">${esc(x.c.nombre)}</span><b>${monto(x.s)}</b></span><span class="barra-dato" aria-hidden="true"><span style="width:${Math.max(4, x.s / max * 100)}%"></span></span></a>`).join('') : '<p class="ayuda">Nadie le debe. ¡Libreta al día!</p>'}</section>
       <section aria-labelledby="t-rev" style="display:flex;flex-direction:column;gap:.375rem"><h2 class="titulo-seccion" id="t-rev">A quién revisar</h2>
-        ${revisar.length ? `<ul class="lista">${revisar.map(x => `<li><a class="fila" href="#cliente-${x.c.id}"><span style="color:${x.tipo === 'atrasado' ? 'var(--naranja)' : x.tipo === 'cupo' ? 'var(--azul)' : 'var(--gris)'}">${ic(x.tipo === 'atrasado' ? 'atencion' : x.tipo === 'cupo' ? 'grafica' : 'reloj', 22, 2.2)}</span><span class="medio"><span class="nombre" style="font-size:1.0625rem">${esc(x.titulo)}</span><span class="detalle">${Vista.oculto ? 'Toque para ver' : esc(x.detalle)}</span></span>${ic('sigue', 20, 2.2)}</a></li>`).join('')}</ul>`
+        ${revisar.length ? `<ul class="lista">${revisar.map(x => `<li><a class="fila" href="#cliente-${x.c.id}"><span class="ic-caja" style="color:${x.tipo === 'atrasado' ? 'var(--naranja)' : x.tipo === 'cupo' ? 'var(--azul)' : 'var(--gris)'}">${ic(x.tipo === 'atrasado' ? 'atencion' : x.tipo === 'cupo' ? 'grafica' : 'reloj', 22, 2.2)}</span><span class="medio"><span class="nombre" style="font-size:1.0625rem">${esc(x.titulo)}</span><span class="detalle">${Vista.oculto ? 'Toque para ver' : esc(x.detalle)}</span></span>${ic('sigue', 20, 2.2)}</a></li>`).join('')}</ul>`
           : '<p class="ayuda">Todo en orden: nadie atrasado ni cerca del cupo.</p>'}</section>
     </main><div class="abajo">${nav('resumen')}</div></div>`,
     montar(r) {
@@ -147,13 +147,13 @@ async function guardarCopia() {
 const TONOS_CORTOS = { cercano: 'Cercano', formal: 'Formal', breve: 'Breve' };
 function ejemploMensaje(tono) {
   const t = tienda();
-  return _llenar(PLANTILLAS[tono].fiado, { nombre: 'Doña Nubia', monto: '$5.000', fecha: 'hoy', que: ' (pan y leche)', saldo: '$23.000', enlace: 'https://enlace', tienda: t.nombre || 'la tienda', saludo: 'Buenos días' });
+  return _llenar(PLANTILLAS[tono].fiado, { nombre: 'Doña Nubia', monto: '$5.000', fecha: fechaLarga(new Date()), que: ' (pan y leche)', saldo: '$23.000', enlace: 'https://enlace', tienda: t.nombre || 'la tienda', laTienda: 'la tienda', saludo: 'Buenos días' });
 }
 V.ajustes = () => {
   const t = tienda(); const dc = diasDesdeCopia(); const inst = puedeInstalar();
   const letra = t.letra || 'normal', tono = t.tono || 'cercano';
   const interruptor = (clave, titulo, ayuda, valor) => `<div class="ajuste"><span><b id="a-${clave}">${titulo}</b>${ayuda ? `<span class="ayuda">${ayuda}</span>` : ''}</span><button type="button" class="interruptor" role="switch" aria-checked="${!!valor}" aria-labelledby="a-${clave}" data-interruptor="${clave}"><span class="pista"><span class="bola"></span></span></button></div>`;
-  const enlace = (href, icono, texto, accion = '') => `<li>${accion ? `<button type="button" class="fila" data-accion="${accion}">` : `<a class="fila" href="#${href}">`}<span style="color:var(--azul)">${ic(icono, 24, 2.2)}</span><span class="medio"><span class="nombre" style="font-size:1.0625rem">${texto}</span></span>${ic('sigue', 22, 2.2)}${accion ? '</button>' : '</a>'}</li>`;
+  const enlace = (href, icono, texto, accion = '') => `<li>${accion ? `<button type="button" class="fila" data-accion="${accion}">` : `<a class="fila" href="#${href}">`}<span class="ic-caja" style="color:var(--azul)">${ic(icono, 24, 2.2)}</span><span class="medio"><span class="nombre" style="font-size:1.0625rem">${texto}</span></span>${ic('sigue', 22, 2.2)}${accion ? '</button>' : '</a>'}</li>`;
   return {
     titulo: 'Ajustes',
     html: `<div class="pantalla">${barra({ titulo: 'Ajustes' })}<main class="contenido" style="gap:.875rem">
@@ -181,7 +181,7 @@ V.ajustes = () => {
         <p class="ayuda">Cada vecino acepta los mensajes (Ley 1581 de 2012). Los recordatorios siguen el horario de la Ley 2300 de 2023.</p>
         <p class="ayuda">Fiao es una versión de prueba, sin fines comerciales. No es asesoría legal ni contable. Usted responde por los datos de sus clientes.</p></div></details>
       <button type="button" class="btn-sec peligro" data-accion="borrar">Borrar la libreta de este celular</button>
-      <p class="nota">Fiao · versión 2.0</p>
+      <p class="nota">Fiao · versión 2.1</p>
     </main><div class="abajo">${nav('ajustes')}</div></div>`,
     montar(r) {
       activarGrupos(r, async (g, v) => {

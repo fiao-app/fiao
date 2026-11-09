@@ -7,7 +7,7 @@ const ICONOS = {
   sigue: '<path d="M9 18l6-6-6-6"/>',
   abajo: '<path d="M6 9l6 6 6-6"/>',
   buscar: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>',
-  ajustes: '<circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M2.5 12h3M18.5 12h3M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1"/>',
+  ajustes: '<path d="M9.28 4.90 L10.09 2.18 L13.91 2.18 L14.72 4.90 L15.09 5.06 L17.59 3.71 L20.29 6.41 L18.94 8.91 L19.10 9.28 L21.82 10.09 L21.82 13.91 L19.10 14.72 L18.94 15.09 L20.29 17.59 L17.59 20.29 L15.09 18.94 L14.72 19.10 L13.91 21.82 L10.09 21.82 L9.28 19.10 L8.91 18.94 L6.41 20.29 L3.71 17.59 L5.06 15.09 L4.90 14.72 L2.18 13.91 L2.18 10.09 L4.90 9.28 L5.06 8.91 L3.71 6.41 L6.41 3.71 L8.91 5.06Z"/><circle cx="12" cy="12" r="3.2"/>',
   mas: '<path d="M12 5v14M5 12h14"/>',
   ok: '<path d="M20 6L9 17l-5-5"/>',
   atencion: '<path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>',
@@ -42,8 +42,9 @@ const ICONOS = {
 function ic(nombre, tam = 24, grosor = 2) {
   return `<svg width="${tam}" height="${tam}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${grosor}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${ICONOS[nombre] || ''}</svg>`;
 }
-/** La F de Fiao: el margen del cuaderno, dos renglones y el punto del fiado anotado. */
-const LOGO = (t = 56, etiqueta = 'Fiao') => `<svg width="${t}" height="${t}" viewBox="0 0 56 56" ${etiqueta ? `role="img" aria-label="${etiqueta}"` : 'aria-hidden="true"'}><rect width="56" height="56" rx="14" fill="#2346A0"/><path d="M20 14V42M20 14H38M20 27.5H32" stroke="#FFFFFF" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="39.5" cy="27.5" r="4.25" fill="#F28C5B"/></svg>`;
+/** El ícono de Fiao: el toldo rayado de la tienda de barrio forma el brazo de la F;
+    la moneda naranja es el fiado que se anota y se paga. */
+const LOGO = (t = 56, etiqueta = 'Fiao') => `<svg width="${t}" height="${t}" viewBox="0 0 56 56" ${etiqueta ? `role="img" aria-label="${etiqueta}"` : 'aria-hidden="true"'}><rect width="56" height="56" rx="13" fill="#2346A0"/><path d="M13 14Q13 11 16 11H23V19A5 5 0 0 1 13 19Z" fill="#FFFFFF"/><path d="M23 11H33V19A5 5 0 0 1 23 19Z" fill="#F28C5B"/><path d="M33 11H40Q43 11 43 14V19A5 5 0 0 1 33 19Z" fill="#FFFFFF"/><path d="M18 22V44M18 33H28.5" stroke="#FFFFFF" stroke-width="6.2" stroke-linecap="round" fill="none"/><circle cx="35.5" cy="33" r="4.4" fill="#F28C5B"/></svg>`;
 
 const reducido = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 function vibrar(patron = 12) { try { if (!reducido() && navigator.vibrate) navigator.vibrate(patron); } catch (e) { /* nada */ } }
@@ -227,11 +228,11 @@ function selloOk(tam = 46) { return `<span class="sello">${`<svg width="${tam}" 
 /* ───── "¿Por qué?": las razones (y las leyes) quedan a un toque, no en la pantalla ───── */
 const POR_QUE = {
   horario: ['¿Por qué solo en ese horario?', 'La Ley 2300 de 2023 protege a quien debe. Los recordatorios de pago solo se pueden enviar de lunes a viernes, de 7 de la mañana a 7 de la noche, y los sábados de 8 de la mañana a 3 de la tarde. Nunca domingos ni festivos, y uno solo al día. Fiao lo cuida por usted.'],
-  permiso: ['¿Por qué pedir permiso?', 'La Ley 1581 de 2012 dice que para escribirle a alguien con sus datos, esa persona debe aceptar. Por eso Fiao le pide a cada vecino que responda SÍ antes de mandarle recibos. Mientras tanto, usted le muestra la cuenta en la tienda.'],
-  borrar: ['¿Por qué no se borra?', 'La cuenta es de los dos. Si algo se corrige o se anula, queda el rastro: así el vecino ve qué cambió y nadie desconfía. Solo puede deshacer justo después de anotar, antes de enviarlo o mostrarlo.'],
+  permiso: ['¿Por qué pedir permiso?', 'La Ley 1581 de 2012 pide la autorización de cada persona para usar sus datos, como su número de celular. Por eso Fiao le pide a cada vecino que responda SÍ antes de mandarle recibos. Mientras tanto, usted le muestra la cuenta en la tienda.'],
+  borrar: ['¿Por qué no se borra?', 'La cuenta es de los dos. Si algo se corrige o se anula, queda el rastro: así el vecino ve qué cambió y nadie desconfía. Solo se puede deshacer justo después de anotar, si aún no lo ha enviado ni mostrado.'],
   celular: ['¿Dónde queda mi libreta?', 'Solo en este celular. Fiao no tiene servidor, no pide registro y nunca toca su plata. Por eso conviene guardar una copia de vez en cuando, por si cambia o se le daña el celular.'],
   cupo: ['¿Qué es el cupo?', 'Es hasta cuánto le fía a esa persona. Fiao solo le avisa cuando una compra lo pasa por mucho. Usted siempre decide.'],
-  enlace: ['¿Qué ve el vecino?', 'Un enlace con su cuenta: lo que debe, lo que ha llevado y lo que ha pagado. No instala nada. El enlace no se sube a internet: la cuenta viaja dentro del mismo enlace.']
+  enlace: ['¿Qué ve el vecino?', 'Un enlace con su cuenta: lo que debe, lo que ha llevado y lo que ha pagado. El vecino no instala nada. La cuenta no se guarda en ningún servidor: viaja dentro del mismo enlace.']
 };
 function porQue(clave, texto = '¿Por qué?') { return `<button type="button" class="por-que" data-porque="${clave}">${ic('ayuda', 18, 2.2)}${texto}</button>`; }
 function abrirPorQue(clave) {
@@ -251,12 +252,12 @@ const GLOSARIO = [
   ['En la calle', 'lo que le deben entre todos.']
 ];
 const AYUDA = {
-  inicio: ['La libreta', ['Arriba ve cuánto le deben entre todos.', 'Primero salen los atrasados y los que pagan hoy.', 'Toque un nombre para ver su cuenta.', 'Con "Anotar fiado" anota en segundos.']],
-  cliente: ['La cuenta de un cliente', ['Arriba ve cuánto debe y su cupo.', '"Anotar" suma un fiado. "Pagó" registra un pago.', 'Toque una línea del historial para ver el detalle o corregirla.']],
-  cobros: ['Cobros', ['Aquí salen quienes se atrasaron o pagan hoy.', '"Recordar" abre WhatsApp con el mensaje listo.', 'Solo se puede en el horario que permite la ley.']],
-  resumen: ['Resumen', ['Cuánto le deben, cuánto recuperó y cuánto fió este mes.', 'Abajo ve a quién conviene revisar.']],
+  inicio: ['Libreta', ['Arriba ve cuánto le deben entre todos.', 'Primero salen los atrasados y los que pagan hoy.', 'Toque un nombre para ver su cuenta.', 'Con «Anotar fiado» anota en segundos.']],
+  cliente: ['Cuenta del cliente', ['Arriba ve cuánto debe y su cupo.', '«Anotar» suma un fiado. «Pagó» registra un pago.', 'Toque una línea del historial para ver el detalle o corregirla.']],
+  cobros: ['Cobros', ['Aquí salen quienes se atrasaron o pagan hoy.', '«Recordar» abre WhatsApp con el mensaje listo.', 'Solo se puede en el horario que permite la ley.']],
+  resumen: ['Resumen', ['Vea cuánto le deben, cuánto recuperó y cuánto fió este mes.', 'Abajo ve a quién conviene revisar.']],
   ajustes: ['Ajustes', ['Cambie el tamaño de la letra y cómo suenan sus mensajes.', 'Guarde una copia de su libreta cada semana.']],
-  mostrar: ['Mostrar la cuenta', ['Gire el celular hacia el vecino.', 'Si está de acuerdo, toque el botón verde.']],
+  mostrar: ['Mostrar la cuenta', ['Gire el celular hacia el vecino.', 'Si el vecino está de acuerdo, toque el botón de abajo.']],
   corregir: ['Corregir', ['Escriba el monto correcto y guarde.', 'El vecino verá qué cambió. Nada se borra.']]
 };
 function botonEscuchar(texto) { return 'speechSynthesis' in window ? `<button type="button" class="btn-sec" data-escuchar="${esc(texto)}">${ic('altavoz', 22, 2.2)}Escuchar</button>` : ''; }
@@ -276,7 +277,7 @@ function montarEscuchar(d) {
 function abrirAyuda() {
   const ruta = location.hash.slice(1).split('-')[0] || 'inicio';
   const [t, lineas] = AYUDA[ruta] || AYUDA.inicio;
-  abrirHoja(`${cabHoja(`Ayuda: ${t}`)}
+  abrirHoja(`${cabHoja(`Ayuda · ${t}`)}
     <ul style="margin:0;padding-left:1.25rem;display:flex;flex-direction:column;gap:.5rem;font-size:1.125rem;line-height:1.5">${lineas.map(l => `<li>${l}</li>`).join('')}</ul>
     ${botonEscuchar(lineas.join(' '))}
     <details class="mas"><summary>${ic('libreta', 22)}Palabras de Fiao</summary><div class="interior"><dl style="margin:0;display:flex;flex-direction:column;gap:.5rem;font-size:1.0625rem">${GLOSARIO.map(([p, d]) => `<div><dt style="display:inline;font-weight:600">${p}:</dt> <dd style="display:inline;margin:0">${d}</dd></div>`).join('')}</dl></div></details>

@@ -2,13 +2,13 @@
    No guarda datos de la libreta (esos viven en IndexedDB) ni toca internet por su cuenta. */
 'use strict';
 
-const VERSION = 'fiao-v2.0.0';
+const VERSION = 'fiao-v2.1.0';
 const ARCHIVOS = [
   './', './index.html', './manifest.webmanifest', './css/fiao.css',
   './fonts/atkinson-next-400.woff2', './fonts/atkinson-next-600.woff2', './fonts/atkinson-next-800.woff2',
   './vendor/lz-string.min.js',
   './js/util.js', './js/calendario.js', './js/db.js', './js/modelo.js', './js/mensajes.js', './js/demo.js',
-  './js/ui.js', './js/guia.js', './js/vistas-inicio.js', './js/vistas-fiado.js', './js/vistas-cobro.js', './js/app.js', './js/vecino.js',
+  './js/ui.js', './js/guia.js', './js/ilustraciones.js', './js/vistas-inicio.js', './js/vistas-fiado.js', './js/vistas-cobro.js', './js/app.js', './js/vecino.js',
   './c/', './c/index.html',
   './icons/icono.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png'
 ];

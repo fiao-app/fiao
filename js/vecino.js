@@ -59,7 +59,7 @@ function pintarVecino() {
       </section>` : `<div class="info ok">${ic('ok', 22)}<p>¡Gracias! Su cuenta está al día.</p></div>`}
       <p class="ayuda">Si fía o paga después, la tienda le manda un enlace nuevo.</p>
     </main>
-    <footer style="padding:.625rem 1.25rem 1.25rem;display:flex;gap:.625rem;align-items:flex-start;color:var(--gris)">${ic('escudo', 20)}<p style="font-size:1rem;line-height:1.3125rem">Enlace solo para usted, no lo reenvíe. Su cuenta no se guarda en internet. Fiao no recibe su dinero.</p></footer>
+    <footer style="padding:.625rem 1.25rem 1.25rem;display:flex;gap:.625rem;align-items:flex-start;color:var(--gris)">${ic('escudo', 20)}<p style="font-size:1rem;line-height:1.3125rem">Este enlace es solo para usted: no lo reenvíe. Su cuenta no se guarda en internet. Fiao no recibe su dinero.</p></footer>
   </div>`;
   montarVecino(app, k);
 }

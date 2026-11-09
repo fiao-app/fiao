@@ -45,15 +45,15 @@ const Guia = {
   /* ── Práctica: su primer fiado ── */
   practica: [
     { cuando: 'vista:inicio', sel: '[data-guia="anotar"]', texto: 'Anote su primer fiado. Toque aquí.', sigue: 'hoja-abierta:anotar' },
-    { cuando: 'anotar-nuevo', sel: '[data-guia="cliente-nuevo"]', texto: 'Escriba el nombre de un cliente y toque "Seguir".', sigue: 'anotar-monto' },
-    { cuando: 'anotar-monto', sel: '[data-guia="monto"]', texto: 'Marque cuánto se llevó. Luego toque "Anotar".', sigue: 'anotado' }
+    { cuando: 'anotar-nuevo', sel: '[data-guia="cliente-nuevo"]', texto: 'Escriba el nombre de un cliente y toque «Seguir».', sigue: 'anotar-monto' },
+    { cuando: 'anotar-monto', sel: '[data-guia="monto"]', texto: 'Marque cuánto se llevó. Luego toque «Anotar».', sigue: 'anotado' }
   ],
   /* ── Recorrido de la tienda de ejemplo ── */
   recorrido: [
     { sel: '.total', texto: 'Esto es lo que le deben entre todos.' },
     { sel: '#app .lista li:first-child', texto: 'Primero salen los atrasados y los que pagan hoy.' },
     { sel: '[data-guia="anotar"]', texto: 'Con este botón anota un fiado en segundos.' },
-    { sel: '.nav a[href="#cobros"]', texto: 'Aquí ve a quién recordar, y cuándo lo permite la ley.' }
+    { sel: '.nav a[href="#cobros"]', texto: 'Aquí ve a quién recordar y cuándo lo permite la ley.' }
   ],
 
   alEvento(paso, nombre) {
@@ -81,7 +81,7 @@ const Guia = {
     Foco.quitar(); celebrar();
     const b = Object.assign(document.createElement('div'), { className: 'guia-burbuja' });
     b.setAttribute('role', 'dialog'); b.setAttribute('aria-label', 'Guía'); b.style.top = '1rem';
-    b.innerHTML = `<span class="paso">Práctica terminada</span><p>¡Muy bien! Así de fácil anota un fiado.</p><p style="font-weight:400;font-size:1.0625rem">Si fue de prueba, toque "Deshacer" abajo.</p><div class="acciones"><span></span><button type="button" class="btn-mini">Entendido</button></div>`;
+    b.innerHTML = `<span class="paso">Práctica terminada</span><p>¡Muy bien! Así de fácil anota un fiado.</p><p style="font-weight:400;font-size:1.0625rem">Si fue de prueba, toque «Deshacer» abajo.</p><div class="acciones"><span></span><button type="button" class="btn-mini">Entendido</button></div>`;
     document.body.appendChild(b); anunciar('¡Muy bien! Así de fácil anota un fiado.');
     b.querySelector('button').focus();
     b.querySelector('button').addEventListener('click', () => { b.remove(); this.terminar(); });
