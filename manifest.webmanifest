@@ -1,0 +1,24 @@
+{
+  "name": "Fiao",
+  "short_name": "Fiao",
+  "description": "El fiado de la tienda de barrio, claro para el tendero y para el vecino.",
+  "lang": "es-CO",
+  "dir": "ltr",
+  "id": "./",
+  "start_url": "./#inicio",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F4F6FA",
+  "theme_color": "#2346A0",
+  "categories": ["business", "finance", "productivity"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Anotar fiado", "url": "./#elegir", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Cobros de hoy", "url": "./#cobros", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
