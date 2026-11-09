@@ -47,9 +47,9 @@ function estadoDe(c, hoy = new Date()) {
 function textoEstado(c, e) {
   switch (e.tipo) {
     case 'nada': return 'No debe nada';
-    case 'atrasado': return `Atrasado · ${e.dias} ${e.dias === 1 ? 'día' : 'días'}`;
+    case 'atrasado': return `Atrasado ${e.dias} ${e.dias === 1 ? 'día' : 'días'}`;
     case 'hoy': return c.pago === 'tarde' ? 'Paga hoy en la tarde' : 'Paga hoy';
-    case 'futuro': return e.dias === 1 ? 'Paga mañana' : `Paga ${fechaCorta(e.fecha)}`;
+    case 'futuro': return e.dias === 1 ? 'Paga mañana' : `Paga ${elDia(e.fecha)}`;
     default: return 'Sin fecha de pago';
   }
 }
@@ -88,7 +88,7 @@ function _ahoraISO() { return new Date().toISOString(); }
 
 async function registrarFiado({ c, monto, que = '', llevo = '', tipo = 'fiado', fecha = _ahoraISO() }) {
   const antes = saldoDe(c.id);
-  const m = { id: uid(), clienteId: c.id, tipo, monto, que: que.trim(), llevo: llevo.trim(), atendio: tienda().atiendeAhora || '', fecha, correcciones: [], anulado: null };
+  const m = { id: uid(), clienteId: c.id, tipo, monto, que: que.trim(), llevo: llevo.trim(), atendio: tienda().atiendeAhora || '', fecha, correcciones: [], anulado: null, _fechaAntes: c.proximaFecha || null };
   await guardarMov(m);
   if (antes <= 0 || !c.proximaFecha) { c.proximaFecha = isoDia(fechaPorPreferencia(c.pago, new Date(fecha))); await guardarCliente(c); }
   return m;
@@ -97,7 +97,7 @@ async function registrarFiado({ c, monto, que = '', llevo = '', tipo = 'fiado', 
 async function registrarPago({ c, monto, medio = 'efectivo', recibio = '', nuevaFecha = null }) {
   const hoy = new Date();
   const aTiempo = c.proximaFecha ? diasEntre(hoy, diaDe(c.proximaFecha)) >= 0 : true;
-  const m = { id: uid(), clienteId: c.id, tipo: 'pago', monto, medio, atendio: recibio || tienda().atiendeAhora || '', fecha: _ahoraISO(), aTiempo, correcciones: [], anulado: null };
+  const m = { id: uid(), clienteId: c.id, tipo: 'pago', monto, medio, atendio: recibio || tienda().atiendeAhora || '', fecha: _ahoraISO(), aTiempo, correcciones: [], anulado: null, _fechaAntes: c.proximaFecha || null };
   await guardarMov(m);
   const saldo = saldoDe(c.id);
   c.proximaFecha = saldo > 0 ? (nuevaFecha ? isoDia(nuevaFecha) : c.proximaFecha) : null;
@@ -105,6 +105,15 @@ async function registrarPago({ c, monto, medio = 'efectivo', recibio = '', nueva
   return m;
 }
 
+/** Deshacer de verdad, solo en los segundos siguientes y si no se ha enviado ni mostrado. */
+function sePuedeDeshacer(m) { return !!m && !m.enviado && !m.visto && !m.anulado && !(m.correcciones || []).length && (Date.now() - new Date(m.fecha)) < 60000; }
+async function deshacerMov(m) {
+  if (!sePuedeDeshacer(m)) return false;
+  const c = cliente(m.clienteId);
+  await borrarMov(m.id);
+  if (c) { c.proximaFecha = m._fechaAntes || null; await _ajustarFecha(c); }
+  return true;
+}
 async function _ajustarFecha(c) {
   const s = saldoDe(c.id);
   if (s <= 0 && c.proximaFecha) c.proximaFecha = null;
@@ -178,10 +187,10 @@ function aQuienRevisar(hoy = new Date()) {
   for (const c of clientes()) {
     const e = estadoDe(c, hoy);
     if (e.saldo <= 0) continue;
-    if (e.tipo === 'atrasado') { out.push({ c, tipo: 'atrasado', peso: 100 + e.dias, titulo: `${c.nombre} · atrasado ${e.dias} ${e.dias === 1 ? 'día' : 'días'}`, detalle: `Debe ${pesos(e.saldo)} desde el ${fechaCorta(e.fecha)}` }); continue; }
-    if (c.cupo && usoCupo(c, e.saldo) >= 0.9) { out.push({ c, tipo: 'cupo', peso: 50, titulo: `${c.nombre} · ${Math.round(usoCupo(c, e.saldo) * 100)} % del cupo`, detalle: `Debe ${pesos(e.saldo)} de ${pesos(c.cupo)}` }); continue; }
+    if (e.tipo === 'atrasado') { out.push({ c, tipo: 'atrasado', peso: 100 + e.dias, titulo: `${c.nombre}: atrasado ${e.dias} ${e.dias === 1 ? 'día' : 'días'}`, detalle: `Debe ${pesos(e.saldo)} desde ${elDia(e.fecha)}` }); continue; }
+    if (c.cupo && usoCupo(c, e.saldo) >= 0.9) { out.push({ c, tipo: 'cupo', peso: 50, titulo: `${c.nombre}: va en el ${Math.round(usoCupo(c, e.saldo) * 100)} % del cupo`, detalle: `Debe ${pesos(e.saldo)} de ${pesos(c.cupo)}` }); continue; }
     const u = ultimoMov(c);
-    if (u && diasEntre(new Date(u.fecha), hoy) >= 21) { const sem = Math.floor(diasEntre(new Date(u.fecha), hoy) / 7); out.push({ c, tipo: 'ausente', peso: 10, titulo: `${c.nombre} · no viene hace ${sem} semanas`, detalle: `Debe ${pesos(e.saldo)}` }); }
+    if (u && diasEntre(new Date(u.fecha), hoy) >= 21) { const sem = Math.floor(diasEntre(new Date(u.fecha), hoy) / 7); out.push({ c, tipo: 'ausente', peso: 10, titulo: `${c.nombre}: no viene hace ${sem} semanas`, detalle: `Debe ${pesos(e.saldo)}` }); }
   }
   return out.sort((a, b) => b.peso - a.peso);
 }
@@ -190,6 +199,14 @@ function losQueMasFian(n = 4) {
   const desde = sumarDias(new Date(), -30).toISOString(); const cuenta = new Map();
   for (const m of Datos.movs.values()) if (m.tipo === 'fiado' && m.fecha >= desde) cuenta.set(m.clienteId, (cuenta.get(m.clienteId) || 0) + 1);
   return [...cuenta.entries()].sort((a, b) => b[1] - a[1]).slice(0, n).map(([id]) => cliente(id)).filter(Boolean);
+}
+/** Para el paso "¿A quién le fía?": los que más fían y, después, los más recientes. */
+function frecuentes(n = 6) {
+  const out = [...losQueMasFian(n)];
+  const recientes = [...Datos.movs.values()].sort((a, b) => b.fecha.localeCompare(a.fecha));
+  for (const m of recientes) { if (out.length >= n) break; const c = cliente(m.clienteId); if (c && !out.includes(c)) out.push(c); }
+  for (const c of clientes()) { if (out.length >= n) break; if (!out.includes(c)) out.push(c); }
+  return out.slice(0, n);
 }
 function diasDesdeCopia() {
   const t = tienda(); if (!t.ultimaCopia) return null;

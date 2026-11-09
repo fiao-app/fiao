@@ -18,7 +18,7 @@
     { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "shortcuts": [
-    { "name": "Anotar fiado", "url": "./#elegir", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Anotar fiado", "url": "./#anotar", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
     { "name": "Cobros de hoy", "url": "./#cobros", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
   ]
 }

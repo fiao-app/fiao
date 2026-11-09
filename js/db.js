@@ -84,6 +84,8 @@ function guardarTienda(t) { t.id = 'tienda'; Datos.tienda = t; return _escribir(
 function guardarCliente(c) { Datos.clientes.set(c.id, c); return _escribir('clientes', c); }
 function guardarMov(m) { Datos.movs.set(m.id, m); return _escribir('movimientos', m); }
 function guardarContacto(c) { Datos.contactos.set(c.id, c); return _escribir('contactos', c); }
+/** Solo para "Deshacer" en los segundos siguientes a anotar: lo demás se corrige o se anula. */
+function borrarMov(id) { Datos.movs.delete(id); return _escribir('movimientos', id, true); }
 
 /** Todo en un objeto, para la copia de respaldo. */
 function exportarLibreta() {

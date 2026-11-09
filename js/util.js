@@ -1,5 +1,6 @@
 /* Fiao · utilidades compartidas (app del tendero y página del vecino).
-   Formatos colombianos: $50.500, vie. 13 nov., 4:10 p. m. */
+   Formatos colombianos: $50.500, viernes 13 de noviembre, 4:10 p. m.
+   En pantalla no se abrevian días ni meses: se leen mejor completos. */
 'use strict';
 
 const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
@@ -43,25 +44,42 @@ function sumarDias(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); re
 /** Días enteros entre dos fechas (b − a), por calendario. */
 function diasEntre(a, b) { return Math.round((diaDe(isoDia(b)) - diaDe(isoDia(a))) / 86400000); }
 
-/** vie. 13 nov. */
-function fechaCorta(d) { const x = new Date(d); return `${DIAS_CORTOS[x.getDay()]} ${x.getDate()} ${MESES_CORTOS[x.getMonth()]}`; }
-/** viernes 13 de nov. */
-function fechaLarga(d) { const x = new Date(d); return `${DIAS[x.getDay()]} ${x.getDate()} de ${MESES_CORTOS[x.getMonth()]}`; }
-/** 13 nov. */
-function diaMes(d) { const x = new Date(d); return `${x.getDate()} ${MESES_CORTOS[x.getMonth()]}`; }
+/** viernes 13 */
+function fechaCorta(d) { const x = new Date(d); return `${DIAS[x.getDay()]} ${x.getDate()}`; }
+/** viernes 13 de noviembre */
+function fechaLarga(d) { const x = new Date(d); return `${DIAS[x.getDay()]} ${x.getDate()} de ${MESES[x.getMonth()]}`; }
+/** 13 de noviembre */
+function diaMes(d) { const x = new Date(d); return `${x.getDate()} de ${MESES[x.getMonth()]}`; }
+/** Fecha cercana en palabras: "el viernes 13"; si es de otro mes, "el viernes 13 de diciembre". */
+function elDia(d, hoy = new Date()) {
+  const x = new Date(d);
+  return `el ${Math.abs(diasEntre(hoy, x)) <= 6 || x.getMonth() === new Date(hoy).getMonth() ? fechaCorta(x) : fechaLarga(x)}`;
+}
 /** 4:10 p. m. */
 function hora(d) {
   const x = new Date(d); let h = x.getHours(); const m = String(x.getMinutes()).padStart(2, '0');
   const pm = h >= 12; h = h % 12 || 12;
   return `${h}:${m} ${pm ? 'p. m.' : 'a. m.'}`;
 }
-/** "hoy", "ayer", "mañana" o la fecha corta. */
+/** "hoy", "ayer", "mañana" o la fecha completa. */
 function cuando(d, hoy = new Date()) {
   const n = diasEntre(hoy, d);
   if (n === 0) return 'hoy';
   if (n === -1) return 'ayer';
   if (n === 1) return 'mañana';
-  return fechaCorta(d);
+  return Math.abs(n) <= 6 ? fechaCorta(d) : fechaLarga(d);
+}
+/** Agrupa movimientos (del más reciente al más antiguo) por día: [{ dia: 'Hoy', items: [...] }]. */
+function agruparPorDia(lista, hoy = new Date()) {
+  const grupos = [];
+  for (const m of lista) {
+    const d = new Date(Array.isArray(m) ? m[0] : m.fecha);
+    const k = isoDia(d);
+    let g = grupos[grupos.length - 1];
+    if (!g || g.k !== k) { g = { k, dia: mayuscula(cuando(d, hoy)), items: [] }; grupos.push(g); }
+    g.items.push(m);
+  }
+  return grupos;
 }
 /** Cierra la frase sin repetir el punto de las abreviaturas ("nov.", "p. m."). */
 function punto(s) { s = String(s); return /\.$/.test(s) ? s : s + '.'; }
