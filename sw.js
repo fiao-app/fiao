@@ -2,7 +2,7 @@
    No guarda datos de la libreta (esos viven en IndexedDB) ni toca internet por su cuenta. */
 'use strict';
 
-const VERSION = 'fiao-v3.2.4';
+const VERSION = 'fiao-v3.2.4-logo';
 /* La voz vive en su propio cajón: no se vuelve a bajar con cada versión de la app.
    Si cambia una grabación, se sube este número. */
 const VOZ_CACHE = 'fiao-voz-3';

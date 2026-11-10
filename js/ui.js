@@ -48,12 +48,12 @@ for (const [k, [dx, dy]] of Object.entries(AJUSTE_ICONOS)) if (ICONOS[k]) ICONOS
 function ic(nombre, tam = 24, grosor = 2) {
   return `<svg width="${tam}" height="${tam}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${grosor}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${ICONOS[nombre] || ''}</svg>`;
 }
-/** El ícono de Fiao: el toldo rayado de la tienda de barrio forma el brazo de la F;
-    la moneda naranja es el fiado que se anota y se paga. */
+/** El ícono de Fiao: el toldo rayado de la tienda de barrio forma el brazo de la F,
+    con su franja naranja; el asta y el brazo medio de la F van con todo su peso. */
 const LOGO = (t = 56, etiqueta = 'Fiao', clase = '', invertido = false) => {
-  const tinta = enTinta(), azul = tinta ? '#1D3BA8' : '#3346E0', moneda = tinta ? '#111111' : '#FF8A3D';
+  const tinta = enTinta(), azul = tinta ? '#1D3BA8' : '#3346E0', franja = tinta ? '#111111' : '#FF8A3D';
   const fondo = invertido ? '#FFFFFF' : azul, trazo = invertido ? azul : '#FFFFFF';
-  return `<svg${clase ? ` class="${clase}"` : ''} width="${t}" height="${t}" viewBox="0 0 56 56" ${etiqueta ? `role="img" aria-label="${etiqueta}"` : 'aria-hidden="true"'}><rect width="56" height="56" rx="13" fill="${fondo}"/><path d="M13 14Q13 11 16 11H23V19A5 5 0 0 1 13 19Z" fill="${trazo}"/><path d="M23 11H33V19A5 5 0 0 1 23 19Z" fill="${moneda}"/><path d="M33 11H40Q43 11 43 14V19A5 5 0 0 1 33 19Z" fill="${trazo}"/><path d="M18 22V44M18 33H28.5" stroke="${trazo}" stroke-width="6.2" stroke-linecap="round" fill="none"/><circle cx="35.5" cy="33" r="4.4" fill="${moneda}"/></svg>`;
+  return `<svg${clase ? ` class="${clase}"` : ''} width="${t}" height="${t}" viewBox="0 0 56 56" ${etiqueta ? `role="img" aria-label="${etiqueta}"` : 'aria-hidden="true"'}><rect width="56" height="56" rx="13" fill="${fondo}"/><path d="M13 14Q13 11 16 11H23V19A5 5 0 0 1 13 19Z" fill="${trazo}"/><path d="M23 11H33V19A5 5 0 0 1 23 19Z" fill="${franja}"/><path d="M33 11H40Q43 11 43 14V19A5 5 0 0 1 33 19Z" fill="${trazo}"/><path d="M13 19H23V28H33A5 5 0 0 1 33 38H23V42A5 5 0 0 1 13 42Z" fill="${trazo}"/></svg>`;
 };
 
 /** ¿Movimiento reducido? Manda lo elegido en Ajustes; si no, lo que pide el celular. */
