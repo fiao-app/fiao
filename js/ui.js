@@ -41,6 +41,10 @@ const ICONOS = {
   estrella: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
   idea: '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.5 1.1 1.3 1.1 2.2h5c0-.9.4-1.7 1.1-2.2A6 6 0 0 0 12 3z"/>'
 };
+/* Centrado óptico: estos íconos no tienen su dibujo en el centro de la cuadrícula de 24 (medido con getBBox).
+   Se corren lo justo para que queden centrados en sus círculos y alineados con el texto. */
+const AJUSTE_ICONOS = { ok: [0, 0.5], chat: [-0.5, -0.55], grafica: [0, -0.5], lapiz: [0, 0.55], contactos: [0, -0.5], copiar: [-1, 0], borrar: [-0.5, 0], estrella: [0, 0.35] };
+for (const [k, [dx, dy]] of Object.entries(AJUSTE_ICONOS)) if (ICONOS[k]) ICONOS[k] = `<g transform="translate(${dx} ${dy})">${ICONOS[k]}</g>`;
 function ic(nombre, tam = 24, grosor = 2) {
   return `<svg width="${tam}" height="${tam}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${grosor}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${ICONOS[nombre] || ''}</svg>`;
 }

@@ -69,6 +69,10 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus { outline: none; }
    en filas y botones van en su propia caja flexible, sin el espacio de los descendentes. */
 svg { vertical-align: -0.2em; }
 .ic-caja { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; line-height: 0; }
+/* Ícono dentro de un círculo de color (listas de Ajustes, avisos de cupo). */
+.ic-fondo { width: 2.5rem; height: 2.5rem; border-radius: 50%; background: var(--azul-fondo); color: var(--azul-osc); }
+.ic-fondo.alerta { background: var(--alerta-fondo); color: var(--alerta); }
+.ic-fondo.grande { width: 3.25rem; height: 3.25rem; }
 
 /* ───── Movimiento ───── */
 @keyframes entrar { from { opacity: 0; transform: translateY(0.5rem); } to { opacity: 1; transform: none; } }
@@ -133,7 +137,9 @@ html[data-tema="tinta"] .moneda-vuela { background: #FFFFFF; color: #111111; box
   @keyframes cab-encoge { to { transform: translateY(1.25rem) scale(0.88); } }
 }
 /* 13 · Las ilustraciones de «Así funciona» se arman por partes */
-.como-ilus svg g, .como-ilus svg .il-destello { transform-box: fill-box; transform-origin: center; }
+/* Solo los grupos que se animan giran sobre su centro: el grupo que ubica cada ícono dentro de su círculo
+   conserva su transformación tal cual (si no, el ícono se corre). */
+.como-ilus svg :is(.il-esc, .il-obj, .il-extra, .il-izq, .il-der, .il-destello) { transform-box: fill-box; transform-origin: center; }
 .como-ilus .il-esc { animation: aparece 300ms var(--suave) both; }
 .como-ilus .il-obj, .como-ilus .il-extra { animation: flota 320ms 90ms var(--suave) both; }
 .como-ilus .il-izq { animation: aparece 280ms 200ms var(--rebote) both; }
@@ -615,9 +621,6 @@ html[data-tema="tinta"] .estado.hoy { background: #FFFFFF; color: #1D3BA8; box-s
 html[data-tema="tinta"] .pildora.verde { box-shadow: inset 0 0 0 2px #1D3BA8; }
 html[data-tema="tinta"] .cab-marca .estado.atrasado, html[data-tema="tinta"] .cab-marca .estado.hoy, html[data-tema="tinta"] .cab-marca .estado.ok { background: transparent; color: #FFFFFF; box-shadow: inset 0 0 0 2px #FFFFFF; }
 html[data-tema="tinta"] .cab-marca .estado.atrasado { background: #111111; box-shadow: none; }
-html[data-tema="tinta"] .aviso-hoy.atr .i { background: #111111; color: #FFFFFF; }
-html[data-tema="tinta"] .aviso-hoy.hoy .i { background: #E8EDFA; color: #1D3BA8; }
-html[data-tema="tinta"] .aviso-hoy.ok .i { background: #FFFFFF; color: #1D3BA8; box-shadow: inset 0 0 0 2px #1D3BA8; }
 html[data-tema="tinta"] .lista.atencion { box-shadow: 0 0 0 1px #111111, inset 6px 0 0 #111111; }
 /* Lo que se toca lleva 2 px; lo que solo contiene, 1 px. Así lo tocable se distingue de un vistazo. */
 html[data-tema="tinta"] .aviso-hoy, html[data-tema="tinta"] .atajo .c, html[data-tema="tinta"] .consejo button { box-shadow: 0 0 0 2px #111111; }
@@ -643,7 +646,6 @@ html[data-tema="tinta"] .teclado button:active, html[data-tema="tinta"] .frecuen
 html[data-tema="tinta"] .tabla > div + div { border-top-color: var(--renglon); }
 html[data-tema="tinta"] .tabla > .resaltada { background: #111111; color: #FFFFFF; }
 html[data-tema="tinta"] .como-menu li { background: #FFFFFF; box-shadow: inset 0 0 0 2px var(--renglon); }
-html[data-tema="tinta"] .como-menu li.moneda .c { background: #111111; color: #FFFFFF; }
 html[data-tema="tinta"] .segmento { box-shadow: inset 0 0 0 2px var(--renglon); }
 html[data-tema="tinta"] .segmento button { color: #111111; }
 html[data-tema="tinta"] .segmento button[aria-checked="true"] { background: #1D3BA8; color: #FFFFFF; border-color: #1D3BA8; box-shadow: none; }
@@ -674,3 +676,11 @@ html[data-tema="tinta"] .bienvenida .logo-grande { filter: none; }
 .falla-guardado .btn-mini { background: #FFFFFF; color: var(--tinta); }
 .falla-guardado .btn-mini.sec { background: transparent; color: #FFFFFF; box-shadow: inset 0 0 0 2px #FFFFFF; }
 html[data-tema="tinta"] .falla-guardado { background: #111111; box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px #111111; }
+
+/* ───── Tinta · íconos con fuerza ─────
+   Un círculo pálido con un ícono delgado se pierde en el papel blanco. En Tinta, cada ícono en círculo va
+   relleno (azul o negro) con el trazo en blanco y un poco más grueso; el estado lo dice el ícono, no el tono. */
+html[data-tema="tinta"] .aviso-hoy .i, html[data-tema="tinta"] .ic-fondo, html[data-tema="tinta"] .como-menu li .c { background: #1D3BA8; color: #FFFFFF; box-shadow: none; }
+html[data-tema="tinta"] .aviso-hoy.atr .i, html[data-tema="tinta"] .ic-fondo.alerta, html[data-tema="tinta"] .como-menu li.moneda .c { background: #111111; color: #FFFFFF; }
+html[data-tema="tinta"] .aviso-hoy .i svg, html[data-tema="tinta"] .ic-fondo svg, html[data-tema="tinta"] .como-menu li .c svg { stroke-width: 2.6; }
+html[data-tema="tinta"] .aviso-hoy .i svg { width: 22px; height: 22px; }

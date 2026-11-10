@@ -170,7 +170,7 @@ function pasoMonto(est) {
 function pasoCupo(est, tot) {
   Teclas.fn = null;
   const c = est.c, saldo = saldoDe(c.id), nuevo = saldo + tot, sube = Math.ceil(nuevo / 10000) * 10000;
-  pintarHoja(`<div style="display:flex;gap:.875rem;align-items:center"><span style="width:3.25rem;height:3.25rem;flex-shrink:0;border-radius:50%;background:var(--alerta-fondo);color:var(--alerta);display:flex;align-items:center;justify-content:center">${ic('atencion', 28, 2.2)}</span><h2>Esta compra pasa el cupo de ${esc(nombreCorto(c.nombre))}</h2></div>
+  pintarHoja(`<div style="display:flex;gap:.875rem;align-items:center"><span class="ic-caja ic-fondo alerta grande">${ic('atencion', 28, 2.2)}</span><h2>Esta compra pasa el cupo de ${esc(nombreCorto(c.nombre))}</h2></div>
     <p>Usted decide. Fiao solo le avisa. ${porQue('cupo', '¿Qué es el cupo?')}</p>
     <div class="tabla"><div><span>Debe ahora</span><b>${pesos(saldo)}</b></div><div><span>Con esta compra</span><b>${pesos(nuevo)}</b></div><div class="resaltada"><span>Su cupo</span><b>${pesos(c.cupo)}</b></div></div>
     <button type="button" class="btn" data-op="igual">Anotar igual</button>

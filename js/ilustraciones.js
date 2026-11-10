@@ -35,6 +35,8 @@ function destello(x, y, r = 7, color = PAL.moneda) {
 }
 function insignia(x, icono, fondo, color) {
   const k = 20 / 24;
+  /* En Tinta, la insignia va rellena con su color y el ícono en blanco: un círculo pálido se pierde en el papel. */
+  if (document.documentElement.dataset.tema === 'tinta') { fondo = color; color = '#FFFFFF'; }
   return `<circle cx="${x}" cy="80" r="18" fill="${fondo}"/><g transform="translate(${x - 10} 70) scale(${k})" fill="none" stroke="${color}" stroke-width="${(2.4 / k).toFixed(2)}" stroke-linecap="round" stroke-linejoin="round">${ICONOS[icono]}</g>`;
 }
 /** Conector punteado de la insignia izquierda al objeto; el derecho es el mismo trazo reflejado. */
