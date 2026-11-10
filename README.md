@@ -50,6 +50,7 @@ Correcciones de la evaluación final (heurística, crítica de diseño, usabilid
 - **Rápida con libretas grandes.** Un índice por cliente guarda las anotaciones y el saldo de cada uno: con 300 clientes y 30.000 anotaciones, la Libreta se dibuja en 46 ms con el procesador 4 veces más lento (antes, 1,2 s).
 - **Previene errores comunes.** Avisa si ya hay un cliente con el mismo nombre (y deja anotarle al que ya existe) y si un monto es mucho más de lo normal, por un cero de más.
 - **Mostrar la cuenta.** Un atajo en la ficha gira la pantalla hacia el vecino con su cuenta completa: lo que debe, la fecha acordada y lo último anotado.
+- **Recordar en fila.** Cuando hay 2 o más clientes por recordar, Cobros ofrece «Recordar a los 3 de hoy»: Fiao abre WhatsApp con un cliente a la vez y el tendero envía allá. WhatsApp no permite que una app envíe por usted, así que cada chat se abre con un toque; la fila respeta la Ley 2300 (horario, permiso, una vez al día) y, si el celular cierra Fiao a mitad de camino, al volver quedan solo los que faltan.
 - **Editar la costumbre de pago mueve la fecha.** Al cambiar «¿Cuándo suele pagar?», el formulario muestra el próximo pago y la ficha lo refleja; con «Otro día» se elige la fecha exacta.
 - **«Al día» quiere decir sin atrasos**, como se dice en el barrio, aunque el cliente deba.
 - **Dos ventanas sincronizadas.** Si Fiao está abierta en la app instalada y en el navegador, lo que se anota en una aparece en la otra.

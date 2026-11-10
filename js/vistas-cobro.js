@@ -32,12 +32,67 @@ function razonHoy(c) {
   if (c.recordar === 'nunca') return 'no se le recuerda';
   return 'se le recuerda si se atrasa';
 }
+/* ───── Recordar en fila ─────
+   Fiao abre WhatsApp con un cliente a la vez; el tendero envía allá y, al volver, sigue con el siguiente.
+   WhatsApp no deja enviar por usted, así que cada chat se abre con un toque (y se cumple la Ley 2300).
+   La fila sale de los datos: si el celular cierra Fiao a mitad de camino, al volver solo quedan los que faltan. */
+function filaRecordar(ahora = new Date()) {
+  const x = clientes().map(c => ({ c, e: estadoDe(c, ahora) })).filter(({ c, e }) => necesitaRecordatorio(c, e) && permisoOk(c) && !recordadoHoy(c.id, ahora));
+  const atr = x.filter(y => y.e.tipo === 'atrasado').sort((a, b) => b.e.dias - a.e.dias);
+  const hoy = x.filter(y => y.e.tipo === 'hoy').sort((a, b) => b.e.saldo - a.e.saldo);
+  return [...atr, ...hoy];
+}
+function abrirLote() {
+  const fila = filaRecordar(); if (!fila.length) return;
+  const hechos = new Set(), saltados = new Set();
+  let bloqueo = '', ocupado = false;
+  const fecha = e => e.tipo === 'atrasado' ? `atrasado ${e.dias} ${e.dias === 1 ? 'día' : 'días'}` : 'paga hoy';
+  const pintar = () => {
+    const sig = fila.find(x => !hechos.has(x.c.id) && !saltados.has(x.c.id));
+    const n = fila.length, listos = hechos.size;
+    const marca = x => hechos.has(x.c.id) ? `<span class="estado ok">${ic('ok', 18, 2.6)}Recordado</span>`
+      : saltados.has(x.c.id) ? '<span class="estado">Saltado</span>'
+      : x === sig ? '<span class="pildora azul">Sigue</span>' : '';
+    const filas = fila.map(x => `<li><div class="fila${x === sig ? ' lote-actual' : ''}"${x === sig ? ' aria-current="step"' : ''}>${avatarHtml(x.c)}<span class="medio"><span class="nombre">${esc(x.c.nombre)}</span><span class="detalle">${monto(x.e.saldo)} · ${fecha(x.e)}</span></span>${marca(x)}</div></li>`).join('');
+    const nc = sig ? esc(nombreCorto(sig.c.nombre)) : '';
+    const cuerpo = sig ? `
+      ${bloqueo ? `<div class="info atencion" role="alert">${ic('reloj', 22)}<p>${bloqueo} ${porQue('horario')}</p></div>` : ''}
+      <button type="button" class="btn" data-accion="lote-abrir"${bloqueo ? ' disabled' : ''}>${ic('chat', 24, 2.4)}Recordar a ${nc}</button>
+      <details class="mas"><summary>${ic('chat', 22)}Ver el mensaje para ${nc}</summary><div class="interior"><div class="burbuja" style="font-size:1rem;line-height:1.4">${esc(mensajeRecordatorio(sig.c, sig.e))}</div></div></details>
+      <button type="button" class="btn-link" data-accion="lote-saltar">Saltar a ${nc}</button>`
+      : `<div class="lote-fin">${selloOk(40)}<p><b>${listos ? `¡Listo! Le recordó a ${listos} ${listos === 1 ? 'cliente' : 'clientes'}.` : 'No le recordó a nadie.'}</b></p>${saltados.size ? `<p class="ayuda">${saltados.size === 1 ? 'Saltó a 1 cliente' : `Saltó a ${saltados.size} clientes`}: puede recordarle${saltados.size === 1 ? '' : 's'} desde Cobros.</p>` : ''}</div>
+      <button type="button" class="btn" data-cerrar>${ic('ok', 24, 2.6)}Listo</button>`;
+    pintarHoja(`${cabHoja('Recordar en fila')}
+      <p class="ayuda">Fiao abre WhatsApp con el mensaje listo. Usted lo envía allá y vuelve aquí para el siguiente.</p>
+      <div class="lote-avance"><div class="medidor" aria-hidden="true"><span style="width:${Math.round((listos / n) * 100)}%"></span></div><span id="lote-estado" aria-live="polite">Recordados: ${listos} de ${n}</span></div>
+      <ul class="lista lote-lista" aria-label="Clientes por recordar">${filas}</ul>${cuerpo}`, d => {
+      d.querySelector('[data-accion="lote-abrir"]')?.addEventListener('click', async ev => {
+        if (ocupado) return; ocupado = true;
+        const c = sig.c;
+        if (!puedeRecordarAhora()) { bloqueo = motivoNoRecordar(); ocupado = false; pintar(); return; }
+        if (!recordadoHoy(c.id)) {
+          abrirWhatsApp(c.cel, mensajeRecordatorio(c, estadoDe(c)));
+          await registrarContacto(c.id, 'recordatorio');
+        }
+        hechos.add(c.id); ocupado = false; vibrar(10); pintar();
+        d.querySelector('[data-accion="lote-abrir"], [data-cerrar].btn')?.focus({ preventScroll: true });
+      });
+      d.querySelector('[data-accion="lote-saltar"]')?.addEventListener('click', () => { saltados.add(sig.c.id); pintar(); d.querySelector('[data-accion="lote-abrir"], [data-cerrar].btn')?.focus({ preventScroll: true }); });
+    });
+  };
+  const d = abrirHoja('', () => {}, { nombre: 'lote' });
+  pintar();
+  const titulo = d.querySelector('h2'); if (titulo) { titulo.tabIndex = -1; titulo.focus({ preventScroll: true }); }
+  d.addEventListener('close', () => mostrarRuta({ animar: false }), { once: true });
+}
+
 V.cobros = () => {
   const ahora = new Date();
   const todos = clientes().map(c => ({ c, e: estadoDe(c, ahora) }));
   const atrasados = todos.filter(x => x.e.tipo === 'atrasado').sort((a, b) => b.e.dias - a.e.dias);
   const deHoy = todos.filter(x => x.e.tipo === 'hoy').sort((a, b) => b.e.saldo - a.e.saldo);
   const pend = resumenesPendientes();
+  const enFila = puedeRecordarAhora(ahora) ? filaRecordar(ahora).length : 0;
   const primero = [...atrasados, ...deHoy].find(x => necesitaRecordatorio(x.c, x.e) && permisoOk(x.c) && !recordadoHoy(x.c.id, ahora));
   const fila = ({ c, e }, detalle) => `<li><div class="fila" style="padding-right:.75rem"><a href="#cliente-${c.id}" class="medio" style="text-decoration:none;color:inherit;min-height:3rem;justify-content:center"><span class="nombre">${esc(c.nombre)}</span>${detalle}</a>${accionCobro(c, e, ahora)}</div></li>`;
   const sub = puedeRecordarAhora(ahora) ? `Puede recordar hasta las ${horarioLegal(ahora).hasta - 12}:00 p. m.` : '';
@@ -49,6 +104,7 @@ V.cobros = () => {
     html: `<div class="pantalla">${cabMarca({ titulo: 'Cobros', sub, cuerpo })}<main class="contenido" style="gap:.875rem">
       ${consejo('cobros', 'Aquí salen quienes deben pagar. Fiao respeta el horario de la ley.')}
       ${puedeRecordarAhora(ahora) ? '' : `<div class="info atencion" id="motivo-ley">${ic('reloj', 22)}<p>${motivoNoRecordar(ahora)} ${porQue('horario')}</p></div>`}
+      ${enFila >= 2 ? `<button type="button" class="btn" data-accion="lote">${ic('chat', 24, 2.4)}Recordar a los ${enFila} de hoy</button>` : ''}
       ${atrasados.length ? `<section aria-labelledby="t-atr" style="display:flex;flex-direction:column;gap:.375rem"><h2 class="titulo-seccion" id="t-atr">Se atrasaron</h2>
         <ul class="lista atencion">${atrasados.map(x => fila(x, `<span class="estado atrasado">${monto(x.e.saldo)} · ${x.e.dias} ${x.e.dias === 1 ? 'día' : 'días'}</span>`)).join('')}</ul></section>` : ''}
       ${deHoy.length ? `<section aria-labelledby="t-hoy" style="display:flex;flex-direction:column;gap:.375rem"><h2 class="titulo-seccion" id="t-hoy">Pagan hoy</h2>
@@ -60,6 +116,7 @@ V.cobros = () => {
     </main><div class="abajo">${nav('cobros')}</div></div>`,
     montar(r) {
       r.firstElementChild.addEventListener('click', async ev => {
+        if (ev.target.closest('[data-accion="lote"]')) { abrirLote(); return; }
         const p = ev.target.closest('[data-permiso]'); if (p) { abrirPermiso(cliente(p.dataset.permiso)); return; }
         const b = ev.target.closest('[data-recordar]'); if (!b || b.disabled) return;
         const c = cliente(b.dataset.recordar); const e = estadoDe(c);
