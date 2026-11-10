@@ -323,6 +323,8 @@ function formCliente(c) {
   const contactosApi = 'contacts' in navigator && 'ContactsManager' in window;
   const opc = '<span class="opcional">(opcional)</span>';
   const volver = nuevo ? 'inicio' : `cliente-${c.id}`;
+  /* Si debe algo, el formulario muestra el próximo pago y lo mueve con la costumbre elegida. */
+  const conFecha = !nuevo && saldoDe(c.id) > 0;
   return {
     titulo: nuevo ? 'Cliente nuevo' : 'Editar cliente',
     html: `<div class="pantalla">${barra({ titulo: nuevo ? 'Cliente nuevo' : 'Editar cliente', volver, ayuda: false })}
@@ -332,6 +334,8 @@ function formCliente(c) {
         <div class="con-prefijo"><span class="prefijo" aria-hidden="true">+57</span><input class="entrada" id="c-cel" type="tel" inputmode="tel" value="${esc(celLegible(c.cel))}" placeholder="10 dígitos" autocomplete="off">${contactosApi ? `<button type="button" class="btn-cuadro" data-accion="contactos" aria-label="Elegir de mis contactos">${ic('contactos', 26)}</button>` : ''}</div></div>
       ${nuevo ? `<div class="campo"><label for="c-saldo">¿Ya le debe algo del cuaderno? ${opc}</label><input class="entrada" id="c-saldo" inputmode="numeric" placeholder="$0" autocomplete="off"></div>` : ''}
       ${grupoOpciones('pago', '¿Cuándo suele pagar?', PREF_PAGO, c.pago)}
+      ${conFecha ? `<div class="proximo-pago"><p class="ayuda" aria-live="polite">${ic('calendario', 20)}<span id="c-proxima"></span></p>
+        <div class="campo" id="c-caja-dia" hidden><label for="c-dia">¿Qué día acordaron?</label><input class="entrada" id="c-dia" type="date" min="${isoDia(new Date())}" value="${esc(c.proximaFecha || '')}"></div></div>` : ''}
       <details class="mas"${nuevo ? '' : ' open'}><summary>${ic('ajustes', 22)}Más opciones: cupo, recibos y recordatorios</summary><div class="interior">
         ${grupoOpciones('cupo', 'Hasta cuánto le fía', { sin: 'Sin límite', 50000: '$50.000', 100000: '$100.000', otro: 'Otro' }, cupoSel)}
         <div class="deslizador" id="caja-cupo"${cupoSel === 'otro' ? '' : ' hidden'}><label for="c-cupo" class="leyenda">Cupo: <b id="c-cupo-v">${pesos(cupoOtro)}</b></label>
@@ -350,7 +354,18 @@ function formCliente(c) {
     montar(r) {
       const leer = activarGrupos(r, (g, v) => {
         if (g === 'cupo') { r.querySelector('#caja-cupo').hidden = v !== 'otro'; if (v === 'otro') r.querySelector('#c-cupo').focus(); }
+        if (g === 'pago') pintarProxima();
       });
+      /* Próximo pago según la costumbre: si no cambió, se respeta la fecha acordada; «Otro día», la que se elija. */
+      const proxima = v => v === 'otro' ? (r.querySelector('#c-dia').value || c.proximaFecha) : v === c.pago ? c.proximaFecha : isoDia(fechaPorPreferencia(v));
+      const pintarProxima = () => {
+        if (!conFecha) return;
+        const v = leer('pago'), iso = proxima(v);
+        r.querySelector('#c-caja-dia').hidden = v !== 'otro';
+        r.querySelector('#c-proxima').textContent = iso ? `Próximo pago: ${elDia(diaDe(iso))}.` : 'Elija el día del próximo pago.';
+      };
+      r.querySelector('#c-dia')?.addEventListener('change', pintarProxima);
+      pintarProxima();
       const rCupo = r.querySelector('#c-cupo');
       const pintarCupo = () => { r.querySelector('#c-cupo-v').textContent = pesos(cupoOtro); rCupo.setAttribute('aria-valuetext', pesos(cupoOtro)); rCupo.style.setProperty('--lleno', `${((rCupo.value - 1) / 49) * 100}%`); };
       rCupo.addEventListener('input', () => { cupoOtro = rCupo.value * 10000; vibrar(4); pintarCupo(); });
@@ -395,7 +410,11 @@ function formCliente(c) {
           ir(`cliente-${nc.id}`);
         } else {
           const p = leer('permiso');
+          const nuevaFecha = conFecha ? proxima(datos.pago) : null;
+          const diaTocado = conFecha && r.querySelector('#c-dia').value !== (c.proximaFecha || '');
+          if (diaTocado && datos.pago === 'otro' && nuevaFecha < isoDia(new Date())) return fallo('Elija un día desde hoy.', '#c-dia');
           Object.assign(c, datos);
+          if (nuevaFecha) c.proximaFecha = nuevaFecha;
           if (p && p !== c.permiso?.estado) c.permiso = { estado: p, fecha: new Date().toISOString() };
           await _ajustarFecha(c);
           avisar('Cambios guardados.'); ir(`cliente-${c.id}`);

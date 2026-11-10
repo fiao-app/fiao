@@ -73,6 +73,10 @@ svg { vertical-align: -0.2em; }
 .ic-fondo { width: 2.5rem; height: 2.5rem; border-radius: 50%; background: var(--azul-fondo); color: var(--azul-osc); }
 .ic-fondo.alerta { background: var(--alerta-fondo); color: var(--alerta); }
 .ic-fondo.grande { width: 3.25rem; height: 3.25rem; }
+/* Editar cliente: el próximo pago, debajo de «¿Cuándo suele pagar?». */
+.proximo-pago { display: flex; flex-direction: column; gap: 0.75rem; margin-top: -0.25rem; }
+.proximo-pago .ayuda { display: flex; align-items: center; gap: 0.5rem; color: var(--tinta); }
+.proximo-pago .ayuda svg { color: var(--azul); flex-shrink: 0; }
 
 /* ───── Movimiento ───── */
 @keyframes entrar { from { opacity: 0; transform: translateY(0.5rem); } to { opacity: 1; transform: none; } }
