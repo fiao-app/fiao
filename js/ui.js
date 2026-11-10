@@ -46,11 +46,17 @@ function ic(nombre, tam = 24, grosor = 2) {
 /** El ícono de Fiao: el toldo rayado de la tienda de barrio forma el brazo de la F;
     la moneda naranja es el fiado que se anota y se paga. */
 const LOGO = (t = 56, etiqueta = 'Fiao', clase = '', invertido = false) => {
-  const fondo = invertido ? '#FFFFFF' : '#3346E0', trazo = invertido ? '#3346E0' : '#FFFFFF';
-  return `<svg${clase ? ` class="${clase}"` : ''} width="${t}" height="${t}" viewBox="0 0 56 56" ${etiqueta ? `role="img" aria-label="${etiqueta}"` : 'aria-hidden="true"'}><rect width="56" height="56" rx="13" fill="${fondo}"/><path d="M13 14Q13 11 16 11H23V19A5 5 0 0 1 13 19Z" fill="${trazo}"/><path d="M23 11H33V19A5 5 0 0 1 23 19Z" fill="#FF8A3D"/><path d="M33 11H40Q43 11 43 14V19A5 5 0 0 1 33 19Z" fill="${trazo}"/><path d="M18 22V44M18 33H28.5" stroke="${trazo}" stroke-width="6.2" stroke-linecap="round" fill="none"/><circle cx="35.5" cy="33" r="4.4" fill="#FF8A3D"/></svg>`;
+  const tinta = enTinta(), azul = tinta ? '#1D3BA8' : '#3346E0', moneda = tinta ? '#111111' : '#FF8A3D';
+  const fondo = invertido ? '#FFFFFF' : azul, trazo = invertido ? azul : '#FFFFFF';
+  return `<svg${clase ? ` class="${clase}"` : ''} width="${t}" height="${t}" viewBox="0 0 56 56" ${etiqueta ? `role="img" aria-label="${etiqueta}"` : 'aria-hidden="true"'}><rect width="56" height="56" rx="13" fill="${fondo}"/><path d="M13 14Q13 11 16 11H23V19A5 5 0 0 1 13 19Z" fill="${trazo}"/><path d="M23 11H33V19A5 5 0 0 1 23 19Z" fill="${moneda}"/><path d="M33 11H40Q43 11 43 14V19A5 5 0 0 1 33 19Z" fill="${trazo}"/><path d="M18 22V44M18 33H28.5" stroke="${trazo}" stroke-width="6.2" stroke-linecap="round" fill="none"/><circle cx="35.5" cy="33" r="4.4" fill="${moneda}"/></svg>`;
 };
 
-const reducido = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+/** ¿Movimiento reducido? Manda lo elegido en Ajustes; si no, lo que pide el celular. */
+const reducido = () => {
+  const m = document.documentElement.dataset.movimiento;
+  return m ? m === 'reducido' : matchMedia('(prefers-reduced-motion: reduce)').matches;
+};
+const enTinta = () => document.documentElement.dataset.tema === 'tinta';
 function vibrar(patron = 12) { try { if (!reducido() && navigator.vibrate) navigator.vibrate(patron); } catch (e) { /* nada */ } }
 
 /* ───── Montos visibles u ocultos (cuando hay gente en el mostrador) ───── */
@@ -155,11 +161,15 @@ function avisar(texto, { acciones = [], ms = null, icono = 'ok', voz = null } = 
   const rp = pie && pie.getBoundingClientRect();
   a.style.bottom = abajo ? `calc(${Math.round(abajo.getBoundingClientRect().height) + 12}px)`
     : rp && rp.height && rp.top < innerHeight ? `${Math.round(innerHeight - rp.top) + 8}px` : 'calc(1rem + env(safe-area-inset-bottom, 0px))';
+  const dura = ms ?? (acciones.length ? 8000 : 3200);
+  /* 11 · Con «Deshacer», una barra corre hacia atrás: se ve cuánto tiempo queda. */
+  const barra = acciones.length && !reducido() ? document.createElement('span') : null;
+  if (barra) { barra.className = 'cuenta'; barra.setAttribute('aria-hidden', 'true'); a.appendChild(barra); }
+  const correr = () => { if (!barra) return; barra.style.animation = 'none'; void barra.offsetWidth; barra.style.animation = `cuenta ${dura}ms linear forwards`; };
   a.inert = false; a.classList.add('ver');
   a.querySelectorAll('[data-i]').forEach(b => b.addEventListener('click', () => { ocultarAviso(); const x = acciones[+b.dataset.i]; if (x) x.fn(); }));
-  const dura = ms ?? (acciones.length ? 8000 : 3200);
-  const programar = () => { clearTimeout(_avisoT); _avisoT = setTimeout(ocultarAviso, dura); };
-  a.onpointerenter = a.onfocusin = () => clearTimeout(_avisoT);
+  const programar = () => { clearTimeout(_avisoT); _avisoT = setTimeout(ocultarAviso, dura); correr(); };
+  a.onpointerenter = a.onfocusin = () => { clearTimeout(_avisoT); if (barra) barra.style.animation = 'none'; };
   a.onpointerleave = a.onfocusout = programar;
   programar();
 }
@@ -174,6 +184,7 @@ function abrirHoja(html, alMontar = () => {}, { nombre = '' } = {}) {
   d.dataset.nombre = nombre;
   pintarHoja(html, alMontar, d);
   if (typeof d.showModal === 'function') d.showModal(); else d.setAttribute('open', '');
+  if (typeof Mov !== 'undefined') Mov.arrastrable(d);
   if (!(history.state && history.state.hoja)) history.pushState({ hoja: 1 }, '');
   d.addEventListener('close', () => {
     document.dispatchEvent(new CustomEvent('fiao', { detail: { paso: 'hoja-cerrada', nombre } }));
@@ -243,7 +254,7 @@ function celebrar() {
   vibrar([30, 60, 30]);
   if (reducido()) return;
   const capa = document.createElement('div'); capa.className = 'celebracion'; capa.setAttribute('aria-hidden', 'true');
-  const colores = ['#3346E0', '#FF8A3D', '#127A45', '#FFC233', '#8C9BFF'];
+  const colores = enTinta() ? ['#1D3BA8', '#111111', '#8FA4E8'] : ['#3346E0', '#FF8A3D', '#127A45', '#FFC233', '#8C9BFF'];
   for (let i = 0; i < 22; i++) {
     const p = document.createElement('i'); const ang = (Math.PI * 2 * i) / 22 + Math.random() * 0.4; const r = 120 + Math.random() * 140;
     p.style.background = colores[i % colores.length];

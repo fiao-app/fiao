@@ -115,7 +115,7 @@ function pasoMonto(est) {
     const que = d.querySelector('#h-que'), llevo = d.querySelector('#h-llevo');
     const pintar = () => {
       const tot = total();
-      out.textContent = pesos(tot); out.classList.remove('salta'); void out.offsetWidth; out.classList.add('salta');
+      out.textContent = pesos(tot); if (!reducido()) { out.classList.remove('sube'); void out.offsetWidth; out.classList.add('sube'); }
       suma.textContent = est.sumados.length ? `${est.sumados.map(v => pesos(v)).join(' + ')}${est.monto ? ` + ${pesos(est.monto)}` : ' + …'}` : (est.conLista && c.lista.ultimoMonto ? `La última vez: ${pesos(c.lista.ultimoMonto)}` : '');
       const pasa = tope ? saldo + tot - tope : -1;
       if (tot && pasa > 0) { aviso.hidden = false; aviso.innerHTML = `${ic('atencion', 18, 2.2)}Pasa el cupo por ${pesos(pasa)}`; } else aviso.hidden = true;
@@ -178,6 +178,7 @@ async function guardarFiado(est, tot) {
   if (est.conLista) { c.lista.ultimoMonto = tot; await guardarCliente(c); }
   cerrarHoja();
   mostrarRuta({ animar: false });
+  if (Mov.origen) { Mov.monedaVuela(document.querySelector(`#app ${Mov.origen}`)); Mov.origen = null; }
   emitir('anotado');
   avisoTrasMov(m);
 }
@@ -309,10 +310,10 @@ function abrirPago(c) {
       <button type="button" class="btn verde" id="p-seguir" disabled>Mueva la barra o marque el monto</button>`, d => {
       const out = d.querySelector('#p-monto'), resta = d.querySelector('#p-resta'), btn = d.querySelector('#p-seguir'), err = d.querySelector('#p-error');
       const rango = d.querySelector('#p-rango'), cajaT = d.querySelector('#p-teclado');
-      const pintar = ({ desdeRango = false } = {}) => {
+      const pintar = ({ desdeRango = false, quieto = false } = {}) => {
         const antes = out.textContent;
         out.textContent = pesos(est.monto); err.hidden = true;
-        if (antes !== out.textContent && !reducido()) { out.classList.remove('salta'); void out.offsetWidth; out.classList.add('salta'); }
+        if (!quieto && antes !== out.textContent && !reducido()) { out.classList.remove('salta'); void out.offsetWidth; out.classList.add('salta'); }
         const q = saldo - est.monto;
         resta.innerHTML = !est.monto ? `Debe ${pesos(saldo)}` : q > 0 ? `Queda debiendo <b>${pesos(q)}</b>` : q === 0 ? 'Queda al día' : `Debe ${pesos(saldo)}`;
         if (!desdeRango) rango.value = Math.min(N, Math.round(est.monto / 1000));
@@ -324,7 +325,11 @@ function abrirPago(c) {
       d.querySelectorAll('[data-paso]').forEach(b => b.addEventListener('click', () => {
         est.monto = Math.max(0, Math.min(saldo, (Math.round(est.monto / 1000) + Number(b.dataset.paso)) * 1000)); vibrar(6); pintar();
       }));
-      d.querySelector('[data-accion="mitad"]').addEventListener('click', () => { est.monto = mitad; vibrar(8); pintar(); });
+      /* «Mitad» funciona como un imán: la barra se desliza sola hasta la mitad. */
+      d.querySelector('[data-accion="mitad"]').addEventListener('click', () => {
+        vibrar(8);
+        Mov.deslizar(est.monto, mitad, 280, v => { est.monto = Math.round(v / 100) * 100; pintar({ quieto: true }); }, () => { est.monto = mitad; pintar(); });
+      });
       d.querySelector('[data-accion="teclado"]').addEventListener('click', ev => {
         const abierto = cajaT.hidden; cajaT.hidden = !abierto; ev.currentTarget.setAttribute('aria-expanded', abierto);
         if (abierto) { est.monto = 0; pintar(); }
@@ -457,6 +462,13 @@ V.cliente = (id, extra) => {
     </main></div>`,
     montar(r) {
       Vista.despues = null;
+      /* 5 · Si el saldo cambió (pagó o fió), la cifra cuenta hasta el valor nuevo; al quedar al día, el visto se dibuja. */
+      const saldos = Vista.saldos || (Vista.saldos = {}), previo = saldos[c.id];
+      if (typeof previo === 'number' && previo !== e.saldo) {
+        if (e.saldo > 0) contar(r.querySelector('.cab-marca .cifra'), Math.max(0, previo), e.saldo);
+        else if (previo > 0 && !reducido()) r.querySelector('.cab-marca .estado.ok svg')?.classList.add('dibuja');
+      }
+      saldos[c.id] = e.saldo;
       r.querySelector('[data-accion="anotar"]').addEventListener('click', () => abrirAnotar(c));
       r.querySelector('[data-accion="pago"]')?.addEventListener('click', () => abrirPago(c));
       r.querySelector('[data-accion="permiso"]')?.addEventListener('click', () => abrirPermiso(c));

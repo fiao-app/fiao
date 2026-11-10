@@ -3,7 +3,8 @@
    naranja del fiado como acento. Fondo de papel de cuaderno. Regla 60-30-10: papel y blanco,
    cobalto, moneda. Los colores de estado (atrasado, al día) nunca se usan como marca.
    Letras: Plus Jakarta Sans para títulos y cifras (su 0 no se confunde con el 8), Figtree para leer.
-   Un solo tema claro, a propósito: máximo contraste en el mostrador y al sol.
+   Dos apariencias: Color (la de marca) y Tinta (azul de bolígrafo, negro y blanco, como un cuaderno
+   rayado), que es la de más contraste y se abre sola si el celular pide más contraste.
    Todo en rem: el tamaño de letra elegido escala la app completa.
    Reglas: texto ≥ 18 px de base · toques ≥ 48 px (principales 56–60) · una acción principal
    por pantalla · nunca solo color · movimiento corto y desactivable. */
@@ -47,7 +48,6 @@
   --rebote: cubic-bezier(0.34, 1.56, 0.64, 1);
   color-scheme: light;
 }
-html[data-contraste="alto"] { --gris: #2B3345; --control: #141B34; --linea: #8A93A6; --divisor: #C5CCD8; --sombra: 0 0 0 1px #8A93A6; --raya: rgba(255, 255, 255, 0); }
 html { font-size: 100%; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scroll-padding-top: 5rem; scroll-padding-bottom: 11rem; }
 html[data-letra="grande"] { font-size: 112.5%; }
 html[data-letra="mas"] { font-size: 125%; }
@@ -101,10 +101,57 @@ html[data-dir="atras"]::view-transition-new(root) { animation-name: vt-entra-atr
 .nav { view-transition-name: menu; }
 .nav a[aria-current="page"] { view-transition-name: menu-activa; }
 ::view-transition-group(menu-activa) { animation-duration: 260ms; animation-timing-function: var(--suave); }
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation: none !important; transition: none !important; }
-  ::view-transition-old(root), ::view-transition-new(root), ::view-transition-group(*) { animation: none !important; }
+/* 3.1 · Movimiento que explica (ver js/movimiento.js). Solo transform y opacity. */
+@keyframes sube { from { transform: translateY(0.375rem); opacity: 0.5; } to { transform: none; opacity: 1; } }
+@keyframes pulsa { 0% { transform: scale(0.9); } 100% { transform: none; } }
+@keyframes rebota { 0% { transform: scale(0.7); } 55% { transform: scale(1.18); } 100% { transform: none; } }
+@keyframes asoma { from { transform: translateX(3rem); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes late { 0%, 100% { transform: none; } 40% { transform: scale(1.1); } }
+@keyframes cuenta { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+@keyframes aparece { from { transform: scale(0.85); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes flota { from { transform: translateY(0.75rem); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes brilla { 0% { transform: scale(0) rotate(-45deg); opacity: 0; } 60% { transform: scale(1.25) rotate(8deg); opacity: 1; } 100% { transform: none; opacity: 1; } }
+.sube { animation: sube 160ms var(--suave); }
+.pulsa { animation: pulsa 180ms var(--rebote); }
+.rebota { animation: rebota 320ms 120ms var(--rebote) both; }
+.escalon { animation: entrar 240ms calc(var(--i, 0) * 30ms) var(--suave) both; }
+.asoma { animation: asoma 320ms calc(160ms + var(--i, 0) * 60ms) var(--suave) both; }
+.estado.late { animation: late 520ms 420ms ease-in-out; }
+.dibuja path { stroke-dasharray: 40; animation: trazo 420ms 120ms var(--suave) both; }
+/* La moneda que vuela de «Anotar» a la cifra de arriba */
+.moneda-vuela { position: fixed; left: 0; top: 0; z-index: 45; width: 2.25rem; height: 2.25rem; border-radius: 50%; background: var(--moneda); color: var(--tinta); font-family: var(--letra-titulo); font-weight: 800; font-size: 1.125rem; display: flex; align-items: center; justify-content: center; pointer-events: none; box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.12); will-change: transform, opacity; }
+html[data-tema="tinta"] .moneda-vuela { background: #FFFFFF; color: #111111; box-shadow: inset 0 0 0 2px #111111; }
+/* La cuenta regresiva del aviso con «Deshacer» */
+.aviso .cuenta { position: absolute; left: 1.25rem; right: 1.25rem; bottom: 0.3125rem; height: 3px; border-radius: 3px; background: rgba(255, 255, 255, 0.55); transform-origin: left center; pointer-events: none; }
+/* Nombre y monto que viajan de la lista a la ficha */
+::view-transition-group(cli-nombre), ::view-transition-group(cli-monto), ::view-transition-group(cli-avatar) { animation-duration: 300ms; animation-timing-function: var(--suave); }
+::view-transition-old(cli-nombre), ::view-transition-new(cli-nombre), ::view-transition-old(cli-monto), ::view-transition-new(cli-monto) { height: 100%; object-fit: none; object-position: left center; }
+::view-transition-old(cli-avatar) { animation: vt-fundido-sale 160ms both; }
+/* 2 · La cifra de arriba se encoge y se aleja al bajar por la pantalla */
+@supports (animation-timeline: scroll()) {
+  .cab-marca .cifra-cab { animation: cab-encoge linear both; animation-timeline: scroll(root block); animation-range: 0 9rem; transform-origin: left top; }
+  @keyframes cab-encoge { to { transform: translateY(1.25rem) scale(0.88); opacity: 0.4; } }
 }
+/* 13 · Las ilustraciones de «Así funciona» se arman por partes */
+.como-ilus svg g, .como-ilus svg .il-destello { transform-box: fill-box; transform-origin: center; }
+.como-ilus .il-esc { animation: aparece 300ms var(--suave) both; }
+.como-ilus .il-obj, .como-ilus .il-extra { animation: flota 320ms 90ms var(--suave) both; }
+.como-ilus .il-izq { animation: aparece 280ms 200ms var(--rebote) both; }
+.como-ilus .il-der { animation: aparece 280ms 260ms var(--rebote) both; }
+.como-ilus .il-destello { animation: brilla 360ms 420ms var(--rebote) both; }
+.como-ilus .como-menu .tab-demo.activa { animation: rebota 320ms 200ms var(--rebote) both; }
+.como-ilus .como-menu li { animation: entrar 240ms calc(120ms + var(--i, 0) * 60ms) var(--suave) both; }
+.como-ilus .como-menu li:nth-child(2) { --i: 1; } .como-ilus .como-menu li:nth-child(3) { --i: 2; } .como-ilus .como-menu li:nth-child(4) { --i: 3; }
+/* Hojas: se agarran de arriba para bajarlas */
+dialog.hoja .hoja-cab h2 { touch-action: none; }
+
+/* Movimiento reducido: lo pide el celular (y usted no eligió «Completo») o lo eligió en Ajustes. */
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-movimiento="completo"]) *, html:not([data-movimiento="completo"]) *::before, html:not([data-movimiento="completo"]) *::after { animation: none !important; transition: none !important; }
+  html:not([data-movimiento="completo"])::view-transition-old(*), html:not([data-movimiento="completo"])::view-transition-new(*), html:not([data-movimiento="completo"])::view-transition-group(*) { animation: none !important; }
+}
+html[data-movimiento="reducido"] *, html[data-movimiento="reducido"] *::before, html[data-movimiento="reducido"] *::after { animation: none !important; transition: none !important; }
+html[data-movimiento="reducido"]::view-transition-old(*), html[data-movimiento="reducido"]::view-transition-new(*), html[data-movimiento="reducido"]::view-transition-group(*) { animation: none !important; }
 
 /* ───── Estructura de pantalla ───── */
 .app { max-width: 30rem; margin: 0 auto; min-height: 100dvh; background: var(--fondo); }
@@ -161,6 +208,7 @@ html[data-dir="atras"]::view-transition-new(root) { animation-name: vt-entra-atr
 .nav a[aria-current="page"] { background: var(--azul-fondo); color: var(--azul-osc); padding: 0 1.125rem 0 0.875rem; }
 .nav a:not([aria-current="page"]) .rot { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 .nav .ico { position: relative; display: inline-flex; line-height: 0; }
+.nav a[aria-current="page"] .ico:has(.globo) { margin-right: 0.375rem; }
 .nav .globo { position: absolute; top: -0.5rem; right: -0.625rem; min-width: 1.25rem; height: 1.25rem; padding: 0 0.25rem; border-radius: 0.625rem; background: var(--alerta); color: var(--blanco); font-family: var(--letra-titulo); font-size: 0.75rem; line-height: 1.25rem; text-align: center; font-weight: 700; box-shadow: 0 0 0 2px var(--blanco); }
 html[data-letra="grande"] .nav, html[data-letra="mas"] .nav { width: 100%; border-radius: 1.5rem; }
 html[data-letra="grande"] .nav a, html[data-letra="mas"] .nav a { flex: 1; flex-direction: column; height: auto; min-height: 3.75rem; min-width: 0; padding: 0.375rem 0.125rem; gap: 0.125rem; border-radius: 1.125rem; font-size: 0.875rem; }
@@ -327,7 +375,8 @@ a.fila:active, button.fila:active { background: var(--azul-fondo); }
 dialog.hoja { position: fixed; inset: auto 0 0 0; width: 100%; max-width: 30rem; max-height: 94dvh; margin: 0 auto; padding: 0.625rem 1.25rem calc(1.25rem + env(safe-area-inset-bottom, 0px)); border: none; border-radius: 1.75rem 1.75rem 0 0; background: var(--blanco); color: var(--tinta); overflow: auto; box-shadow: var(--sombra-alta); }
 dialog.hoja[open] { animation: subir var(--medio) var(--suave); }
 dialog.hoja::backdrop { background: var(--velo); animation: velo var(--medio); }
-dialog.hoja .asa { width: 2.75rem; height: 0.3125rem; border-radius: 999px; background: var(--control); margin: 0 auto 0.75rem; opacity: 0.45; }
+/* El asa se ve pequeña pero se agarra grande (el área de toque incluye el relleno). */
+dialog.hoja .asa { box-sizing: content-box; width: 2.75rem; height: 0.3125rem; padding: 0.5rem 2.5rem; margin: -0.5rem auto 0.25rem; border-radius: 999px; background: var(--control) content-box; opacity: 0.45; touch-action: none; cursor: grab; }
 dialog.hoja .cuerpo { display: flex; flex-direction: column; gap: 0.875rem; }
 dialog.hoja h2 { font-size: 1.375rem; line-height: 1.75rem; }
 .hoja-cab { display: flex; align-items: center; gap: 0.5rem; }
@@ -426,6 +475,12 @@ html[data-letra="mas"] .kpis, html[data-letra="grande"] .kpis { grid-template-co
 .interruptor[aria-checked="true"] .bola { background: var(--blanco); transform: translateX(1.5rem); }
 .ajuste { display: flex; align-items: center; gap: 0.75rem; min-height: 3.5rem; }
 .ajuste > span { flex: 1; display: flex; flex-direction: column; }
+.grupo-ajuste { display: flex; flex-direction: column; gap: 0.5rem; padding-bottom: 0.25rem; }
+.grupo-ajuste .segmento button { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; }
+/* Muestra de cada apariencia: un renglón de cuaderno o los colores de marca. */
+.muestra { width: 1.375rem; height: 1.375rem; border-radius: 50%; flex-shrink: 0; }
+.muestra.color { background: conic-gradient(#3346E0 0 50%, #FF8A3D 50% 75%, #F7F4EE 75%); box-shadow: inset 0 0 0 1.5px rgba(20, 27, 52, 0.25); }
+.muestra.tinta { background: #FFFFFF repeating-linear-gradient(to bottom, transparent 0 4px, #1D3BA8 4px 5.5px); box-shadow: inset 0 0 0 2px #111111; }
 
 /* ───── Aviso inferior (con Deshacer) ───── */
 .aviso { position: fixed; left: 50%; bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px)); z-index: 30; transform: translate(-50%, 1rem); width: calc(100% - 1.5rem); max-width: 28.5rem; padding: 0.625rem 0.5rem 0.75rem 1rem; border-radius: 1.375rem; background: var(--tinta); color: var(--blanco); display: flex; flex-direction: column; gap: 0.5rem; box-shadow: var(--sombra-alta); opacity: 0; pointer-events: none; transition: opacity var(--medio), transform var(--medio) var(--suave); }
@@ -512,3 +567,89 @@ html[data-letra="mas"] .kpis, html[data-letra="grande"] .kpis { grid-template-co
 .copiable > span { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .copiable small { font-size: 1rem; color: var(--gris); }
 .copiable b { font-size: 1.1875rem; overflow-wrap: anywhere; }
+
+
+/* ═════ Apariencia «Tinta» ═════
+   Papel blanco rayado, tinta azul de bolígrafo (#1D3BA8, 9,4:1) y tinta negra (#111, 18,9:1).
+   Entre azul y negro solo hay 2:1, así que los estados nunca dependen del color:
+   atrasado = relleno negro; hoy = borde azul; pagó = azul con su ícono. Sin sombras: bordes de 2 px. */
+html[data-tema="tinta"] {
+  --azul: #1D3BA8; --azul-osc: #1D3BA8; --azul-fondo: #E8EDFA; --azul-fondo-2: #F3F6FD; --azul-claro-texto: #FFFFFF;
+  --moneda: #111111; --moneda-fondo: #FFFFFF; --moneda-texto: #111111;
+  --alerta: #111111; --alerta-texto: #111111; --alerta-fondo: #FFFFFF;
+  --verde: #1D3BA8; --verde-fondo: #FFFFFF;
+  --tinta: #111111; --gris: #3A3A3A; --fondo: #FFFFFF; --blanco: #FFFFFF; --linea: #111111; --divisor: #DCE4F7; --control: #111111;
+  --velo: rgba(17, 17, 17, 0.6);
+  --sombra: 0 0 0 2px #111111; --sombra-flota: 0 0 0 2px #111111; --sombra-alta: 0 0 0 2px #111111;
+  --raya: rgba(255, 255, 255, 0); --renglon: #DCE4F7;
+}
+/* El papel: renglones cada 2 rem, como el cuaderno de la tienda. */
+html[data-tema="tinta"] .app { background: #FFFFFF repeating-linear-gradient(to bottom, transparent 0 calc(2rem - 1px), var(--renglon) calc(2rem - 1px) 2rem); }
+@media (min-width: 40rem) { html[data-tema="tinta"] body { background: #E8EDFA; } html[data-tema="tinta"] .app { box-shadow: 0 0 0 2px #111111; } }
+html[data-tema="tinta"] .barra { box-shadow: 0 2px 0 #111111; }
+html[data-tema="tinta"] .pie { box-shadow: 0 -2px 0 var(--renglon); }
+html[data-tema="tinta"] .abajo { background: linear-gradient(to bottom, rgba(255, 255, 255, 0), #FFFFFF 2.25rem); }
+/* Botones */
+html[data-tema="tinta"] .btn, html[data-tema="tinta"] .btn.verde, html[data-tema="tinta"] .atajo.principal .c, html[data-tema="tinta"] .atajo.pago .c { box-shadow: none; }
+html[data-tema="tinta"] .btn:hover, html[data-tema="tinta"] .btn.verde:hover { background: #152C80; }
+html[data-tema="tinta"] .fab { background: #111111; color: #FFFFFF; box-shadow: none; }
+html[data-tema="tinta"] .fab:hover { background: #000000; }
+html[data-tema="tinta"] .btn-sec { border-color: #111111; color: #111111; }
+html[data-tema="tinta"] .btn-icono:hover, html[data-tema="tinta"] .btn-ayuda, html[data-tema="tinta"] .cerrar-hoja, html[data-tema="tinta"] .hoja-cab .btn-icono { background: #FFFFFF; box-shadow: inset 0 0 0 2px #111111; }
+html[data-tema="tinta"] .mostrar-barra .btn-icono:hover { background: #152C80; box-shadow: none; }
+html[data-tema="tinta"] .btn-redondo { background: rgba(255, 255, 255, 0.14); box-shadow: inset 0 0 0 2px #FFFFFF; }
+html[data-tema="tinta"] .chip-atiende { box-shadow: inset 0 0 0 2px #FFFFFF; }
+/* Menú */
+html[data-tema="tinta"] .nav { background: #FFFFFF; }
+html[data-tema="tinta"] .nav a { color: #111111; }
+html[data-tema="tinta"] .nav a[aria-current="page"], html[data-tema="tinta"] .tab-demo.activa { background: #1D3BA8; color: #FFFFFF; }
+html[data-tema="tinta"] .tab-demo { color: #111111; }
+/* Estados: forma y relleno, no solo color */
+html[data-tema="tinta"] .estado.atrasado, html[data-tema="tinta"] .pildora.atencion { background: #111111; color: #FFFFFF; }
+html[data-tema="tinta"] .estado.hoy { background: #FFFFFF; color: #1D3BA8; box-shadow: inset 0 0 0 2px #1D3BA8; }
+html[data-tema="tinta"] .pildora.verde { box-shadow: inset 0 0 0 2px #1D3BA8; }
+html[data-tema="tinta"] .cab-marca .estado.atrasado, html[data-tema="tinta"] .cab-marca .estado.hoy, html[data-tema="tinta"] .cab-marca .estado.ok { background: transparent; color: #FFFFFF; box-shadow: inset 0 0 0 2px #FFFFFF; }
+html[data-tema="tinta"] .cab-marca .estado.atrasado { background: #111111; box-shadow: none; }
+html[data-tema="tinta"] .aviso-hoy.atr .i { background: #111111; color: #FFFFFF; }
+html[data-tema="tinta"] .aviso-hoy.hoy .i { background: #E8EDFA; color: #1D3BA8; }
+html[data-tema="tinta"] .aviso-hoy.ok .i { background: #FFFFFF; color: #1D3BA8; box-shadow: inset 0 0 0 2px #1D3BA8; }
+html[data-tema="tinta"] .lista.atencion { box-shadow: 0 0 0 2px #111111, inset 6px 0 0 #111111; }
+html[data-tema="tinta"] .tira-dias button[aria-checked="true"] .no { color: #FFFFFF; }
+/* Avisos y consejos: papel con borde */
+html[data-tema="tinta"] .info, html[data-tema="tinta"] .consejo, html[data-tema="tinta"] .banda { background: #FFFFFF; box-shadow: inset 0 0 0 2px #1D3BA8; }
+html[data-tema="tinta"] .info.atencion, html[data-tema="tinta"] .banda.demo, html[data-tema="tinta"] .banda.vieja { box-shadow: inset 0 0 0 2px #111111; }
+html[data-tema="tinta"] .banda.vieja { background: #111111; color: #FFFFFF; }
+html[data-tema="tinta"] .banda.vieja .btn-mini.sec { background: #FFFFFF; color: #111111; box-shadow: none; }
+html[data-tema="tinta"] .banda.demo { background: repeating-linear-gradient(135deg, #FFFFFF 0 0.75rem, #F3F6FD 0.75rem 1.5rem); }
+html[data-tema="tinta"] .consejo button { box-shadow: inset 0 0 0 2px #111111; }
+/* Personas: iniciales a tinta, sin colores */
+html[data-tema="tinta"] .avatar { background: #FFFFFF; color: #111111; box-shadow: inset 0 0 0 2px #111111; }
+/* Hojas, teclado y tablas */
+html[data-tema="tinta"] .teclado button, html[data-tema="tinta"] .frecuentes button, html[data-tema="tinta"] .burbuja, html[data-tema="tinta"] .tabla { background: #FFFFFF; box-shadow: inset 0 0 0 2px #111111; }
+html[data-tema="tinta"] .teclado .borrar { background: #E8EDFA; }
+html[data-tema="tinta"] .teclado button:active, html[data-tema="tinta"] .frecuentes button:active { background: #E8EDFA; }
+html[data-tema="tinta"] .tabla > div + div { border-top-color: var(--renglon); }
+html[data-tema="tinta"] .tabla > .resaltada { background: #111111; color: #FFFFFF; }
+html[data-tema="tinta"] .como-menu li { background: #FFFFFF; box-shadow: inset 0 0 0 2px var(--renglon); }
+html[data-tema="tinta"] .como-menu li.moneda .c { background: #111111; color: #FFFFFF; }
+html[data-tema="tinta"] .segmento { box-shadow: inset 0 0 0 2px var(--renglon); }
+html[data-tema="tinta"] .segmento button { color: #111111; }
+html[data-tema="tinta"] .segmento button[aria-checked="true"] { background: #1D3BA8; color: #FFFFFF; border-color: #1D3BA8; box-shadow: none; }
+html[data-tema="tinta"] .letras button[aria-checked="true"] { border-color: #1D3BA8; background: #F3F6FD; }
+html[data-tema="tinta"] .puntos span { background: #FFFFFF; box-shadow: inset 0 0 0 2px #111111; }
+html[data-tema="tinta"] .puntos span.activo { background: #1D3BA8; box-shadow: none; }
+html[data-tema="tinta"] .pasos .avance, html[data-tema="tinta"] .medidor, html[data-tema="tinta"] .barra-dato { box-shadow: inset 0 0 0 1px #111111; background: #FFFFFF; }
+html[data-tema="tinta"] .cab-marca .medidor { background: rgba(255, 255, 255, 0.24); box-shadow: none; }
+html[data-tema="tinta"] .cab-marca .medidor > span, html[data-tema="tinta"] .cab-marca .medidor.lleno > span { background: #FFFFFF; }
+html[data-tema="tinta"] .recibo { border-radius: 1.375rem; margin-bottom: 0; }
+html[data-tema="tinta"] .recibo::after { display: none; }
+html[data-tema="tinta"] .mostrar hr { background: #111111; }
+/* Aviso inferior y guía */
+html[data-tema="tinta"] .aviso { box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px #111111; }
+html[data-tema="tinta"] .aviso .texto svg { color: #FFFFFF; }
+html[data-tema="tinta"] .aviso button { background: transparent; box-shadow: inset 0 0 0 2px #FFFFFF; }
+html[data-tema="tinta"] .aviso button.fuerte { background: #FFFFFF; color: #111111; }
+html[data-tema="tinta"] .aviso .cerrar { box-shadow: none; }
+html[data-tema="tinta"] .guia-foco { box-shadow: 0 0 0 9999px rgba(17, 17, 17, 0.66), 0 0 0 3px #FFFFFF; animation-name: pulso-tinta; }
+@keyframes pulso-tinta { 0%, 100% { box-shadow: 0 0 0 9999px rgba(17, 17, 17, 0.66), 0 0 0 3px #FFFFFF; } 50% { box-shadow: 0 0 0 9999px rgba(17, 17, 17, 0.66), 0 0 0 9px #FFFFFF; } }
+html[data-tema="tinta"] .bienvenida .logo-grande { filter: none; }

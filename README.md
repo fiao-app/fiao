@@ -36,6 +36,12 @@ Fiao es una aplicación web instalable (PWA) para anotar, mostrar y cobrar el fi
 - **Menú flotante.** Una píldora con íconos; la sección activa muestra su nombre. Con letra Grande o Más grande se ven todos los nombres. «Anotar fiado» flota encima, en color moneda.
 - Cada cliente tiene un color propio en su avatar, calculado de su nombre.
 
+## Apariencia «Tinta» y movimiento (3.1)
+
+- **Tinta.** Una segunda apariencia, solo con azul de bolígrafo (#1D3BA8), negro y blanco, sobre papel rayado como el cuaderno de la tienda. Es la de más contraste (texto de 9,4:1 a 18,9:1) y se lee mejor al sol. Como entre el azul y el negro solo hay 2:1, los estados no dependen del color: «atrasado» va relleno en negro, «paga hoy» con borde azul, y todo lleva su ícono. Se elige en Ajustes → Apariencia; si el celular tiene activado «más contraste», Fiao abre en Tinta hasta que el tendero elija otra cosa.
+- **Movimiento que explica.** Cada animación cuenta algo: el nombre y el monto viajan de la lista a la ficha; al anotar, una moneda vuela del botón a la cifra de arriba y la cifra cuenta hasta el valor nuevo; al pagar, el saldo baja contando y, si queda al día, el visto se dibuja; la hoja se cierra arrastrándola hacia abajo; «Mitad» lleva la barra sola hasta la mitad; el aviso con «Deshacer» muestra cuánto tiempo queda; las ilustraciones de «Así funciona» se arman por partes.
+- **Reglas del movimiento.** Solo se animan posición, tamaño y transparencia (lo más liviano para el celular); 120–200 ms al tocar y 220–320 ms entre pantallas; probado con el procesador 4 veces más lento. Ajustes → Movimiento: «Reducido» quita todas las animaciones; si el celular pide menos movimiento, Fiao arranca en Reducido.
+
 ## Decisiones que sostienen la confianza
 
 - **Los datos viven en el celular.** La libreta se guarda en el navegador (IndexedDB). No hay servidor, cuentas, contraseñas, cookies ni herramientas de medición.
@@ -56,14 +62,14 @@ Fiao es una aplicación web instalable (PWA) para anotar, mostrar y cobrar el fi
 
 ## Accesibilidad
 
-Pautas WCAG 2.2 nivel AA, auditadas con axe-core en 33 pantallas y hojas:
+Pautas WCAG 2.2 nivel AA, auditadas con axe-core en 33 pantallas y hojas, en las dos apariencias:
 
-- Texto de 18 px de base y tres tamaños de letra (Normal, Grande, Más grande). Modo "Más contraste".
+- Texto de 18 px de base y tres tamaños de letra (Normal, Grande, Más grande). Apariencia «Tinta», de más contraste, que se activa sola si el celular la pide.
 - Áreas táctiles de 48 px o más. La acción principal va abajo, al alcance del pulgar.
 - Lo que se desliza también se hace con un toque (WCAG 2.5.7): la barra del pago se puede tocar en cualquier punto, tiene botones − y +, flechas del teclado y el teclado de números a un toque.
 - Contraste del texto de 4,5:1 o más (la mayoría entre 5,4:1 y 15,5:1). Bordes de campos y opciones de 4,5:1.
 - Nunca solo color: cada estado lleva palabra e ícono. Los días y meses van completos, sin abreviaturas.
-- Las animaciones son cortas y se apagan si el celular tiene activado "reducir movimiento". El botón Atrás del celular cierra las hojas.
+- Las animaciones son cortas y se apagan en Ajustes → Movimiento, o solas si el celular tiene activado "reducir movimiento" (WCAG 2.3.3). Cerrar una hoja arrastrándola también se puede con su botón ✕ o con Atrás.
 - Las letras van incluidas en el proyecto para que funcionen sin internet.
 - Botón para ocultar los montos cuando hay gente en el mostrador.
 
@@ -100,7 +106,8 @@ js/db.js                Guardado local (IndexedDB)
 js/modelo.js            Saldos, fechas, estados, cupos, correcciones
 js/mensajes.js          Mensajes de WhatsApp en tres tonos, editables
 js/demo.js              Tienda de ejemplo, ficticia
-js/ui.js                Íconos, hojas, avisos con Deshacer, ayuda, animaciones
+js/ui.js                Íconos, hojas, avisos con Deshacer, ayuda
+js/movimiento.js        Animaciones: elemento compartido, moneda, hojas que se arrastran
 js/guia.js              Guía del primer uso: práctica, recorrido y primeros pasos
 js/voz.js               La voz de Fiao: qué frase suena en cada momento
 js/ilustraciones.js     Ilustraciones del primer acceso, con un mismo sistema de composición

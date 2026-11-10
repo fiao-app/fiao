@@ -34,8 +34,17 @@ function aplicarPreferencias() {
   const t = Datos.tienda || {};
   document.documentElement.dataset.letra = t.letra || document.documentElement.dataset.letra || 'normal';
   if (!Datos.tienda && !Borrador.letra) document.documentElement.dataset.letra = 'normal';
-  document.documentElement.dataset.contraste = t.contraste ? 'alto' : '';
+  const raiz = document.documentElement;
+  /* Apariencia: lo que eligió en Ajustes; si nunca eligió, Tinta cuando el celular pide más contraste. */
+  const tema = t.tema || (t.contraste ? 'tinta' : matchMedia('(prefers-contrast: more)').matches ? 'tinta' : 'color');
+  raiz.dataset.tema = tema;
+  /* Movimiento: lo que eligió; si nunca eligió, lo que pide el celular. */
+  raiz.dataset.movimiento = t.movimiento || (matchMedia('(prefers-reduced-motion: reduce)').matches ? 'reducido' : 'completo');
+  const color = tema === 'tinta' ? '#1D3BA8' : '#3346E0';
+  document.querySelectorAll('meta[name="theme-color"]').forEach(m => m.setAttribute('content', color));
 }
+/* Si cambia el ajuste del celular y usted no ha elegido en Fiao, Fiao lo sigue. */
+['(prefers-contrast: more)', '(prefers-reduced-motion: reduce)'].forEach(q => { try { matchMedia(q).addEventListener('change', () => aplicarPreferencias()); } catch (e) { /* navegador viejo */ } });
 
 let _primeraVez = true, _rutaAnterior = '';
 function mostrarRuta({ animar = true } = {}) {
@@ -54,6 +63,7 @@ function mostrarRuta({ animar = true } = {}) {
     app.innerHTML = vista.html;
     document.title = `${vista.titulo.replace(/<[^>]+>/g, '')} · Fiao`;
     try { vista.montar && vista.montar(app); } catch (e) { console.error(e); }
+    try { Mov.trasPintar(app, ruta, antes, animar && !_primeraVez); } catch (e) { /* el movimiento nunca frena la app */ }
     if (!_primeraVez && vista.enfoque !== false && animar) app.querySelector('h1')?.focus({ preventScroll: true });
     if (animar) window.scrollTo(0, 0);
     _primeraVez = false;
@@ -63,8 +73,10 @@ function mostrarRuta({ animar = true } = {}) {
   if (animar && !_primeraVez && antes !== hash && document.startViewTransition && !reducido()) {
     const a = profundidad(antes), b = profundidad(hash);
     document.documentElement.dataset.dir = b > a ? 'adelante' : b < a ? 'atras' : 'lado';
-    document.startViewTransition(pintar);
-  } else pintar();
+    Mov.antesDeTransicion(antes, hash);
+    const vt = document.startViewTransition(pintar);
+    vt.finished.finally(() => Mov.limpiar());
+  } else { pintar(); Mov.desdeFila = false; Mov.limpiar(); }
 }
 
 /* Acciones presentes en varias pantallas */

@@ -10,11 +10,19 @@
      y los momentos de logro llevan un destello color moneda. */
 'use strict';
 
-const PAL = {
+const PAL_COLOR = {
   tinta: '#141B34', azul: '#3346E0', azulSuave: '#E2E6FF', escenario: '#E9ECFF', escenarioLuz: '#F6F7FF', renglon: '#CBD2FA', borde: '#E4E0D8',
   moneda: '#FF8A3D', monedaTexto: '#9A4A12', monedaFondo: '#FFF0E5', alerta: '#B42318', alertaFondo: '#FDE7E4',
-  verde: '#127A45', verdeFondo: '#E5F4EC', gris: '#5A6072', celda: '#EEEBE4'
+  verde: '#127A45', verdeFondo: '#E5F4EC', gris: '#5A6072', celda: '#EEEBE4', papel: '#FFFFFF', pantalla: '#FFFFFF', camara: '#3A4766'
 };
+/* Tinta: solo azul de bolígrafo, negro y blanco. Lo que era naranja pasa a negro; lo verde, a azul. */
+const PAL_TINTA = {
+  tinta: '#111111', azul: '#1D3BA8', azulSuave: '#DCE4F7', escenario: '#E8EDFA', escenarioLuz: '#FFFFFF', renglon: '#B9C7EE', borde: '#111111',
+  moneda: '#111111', monedaTexto: '#111111', monedaFondo: '#DCE4F7', alerta: '#111111', alertaFondo: '#DCE4F7',
+  verde: '#1D3BA8', verdeFondo: '#DCE4F7', gris: '#3A3A3A', celda: '#DCE4F7', papel: '#FFFFFF', pantalla: '#FFFFFF', camara: '#3A3A3A'
+};
+/** La paleta del tema que está activo (se consulta cada vez que se dibuja). */
+const PAL = new Proxy({}, { get: (_, k) => (document.documentElement.dataset.tema === 'tinta' ? PAL_TINTA : PAL_COLOR)[k] });
 /** Cifras en Plus Jakarta Sans; rótulos en Figtree. Anchos medidos con esas letras. */
 function txtIlus(x, y, texto, { tam = 12, peso = 800, color = PAL.tinta, ancho }) {
   const fam = peso >= 700 ? 'Plus Jakarta Sans, Figtree, sans-serif' : 'Figtree, sans-serif';
@@ -23,7 +31,7 @@ function txtIlus(x, y, texto, { tam = 12, peso = 800, color = PAL.tinta, ancho }
 /** Destello de cuatro puntas, para los momentos de logro. */
 function destello(x, y, r = 7, color = PAL.moneda) {
   const k = r * 0.28;
-  return `<path d="M${x} ${y - r}Q${x + k} ${y - k} ${x + r} ${y}Q${x + k} ${y + k} ${x} ${y + r}Q${x - k} ${y + k} ${x - r} ${y}Q${x - k} ${y - k} ${x} ${y - r}Z" fill="${color}"/>`;
+  return `<path class="il-destello" d="M${x} ${y - r}Q${x + k} ${y - k} ${x + r} ${y}Q${x + k} ${y + k} ${x} ${y + r}Q${x - k} ${y + k} ${x - r} ${y}Q${x - k} ${y - k} ${x} ${y - r}Z" fill="${color}"/>`;
 }
 function insignia(x, icono, fondo, color) {
   const k = 20 / 24;
@@ -38,15 +46,17 @@ let _escenas = 0;
 function escena(centro, izq, der, extra = '', { sombra = 140, ancho = 34 } = {}) {
   const id = `esc${++_escenas}`;
   return `<svg width="240" height="160" viewBox="0 0 240 160" aria-hidden="true" focusable="false"><defs><radialGradient id="${id}" cx="0.38" cy="0.32" r="0.75"><stop offset="0" stop-color="${PAL.escenarioLuz}"/><stop offset="1" stop-color="${PAL.escenario}"/></radialGradient></defs>
-    <circle cx="120" cy="80" r="58" fill="url(#${id})"/><ellipse cx="120" cy="${sombra}" rx="${ancho}" ry="4" fill="${PAL.tinta}" opacity="0.10"/>${extra}${centro}${insignia(40, ...izq)}${insignia(200, ...der)}</svg>`;
+    <g class="il-esc"><circle cx="120" cy="80" r="58" fill="url(#${id})"/><ellipse cx="120" cy="${sombra}" rx="${ancho}" ry="4" fill="${PAL.tinta}" opacity="0.10"/></g><g class="il-extra">${extra}</g><g class="il-obj">${centro}</g><g class="il-izq">${insignia(40, ...izq)}</g><g class="il-der">${insignia(200, ...der)}</g></svg>`;
 }
 /** Teléfono centrado: cuerpo 64 × 124 (x 88–152), pantalla 54 × 106 (x 93–147, y 27–133). */
 function telefono(pantalla) {
-  return `<rect x="88" y="18" width="64" height="124" rx="14" fill="${PAL.tinta}"/><rect x="93" y="27" width="54" height="106" rx="9" fill="#FFFFFF"/><rect x="113" y="21.5" width="14" height="2.5" rx="1.25" fill="#3A4766"/>${pantalla}`;
+  return `<rect x="88" y="18" width="64" height="124" rx="14" fill="${PAL.tinta}"/><rect x="93" y="27" width="54" height="106" rx="9" fill="${PAL.pantalla}"/><rect x="113" y="21.5" width="14" height="2.5" rx="1.25" fill="${PAL.camara}"/>${pantalla}`;
 }
 
-/* Anchos de texto medidos con Plus Jakarta Sans y Figtree: textLength los fija sin deformar la letra. */
-const ILUS = {
+/* Anchos de texto medidos con Plus Jakarta Sans y Figtree: textLength los fija sin deformar la letra.
+   Se dibujan una vez por tema (Color o Tinta) y se guardan. */
+function armarIlus() {
+  const I = {
   /* 1 · Libreta: página con margen naranja, renglones y la cifra anotada. */
   anotar: escena(
     `<rect x="86" y="26" width="68" height="94" rx="10" fill="#FFFFFF" stroke="${PAL.borde}" stroke-width="2.5"/>
@@ -87,9 +97,14 @@ const ILUS = {
       <circle cx="120" cy="80" r="3" fill="#FFFFFF"/><path d="M120 82v5" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"/>
       <path d="M106 112H134" stroke="${PAL.borde}" stroke-width="4" stroke-linecap="round"/>`),
     ['escudo', PAL.azulSuave, PAL.azul], ['descargar', PAL.verdeFondo, PAL.verde], '', { sombra: 146, ancho: 30 })
-};
-/* 6 · El menú de verdad (sin enlaces: es una muestra) y una línea por sección. */
-ILUS.menu = (() => {
+  };
+  I.menu = MENU_DEMO;
+  return I;
+}
+const _ilus = {};
+const ILUS = new Proxy({}, { get: (_, k) => { const t = document.documentElement.dataset.tema === 'tinta' ? 'tinta' : 'color'; return (_ilus[t] || (_ilus[t] = armarIlus()))[k]; } });
+/* 6 · El menú de verdad (sin enlaces: es una muestra) y una línea por sección. Sus colores salen del CSS. */
+const MENU_DEMO = (() => {
   const secc = [['libreta', 'Libreta', 'Quién le debe y cuánto.'], ['campana', 'Cobros', 'A quién recordar hoy, en el horario de la ley.'], ['grafica', 'Resumen', 'Cuánto fió y cuánto recuperó en el mes.'], ['ajustes', 'Ajustes', 'Letra, mensajes y copia de su libreta.']];
   const pildora = `<div class="nav" aria-hidden="true">${secc.map(([i, n], k) => `<span class="tab-demo${k === 0 ? ' activa' : ''}">${ic(i, 24, k === 0 ? 2.4 : 2)}${k === 0 ? n : ''}</span>`).join('')}</div>`;
   return `<div class="como-menu">${pildora}<ul>${secc.map(([i, n, d]) => `<li><span class="c" aria-hidden="true">${ic(i, 22, 2.2)}</span><span><b>${n}</b><span class="d">${d}</span></span></li>`).join('')}</ul></div>`;

@@ -156,14 +156,20 @@ function ejemploMensaje(tono) {
 V.ajustes = () => {
   const t = tienda(); const dc = diasDesdeCopia(); const inst = puedeInstalar();
   const letra = t.letra || 'normal', tono = t.tono || 'cercano';
+  const tema = document.documentElement.dataset.tema || 'color', mov = document.documentElement.dataset.movimiento || 'completo';
+  /** Grupo de opciones con su rótulo; opciones: [valor, texto, estilo]. */
+  const segmento = (g, rotulo, ayuda, opciones, actual) => `<div class="grupo-ajuste"><span class="leyenda" id="r-${g}">${rotulo}</span>
+    <div class="segmento" role="radiogroup" aria-labelledby="r-${g}"${ayuda ? ` aria-describedby="d-${g}"` : ''} data-grupo="${g}">${opciones.map(([k, n, st]) => `<button type="button" role="radio" aria-checked="${k === actual}" data-valor="${k}"${st ? ` style="${st}"` : ''}>${n}</button>`).join('')}</div>
+    ${ayuda ? `<span class="ayuda" id="d-${g}">${ayuda}</span>` : ''}</div>`;
   const interruptor = (clave, titulo, ayuda, valor) => `<div class="ajuste"><span><b id="a-${clave}">${titulo}</b>${ayuda ? `<span class="ayuda">${ayuda}</span>` : ''}</span><button type="button" class="interruptor" role="switch" aria-checked="${!!valor}" aria-labelledby="a-${clave}" data-interruptor="${clave}"><span class="pista"><span class="bola"></span></span></button></div>`;
   const enlace = (href, icono, texto, accion = '') => `<li>${accion ? `<button type="button" class="fila" data-accion="${accion}">` : `<a class="fila" href="#${href}">`}<span class="ic-caja" style="width:2.5rem;height:2.5rem;border-radius:50%;background:var(--azul-fondo);color:var(--azul-osc)">${ic(icono, 22, 2.2)}</span><span class="medio"><span class="nombre" style="font-size:1.0625rem">${texto}</span></span>${ic('sigue', 22, 2.2)}${accion ? '</button>' : '</a>'}</li>`;
   return {
     titulo: 'Ajustes',
     html: `<div class="pantalla">${cabMarca({ titulo: 'Ajustes' })}<main class="contenido" style="gap:.875rem">
-      <section class="tarjeta" aria-labelledby="t-letra"><h2 class="titulo-seccion" id="t-letra">Tamaño de la letra</h2>
-        <div class="segmento" role="radiogroup" aria-labelledby="t-letra" data-grupo="letra">${[['normal', 'Normal', '1rem'], ['grande', 'Grande', '1.125rem'], ['mas', 'Más grande', '1.25rem']].map(([k, n, f]) => `<button type="button" role="radio" aria-checked="${k === letra}" data-valor="${k}" style="font-size:${f}">${n}</button>`).join('')}</div>
-        ${interruptor('contraste', 'Más contraste', 'Letras y bordes más oscuros', t.contraste)}
+      <section class="tarjeta" aria-labelledby="t-pantalla"><h2 class="titulo-seccion" id="t-pantalla">Pantalla y sonido</h2>
+        ${segmento('letra', 'Tamaño de la letra', '', [['normal', 'Normal', 'font-size:1rem'], ['grande', 'Grande', 'font-size:1.125rem'], ['mas', 'Más grande', 'font-size:1.25rem']], letra)}
+        ${segmento('tema', 'Apariencia', 'Tinta: azul, negro y blanco, como un cuaderno. Se lee mejor al sol.', [['color', `<span class="muestra color" aria-hidden="true"></span>Color`], ['tinta', `<span class="muestra tinta" aria-hidden="true"></span>Tinta`]], tema)}
+        ${segmento('movimiento', 'Movimiento', 'Reducido: las pantallas cambian sin animaciones.', [['completo', 'Completo'], ['reducido', 'Reducido']], mov)}
         ${interruptor('ocultar', 'Ocultar montos al abrir', 'Para cuando hay gente en el mostrador', t.ocultarAlAbrir)}
         ${interruptor('voz', 'Voz de Fiao', 'Una frase corta después de cada acción', t.voz !== false)}</section>
       <section class="tarjeta" aria-labelledby="t-tono"><h2 class="titulo-seccion" id="t-tono">Cómo suenan sus mensajes</h2>
@@ -186,18 +192,19 @@ V.ajustes = () => {
         <p class="ayuda">Cada vecino acepta los mensajes (Ley 1581 de 2012). Los recordatorios siguen el horario de la Ley 2300 de 2023.</p>
         <p class="ayuda">Fiao es una versión de prueba, sin fines comerciales. No es asesoría legal ni contable. Usted responde por los datos de sus clientes.</p></div></details>
       <button type="button" class="btn-sec peligro" data-accion="borrar">Borrar la libreta de este celular</button>
-      <p class="nota">Fiao · versión 3.0</p>
+      <p class="nota">Fiao · versión 3.1</p>
     </main><div class="abajo">${nav('ajustes')}</div></div>`,
     montar(r) {
       activarGrupos(r, async (g, v) => {
         if (g === 'letra') { t.letra = v; await guardarTienda(t); aplicarPreferencias(); }
+        if (g === 'tema') { t.tema = v; delete t.contraste; await guardarTienda(t); aplicarPreferencias(); vibrar(10); }
+        if (g === 'movimiento') { t.movimiento = v; await guardarTienda(t); aplicarPreferencias(); }
         if (g === 'tono') { t.tono = v; await guardarTienda(t); r.querySelector('#a-ejemplo').innerHTML = vistaMensaje(ejemploMensaje(v)); }
       });
       r.querySelectorAll('[data-interruptor]').forEach(b => b.addEventListener('click', async () => {
         const k = b.dataset.interruptor;
         if (k === 'voz') { t.voz = t.voz === false; b.setAttribute('aria-checked', t.voz); await guardarTienda(t); vibrar(10); if (t.voz) Voz.decir('cambios'); else Voz.callar(); return; }
-        const campo = k === 'ocultar' ? 'ocultarAlAbrir' : 'contraste';
-        t[campo] = !t[campo]; b.setAttribute('aria-checked', t[campo]); await guardarTienda(t); aplicarPreferencias(); vibrar(10);
+        t.ocultarAlAbrir = !t.ocultarAlAbrir; b.setAttribute('aria-checked', t.ocultarAlAbrir); await guardarTienda(t); vibrar(10);
       }));
       r.querySelector('[data-accion="copia"]').addEventListener('click', async () => { if (await guardarCopia()) mostrarRuta({ animar: false }); });
       r.querySelector('[data-accion="instalar"]')?.addEventListener('click', instalar);

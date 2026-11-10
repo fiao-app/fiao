@@ -12,7 +12,14 @@ function leerCuenta() {
   } catch (e) { return null; }
 }
 
+/* El vecino no tiene Ajustes: la página sigue a su celular (más contraste → Tinta; menos movimiento → quieta). */
+function temaVecino() {
+  const r = document.documentElement;
+  r.dataset.tema = matchMedia('(prefers-contrast: more)').matches ? 'tinta' : 'color';
+  r.dataset.movimiento = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'reducido' : 'completo';
+}
 function pintarVecino() {
+  temaVecino();
   const app = document.getElementById('app');
   const k = leerCuenta();
   if (!k) {
