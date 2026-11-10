@@ -363,6 +363,10 @@ a.fila:active, button.fila:active { background: var(--azul-fondo); }
 .aviso-pago p { font-size: 1.0625rem; line-height: 1.5rem; }
 .aviso-pago .ap-nota { display: flex; gap: 0.5rem; align-items: flex-start; color: var(--alerta-texto); }
 .aviso-pago .ap-nota > svg { flex-shrink: 0; margin-top: 0.125rem; }
+.pasos-copiar { margin: 0; padding: 0; list-style: none; counter-reset: paso; display: flex; flex-direction: column; gap: 0.75rem; }
+.pasos-copiar li { counter-increment: paso; display: flex; gap: 0.75rem; align-items: flex-start; font-size: 1.125rem; line-height: 1.55; }
+.pasos-copiar li::before { content: counter(paso); flex-shrink: 0; width: 2rem; height: 2rem; margin-top: -0.0625rem; border-radius: 50%; background: var(--azul-fondo); color: var(--azul-osc); font-weight: 700; font-size: 1rem; line-height: 2rem; text-align: center; }
+.enlace-aviso { overflow-wrap: anywhere; text-align: center; -webkit-user-select: all; user-select: all; }
 /* Cada cliente con su color, calculado de su nombre (--h). */
 .avatar { --h: 228; width: 2.75rem; height: 2.75rem; flex-shrink: 0; border-radius: 50%; background: hsl(var(--h) 70% 92%); color: hsl(var(--h) 60% 28%); font-family: var(--letra-titulo); font-size: 1rem; font-weight: 700; display: flex; align-items: center; justify-content: center; }
 .estado { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 1rem; line-height: 1.3125rem; color: var(--gris); }
@@ -664,6 +668,7 @@ html[data-tema="tinta"] .tira-dias button[aria-checked="true"] .no { color: #FFF
 html[data-tema="tinta"] .info, html[data-tema="tinta"] .consejo, html[data-tema="tinta"] .banda { background: #FFFFFF; box-shadow: inset 0 0 0 2px #1D3BA8; }
 html[data-tema="tinta"] .info.atencion, html[data-tema="tinta"] .banda.demo, html[data-tema="tinta"] .banda.vieja { box-shadow: inset 0 0 0 2px #111111; }
 html[data-tema="tinta"] .aviso-pago { background: #FFFFFF; box-shadow: inset 0 0 0 2px #1D3BA8; }
+html[data-tema="tinta"] .pasos-copiar li::before { background: #FFFFFF; color: #1D3BA8; box-shadow: inset 0 0 0 2px #1D3BA8; }
 html[data-tema="tinta"] .banda.vieja { background: #111111; color: #FFFFFF; }
 html[data-tema="tinta"] .banda.vieja .btn-mini.sec { background: #FFFFFF; color: #111111; box-shadow: none; }
 html[data-tema="tinta"] .consejo button { box-shadow: inset 0 0 0 2px #111111; }

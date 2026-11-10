@@ -509,15 +509,38 @@ V.pago = (id, x = '') => {
   const montoAviso = /^\d{1,9}$/.test(m || '') ? +m : 0, medio = MEDIO_AVISO[md] ? md : 'otro';
   const c = Datos.tienda ? cliente(id) : null;
   if (!c) {
+    /* El cliente no está aquí. En iPhone pasa siempre con Fiao instalada: WhatsApp abre el enlace en Safari,
+       y Safari no ve la libreta de la app de la pantalla de inicio. Puente: copiar el aviso y pegarlo en el buscador de Fiao. */
+    const ios = esIOS(), enlace = `${location.href.replace(/#.*$/, '')}#pago-${id}-${x}`, [por] = MEDIO_AVISO[medio];
     return {
       titulo: 'Aviso de pago',
       html: `<div class="pantalla">${barra({ titulo: 'Aviso de pago', volver: Datos.tienda ? 'inicio' : null, ayuda: false })}<main class="contenido holgado">
-        <div class="info atencion">${ic('atencion', 22)}<p>${Datos.tienda ? 'Este cliente no está en la libreta de este celular.' : 'En este navegador no hay una libreta de Fiao.'}</p></div>
-        <p style="font-size:1.125rem;line-height:1.55">Puede pasar si borró al cliente o si su libreta está en otro celular.</p>
-        <p style="font-size:1.125rem;line-height:1.55"><b>En iPhone, con Fiao en la pantalla de inicio:</b> WhatsApp abre los enlaces en Safari, que guarda otra libreta. Abra Fiao desde su pantalla de inicio y busque al cliente por nombre o celular.</p>
-        <a class="btn" href="#${Datos.tienda ? 'inicio' : 'bienvenida'}">${ic('libreta', 24, 2.2)}${Datos.tienda ? 'Ir a mi libreta' : 'Ir a Fiao'}</a>
+        <section class="aviso-pago" aria-labelledby="ap-titulo"><div class="ap-cab">${ic('dinero', 24, 2.2)}<h2 id="ap-titulo">Un cliente le avisó un pago${montoAviso ? ` de ${pesos(montoAviso)}` : ''}${por ? ` ${por}` : ''}</h2></div>
+          <p>${Datos.tienda ? 'Pero ese cliente no está en la libreta de este navegador.' : 'Pero su libreta de Fiao no está en este navegador.'}</p></section>
+        <p style="font-size:1.125rem;line-height:1.55">${ios ? 'En iPhone, WhatsApp abre los enlaces en Safari, y Safari no ve la libreta de Fiao que tiene en su pantalla de inicio.' : 'Puede pasar si su libreta está en otro navegador o en otro celular, o si borró al cliente.'}</p>
+        <ol class="pasos-copiar">
+          <li><span><b>Copie el aviso</b> con el botón de abajo.</span></li>
+          <li><span><b>Abra Fiao</b> ${ios ? 'desde su pantalla de inicio' : 'donde la usa'}.</span></li>
+          <li><span><b>Péguelo en el buscador</b> de la Libreta: mantenga el dedo encima y toque «Pegar».</span></li>
+        </ol>
+        <button type="button" class="btn" data-accion="copiar-aviso">${ic('copiar', 24, 2.2)}Copiar aviso</button>
+        <p class="ayuda enlace-aviso" id="enlace-aviso">${esc(enlace)}</p>
+        ${Datos.tienda ? `<a class="btn-link" href="#inicio">Ir a la libreta de este navegador</a>` : ''}
       </main></div>`,
-      montar() {}
+      montar(r) {
+        const bt = r.querySelector('[data-accion="copiar-aviso"]');
+        bt.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(enlace);
+            bt.innerHTML = `${ic('ok', 24, 2.6)}Aviso copiado`;
+            avisar('Aviso copiado. Ahora abra Fiao y péguelo en el buscador.');
+          } catch (e) {
+            const rango = document.createRange(); rango.selectNodeContents(r.querySelector('#enlace-aviso'));
+            const sel = getSelection(); sel.removeAllRanges(); sel.addRange(rango);
+            avisar('Quedó marcado. Manténgalo presionado y toque «Copiar».', { icono: null });
+          }
+        });
+      }
     };
   }
   const v = V.cliente(c.id);

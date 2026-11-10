@@ -291,6 +291,9 @@ V.inicio = () => {
         const x = document.createElement('span'); x.className = 'cel-hallado'; x.hidden = true; li.querySelector('.medio').appendChild(x);
       });
       b.addEventListener('input', () => {
+        /* Si pega un aviso de pago (el enlace del vecino, o el mensaje entero), abre esa cuenta con el aviso. */
+        const aviso = b.value.match(/#pago-([A-Za-z0-9]+)-(\d{0,9}(?:\.[a-z]+)?)/);
+        if (aviso) { b.value = ''; ir(`pago-${aviso[1]}-${aviso[2]}`); return; }
         const q = normalizar(b.value), dig = b.value.replace(/\D/g, '');
         const porNumero = dig.length > 0 && !/\p{L}/u.test(q);
         const qd = porNumero && dig.startsWith('57') && (dig.length > 10 || /^\s*\+/.test(b.value)) ? dig.slice(2) : dig;

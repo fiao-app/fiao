@@ -59,6 +59,8 @@ const LOGO = (t = 56, etiqueta = 'Fiao', clase = '', invertido = false) => {
 
 /** ¿Movimiento reducido? Manda lo elegido en Ajustes; si no, lo que pide el celular. */
 /** iPhone o iPad abriendo Fiao en Safari, sin instalar: ahí Safari puede borrar los datos tras días sin uso. */
+/** ¿iPhone o iPad? (los iPad nuevos se presentan como Mac con pantalla táctil) */
+function esIOS() { return /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }
 function iosSinInstalar() {
   const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   return ios && !navigator.standalone && !matchMedia('(display-mode: standalone)').matches;
