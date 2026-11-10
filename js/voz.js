@@ -42,6 +42,8 @@ const VOZ = {
   'instalada': 'Fiao quedó en su celular.',
   'version': 'Hay una versión nueva de Fiao.',
   'sin-contactos': 'No se pudo abrir la lista de contactos.',
+  'no-guardo': 'No se pudo guardar en este celular. Guarde una copia ahora.',
+  'monto-alto': 'Es mucho más de lo normal. Revise el monto.',
   // Errores al escribir
   'e-nombre': 'Escriba el nombre o apodo.',
   'e-celular': 'El celular tiene 10 números y empieza por 3.',
@@ -52,6 +54,7 @@ const VOZ = {
   'e-monto': 'Escriba el monto. Si no debió anotarse, anúlelo.',
   'e-mismo': 'Es el mismo monto de antes.',
   'e-archivo': 'Ese archivo no es una copia de Fiao.',
+  'nombre-repetido': 'Ya tiene un cliente con ese nombre.',
   // Guía del primer uso
   'g-anotar': 'Anote su primer fiado. Toque aquí.',
   'g-nuevo': 'Escriba el nombre de un cliente y toque «Seguir».',
@@ -80,7 +83,7 @@ const VOZ_REGLAS = [
   [/^Lista oculta\./, 'pasos-ocultos'], [/^Fiao quedó en su celular\.$/, 'instalada'], [/^Hay una versión nueva/, 'version'], [/^No se pudo abrir la lista de contactos/, 'sin-contactos'],
   [/^Escriba el nombre o apodo\.$/, 'e-nombre'], [/^El celular tiene 10 números/, 'e-celular'], [/^Es más de lo que debe/, 'e-mas'],
   [/^Escriba el nombre de la tienda\.$/, 'e-tienda'], [/^Escriba su nombre\.$/, 'e-su-nombre'], [/^Elija el día\.$/, 'e-dia'],
-  [/^Escriba el monto\. Si no debió anotarse/, 'e-monto'], [/^Es el mismo monto de antes\.$/, 'e-mismo'], [/^Ese archivo no es una copia de Fiao\.$/, 'e-archivo'],
+  [/^Escriba el monto\. Si no debió anotarse/, 'e-monto'], [/^Es el mismo monto de antes\.$/, 'e-mismo'], [/^Ese archivo no es una copia de Fiao\.$/, 'e-archivo'], [/^Ya tiene un cliente que se llama /, 'nombre-repetido'],
   [/^Anote su primer fiado\./, 'g-anotar'], [/^Escriba el nombre de un cliente/, 'g-nuevo'], [/^Marque cuánto se llevó\./, 'g-monto'],
   [/^Esto es lo que le deben entre todos\.$/, 'r-total'], [/^Primero salen los atrasados/, 'r-lista'], [/^Con este botón anota un fiado/, 'r-anotar'], [/^Aquí ve a quién recordar/, 'r-cobros']
 ];

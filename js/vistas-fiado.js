@@ -83,6 +83,13 @@ function pasoNuevo(est, nombre) {
       const fallo = (msg, el) => { err.textContent = msg; err.hidden = false; el.setAttribute('aria-invalid', 'true'); if (el.closest('details')) el.closest('details').open = true; temblar(el); el.focus(); };
       if (!n) return fallo('Escriba el nombre o apodo.', inp);
       if (celD && (celD.length !== 10 || (!/^3/.test(celD) && !tienda().demo))) return fallo('El celular tiene 10 números y empieza por 3.', cel);
+      const otro = clienteLlamado(n);
+      if (otro && d.dataset.repetido !== n) {
+        d.dataset.repetido = n; fallo(textoRepetido(otro), inp);
+        const b = d.querySelector('#h-nuevo .btn'); b.textContent = 'Es otra persona: seguir';
+        if (!d.querySelector('[data-misma]')) { const x = document.createElement('button'); x.type = 'button'; x.className = 'btn-sec'; x.dataset.misma = otro.id; x.textContent = `Es la misma: anotarle a ${nombreCorto(otro.nombre)}`; b.after(x); x.addEventListener('click', () => { est.c = cliente(x.dataset.misma); pasoMonto(est); }); }
+        return;
+      }
       const nc = { id: uid(), nombre: n, cel: celD, cupo: null, pago: leer('pago') || 'quincena', recibos: 'whatsapp', recordar: 'atraso', detalle: '', lista: null, permiso: { estado: 'ninguno', fecha: null }, proximaFecha: null, creado: new Date().toISOString() };
       await guardarCliente(nc);
       est.c = nc; pasoMonto(est);
@@ -98,7 +105,7 @@ function pasoMonto(est) {
       <button type="button" class="btn-link" data-accion="cambiar" style="min-height:3rem;font-size:1rem">Cambiar</button><button type="button" class="cerrar-hoja" data-cerrar aria-label="Cerrar">${ic('cerrar', 24, 2.4)}</button></div>
     <div data-guia="monto" style="display:flex;flex-direction:column;gap:.75rem">
       <div class="monto-anotar"><span class="vh" id="r-monto">Cuánto se llevó</span><output class="monto-grande" id="h-monto" aria-labelledby="r-monto" aria-live="polite">$0</output>
-        <span class="suma" id="h-suma"></span><span class="pildora atencion" id="h-cupo" role="status" hidden></span></div>
+        <span class="suma" id="h-suma"></span><span class="pildora atencion" id="h-cupo" role="status" hidden></span><span class="pildora atencion" id="h-raro" role="status" hidden>${ic('atencion', 18, 2.2)}Es mucho más de lo normal. Revise el monto.</span></div>
       <div class="chips" style="justify-content:center">
         ${c.lista ? `<button type="button" class="chip" aria-pressed="${est.conLista}" data-accion="lista"><span class="ok">${ic('ok', 18, 2.6)}</span>${esc(c.lista.nombre || 'Lo de siempre')}</button>` : ''}
         <button type="button" class="chip" aria-pressed="false" data-accion="sumar">${ic('mas', 18, 2.6)}Sumar otro</button>
@@ -119,6 +126,10 @@ function pasoMonto(est) {
       suma.textContent = est.sumados.length ? `${est.sumados.map(v => pesos(v)).join(' + ')}${est.monto ? ` + ${pesos(est.monto)}` : ' + …'}` : (est.conLista && c.lista.ultimoMonto ? `La última vez: ${pesos(c.lista.ultimoMonto)}` : '');
       const pasa = tope ? saldo + tot - tope : -1;
       if (tot && pasa > 0) { aviso.hidden = false; aviso.innerHTML = `${ic('atencion', 18, 2.2)}Pasa el cupo por ${pesos(pasa)}`; } else aviso.hidden = true;
+      /* Un cero de más: se avisa (con voz, una vez por hoja), sin impedir anotarlo. */
+      const raro = d.querySelector('#h-raro'), esRaro = !!tot && montoInusual(c, tot);
+      if (esRaro && raro.hidden && !d.dataset.dijoRaro) { d.dataset.dijoRaro = '1'; if (typeof Voz !== 'undefined') Voz.decir('monto-alto'); }
+      raro.hidden = !esRaro;
       btn.disabled = !tot;
       btn.innerHTML = tot ? `${ic('ok', 24, 2.6)}Anotar ${pesos(tot)}` : 'Marque el monto';
       if (tot) emitir('monto');
@@ -408,6 +419,30 @@ V.mostrar = id => {
   };
 };
 
+/* Mostrar la cuenta completa en el mostrador: lo mismo que el vecino recibe por enlace, girado hacia él. */
+V.cuenta = id => {
+  const c = cliente(id); if (!c) return null;
+  const n = nombreCorto(c.nombre), s = saldoDe(c.id);
+  const todos = movsDe(c.id), ult = todos.slice(0, 14), antes = todos.slice(14).reduce((t, m) => t + efecto(m), 0);
+  const fila = m => {
+    const pago = m.tipo === 'pago', corr = (m.correcciones || [])[0];
+    const notas = [corr ? `Corregido: decía ${pesos(corr.de)}` : '', m.anulado ? 'Anulado: no cuenta' : ''].filter(Boolean).map(x => `<small>${x}</small>`).join('');
+    return `<li class="${pago ? 'pago' : ''}${m.anulado ? ' anulada' : ''}"><span class="d"><span>${esc(nombreMov(m))}</span>${notas}</span><span class="v">${pago ? '− ' : '+ '}${pesos(m.monto)}</span></li>`;
+  };
+  const historial = agruparPorDia(ult).map(g => `<h3 class="dia-historial">${g.dia}</h3><ul class="lista movs-vecino">${g.items.map(fila).join('')}</ul>`).join('');
+  return {
+    titulo: `Cuenta de ${n}`,
+    html: `<div class="pantalla blanca"><header class="mostrar-barra"><span style="display:inline-flex;align-items:center;gap:.5rem">${ic('girar', 22, 2.2)}Gire el celular hacia ${esc(n)}</span><a class="btn-icono" href="#cliente-${c.id}" data-volver aria-label="Cerrar">${ic('cerrar', 26, 2.4)}</a></header><div class="toldo" aria-hidden="true"></div>
+    <main class="mostrar">
+      <h1 class="para" tabindex="-1">${esc(n)}, así va su cuenta:</h1>
+      <div style="display:flex;flex-direction:column;gap:.25rem">${s > 0 ? `<span style="font-size:1.375rem">Debe</span><span class="cifra-xl">${pesos(s)}</span>
+        ${c.proximaFecha ? `<span class="acordado">${ic('calendario', 22)}Acordaron pagar ${elDia(diaDe(c.proximaFecha))}.</span>` : ''}` : `<span class="cifra-l" style="color:var(--verde)">No debe nada</span>`}</div>
+      ${historial ? `<section class="recibo" aria-labelledby="t-cuenta-hist"><h2 class="titulo-seccion" id="t-cuenta-hist">Lo último</h2>${historial}${antes ? `<ul class="lista movs-vecino"><li><span class="d" style="color:var(--gris)">Venía debiendo de antes</span><span class="v" style="color:var(--gris)">${pesos(antes)}</span></li></ul>` : ''}</section>` : ''}
+    </main>
+    <div class="pie" role="region" aria-label="Acciones" style="padding-inline:1.5rem"><a class="btn" href="#cliente-${c.id}">${ic('ok', 24, 2.6)}Listo</a></div></div>`
+  };
+};
+
 /* ═════ Ficha del cliente ═════ */
 function nombreMov(m) {
   if (m.tipo === 'pago') return mayuscula(`Pagó ${MEDIOS[m.medio] || ''}`.trim());
@@ -448,6 +483,7 @@ V.cliente = (id, extra) => {
         ${atajo('principal', 'anotar', 'mas', 'Anotar')}
         ${e.saldo > 0 ? atajo('pago', 'pago', 'dinero', 'Pagó') : ''}
         ${recordar ? (yaRecordado ? atajo('', 'recordar', 'ok', 'Recordado', ' disabled') : atajo('', 'recordar', 'chat', 'Recordar')) : ''}
+        ${movs.length ? `<a class="atajo" href="#cuenta-${c.id}"><span class="c" aria-hidden="true">${ic('girar', 26, 2.4)}</span>Mostrar</a>` : ''}
         ${permisoOk(c) && e.saldo > 0 ? atajo('', 'cuenta', 'enviar', 'Enviar cuenta') : ''}
       </div>
       ${permisoOk(c) && e.saldo > 0 ? `<p class="ayuda" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:0 .25rem;margin-top:-.5rem">${porQue('enlace', '¿Qué ve el vecino en su cuenta?')}</p>` : ''}

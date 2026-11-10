@@ -74,7 +74,7 @@ function copiable(rotulo, valor, id) {
   return `<div class="copiable"><span><small>${rotulo}</small><b id="v-${id}">${esc(valor)}</b></span><button type="button" class="btn-mini sec" data-copiar="v-${id}" aria-label="Copiar ${rotulo}">${ic('copiar', 18, 2.2)} Copiar</button></div>`;
 }
 function montarVecino(app, k) {
-  app.addEventListener('click', async ev => {
+  app.firstElementChild.addEventListener('click', async ev => {
     const b = ev.target.closest('[data-copiar]'); if (!b) return;
     const txt = document.getElementById(b.dataset.copiar).textContent.replace(/\s/g, '');
     try { await navigator.clipboard.writeText(txt); avisar('Copiado.'); }

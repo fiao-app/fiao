@@ -25,7 +25,7 @@ Fiao es una aplicación web instalable (PWA) para anotar, mostrar y cobrar el fi
 - Antes, el tendero elige el tamaño de la letra viendo cómo se ve, y puede ver seis tarjetas de «Así funciona» o saltarlas. La última, «Así se mueve por Fiao», nombra cada ícono del menú.
 - Una práctica guiada le señala dónde tocar para anotar su primer fiado de verdad. Con la tienda de ejemplo, un recorrido de cuatro pasos.
 - "Primeros pasos" en la libreta, consejos de una línea la primera vez que abre cada sección y un botón de **Ayuda** en cada pantalla, con la opción de escucharla.
-- **La voz de Fiao:** después de cada acción (anotar, pagar, corregir, un error al escribir, cada paso de la guía) una voz femenina, cálida y clara dice una frase corta. Son 60 frases grabadas, guardadas dentro de la app: suenan igual en todos los celulares y funcionan sin internet. Nunca dicen nombres ni montos en voz alta. Se apaga en Ajustes.
+- **La voz de Fiao:** después de cada acción (anotar, pagar, corregir, un error al escribir, cada paso de la guía) una voz femenina, cálida y clara dice una frase corta. Son frases grabadas dentro de la app, así que suenan igual en todos los celulares. Las de todos los días se guardan al instalar; las demás, la primera vez que suenan (así la primera visita baja 2 MB menos). Si una frase aún no se ha guardado y no hay internet, la app sigue en silencio. Nunca dicen nombres ni montos en voz alta. Se apaga en Ajustes.
 - Las razones y las leyes quedan detrás de un «¿Por qué?», no en la pantalla.
 
 ## Identidad visual (3.0)
@@ -41,6 +41,18 @@ Fiao es una aplicación web instalable (PWA) para anotar, mostrar y cobrar el fi
 - **Tinta.** Una segunda apariencia, solo con azul de bolígrafo (#1D3BA8), negro y blanco, como la tinta sobre el cuaderno de la tienda. Es la de más contraste (texto de 9,4:1 a 18,9:1) y se lee mejor al sol. Como entre el azul y el negro solo hay 2:1, los estados no dependen del color: «atrasado» va relleno en negro, «paga hoy» con borde azul, y todo lleva su ícono. Se elige en Ajustes → Apariencia; si el celular tiene activado «más contraste», Fiao abre en Tinta hasta que el tendero elija otra cosa.
 - **Movimiento que explica.** Cada animación cuenta algo: el nombre y el monto viajan de la lista a la ficha; al anotar, una moneda vuela del botón a la cifra de arriba y la cifra cuenta hasta el valor nuevo; al pagar, el saldo baja contando y, si queda al día, el visto se dibuja; la hoja se cierra arrastrándola hacia abajo; «Mitad» lleva la barra sola hasta la mitad; el aviso con «Deshacer» muestra cuánto tiempo queda; las ilustraciones de «Así funciona» se arman por partes.
 - **Reglas del movimiento.** Solo se animan posición, tamaño y transparencia (lo más liviano para el celular); 120–200 ms al tocar y 220–320 ms entre pantallas; probado con el procesador 4 veces más lento. Ajustes → Movimiento: «Reducido» quita todas las animaciones; si el celular pide menos movimiento, Fiao arranca en Reducido.
+
+## Confiabilidad (3.2)
+
+Correcciones de la evaluación final (heurística, crítica de diseño, usabilidad y beta testing):
+
+- **Nunca finge que guardó.** Si el celular no deja guardar (sin espacio, error del navegador), una banda fija lo dice y ofrece guardar una copia de inmediato.
+- **Rápida con libretas grandes.** Un índice por cliente guarda las anotaciones y el saldo de cada uno: con 300 clientes y 30.000 anotaciones, la Libreta se dibuja en 46 ms con el procesador 4 veces más lento (antes, 1,2 s).
+- **Previene errores comunes.** Avisa si ya hay un cliente con el mismo nombre (y deja anotarle al que ya existe) y si un monto es mucho más de lo normal, por un cero de más.
+- **Mostrar la cuenta.** Un atajo en la ficha gira la pantalla hacia el vecino con su cuenta completa: lo que debe, la fecha acordada y lo último anotado.
+- **«Al día» quiere decir sin atrasos**, como se dice en el barrio, aunque el cliente deba.
+- **Dos ventanas sincronizadas.** Si Fiao está abierta en la app instalada y en el navegador, lo que se anota en una aparece en la otra.
+- **iPhone:** si Fiao se abre en Safari sin instalar, una banda explica cómo agregarla a la pantalla de inicio, porque Safari puede borrar los datos de los sitios que no se abren en días.
 
 ## Decisiones que sostienen la confianza
 
@@ -114,7 +126,7 @@ js/ilustraciones.js     Ilustraciones del primer acceso, con un mismo sistema de
 js/vistas-*.js          Las pantallas y las hojas (anotar, pagó, permiso)
 js/app.js               Rutas y arranque
 js/vecino.js            Pantalla del vecino
-audio/                  Las 60 frases grabadas de la voz de Fiao
+audio/                  Las frases grabadas de la voz de Fiao
 sw.js                   Funciona sin internet (y avisa cuando hay una versión nueva)
 manifest.webmanifest    Instalación como app
 ```

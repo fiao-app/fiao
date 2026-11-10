@@ -28,6 +28,7 @@ const ICONOS = {
   descargar: '<path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 21h16"/>',
   contactos: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
   celular: '<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>',
+  compartir: '<path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M7 10H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-1"/>',
   enlace: '<path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/>',
   copiar: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>',
   girar: '<path d="M4 12a8 8 0 0 1 14-5.3L20 9"/><path d="M20 4v5h-5"/><path d="M20 12a8 8 0 0 1-14 5.3L4 15"/><path d="M4 20v-5h5"/>',
@@ -52,6 +53,11 @@ const LOGO = (t = 56, etiqueta = 'Fiao', clase = '', invertido = false) => {
 };
 
 /** ¿Movimiento reducido? Manda lo elegido en Ajustes; si no, lo que pide el celular. */
+/** iPhone o iPad abriendo Fiao en Safari, sin instalar: ahí Safari puede borrar los datos tras días sin uso. */
+function iosSinInstalar() {
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  return ios && !navigator.standalone && !matchMedia('(display-mode: standalone)').matches;
+}
 const reducido = () => {
   const m = document.documentElement.dataset.movimiento;
   return m ? m === 'reducido' : matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -152,6 +158,8 @@ function anunciar(texto) { const a = document.getElementById('anuncio'); if (a) 
 function ocultarAviso() { const a = document.getElementById('aviso'); if (!a) return; clearTimeout(_avisoT); a.classList.remove('ver'); a.inert = true; }
 function avisar(texto, { acciones = [], ms = null, icono = 'ok', voz = null } = {}) {
   const a = document.getElementById('aviso'); if (!a) return;
+  /* Justo después de una falla al guardar, no se dice «quedó anotado»: manda la banda de la falla. */
+  if (typeof Datos !== 'undefined' && Datos.falloGuardado && Date.now() - Datos.falloGuardado < 4000 && icono === 'ok') return;
   anunciar(texto + (acciones.length ? `. Opciones: ${acciones.map(x => x.texto).join(', ')}.` : ''));
   if (typeof Voz !== 'undefined' && voz !== false) Voz.decir(voz || Voz.claveDe(texto));
   a.innerHTML = `<div class="linea"><span class="texto">${icono ? ic(icono, 22, 2.6) : ''}<span>${esc(texto)}</span></span><button type="button" class="cerrar" data-i="x" aria-label="Cerrar aviso">${ic('cerrar', 20, 2.4)}</button></div>
@@ -296,7 +304,7 @@ const AYUDA = {
   cliente: ['Cuenta del cliente', ['Arriba ve cuánto debe y su cupo.', '«Anotar» suma un fiado. «Pagó» registra un pago.', 'Toque una línea del historial para ver el detalle o corregirla.']],
   cobros: ['Cobros', ['Aquí salen quienes se atrasaron o pagan hoy.', '«Recordar» abre WhatsApp con el mensaje listo.', 'Solo se puede en el horario que permite la ley.']],
   resumen: ['Resumen', ['Vea cuánto le deben, cuánto recuperó y cuánto fió este mes.', 'Abajo ve a quién conviene revisar.']],
-  ajustes: ['Ajustes', ['Cambie el tamaño de la letra y cómo suenan sus mensajes.', 'Guarde una copia de su libreta cada semana.']],
+  ajustes: ['Ajustes', ['Cambie el tamaño de la letra, la apariencia y el movimiento, y cómo suenan sus mensajes.', 'Guarde una copia de su libreta cada semana.']],
   mostrar: ['Mostrar la cuenta', ['Gire el celular hacia el vecino.', 'Si el vecino está de acuerdo, toque el botón de abajo.']],
   corregir: ['Corregir', ['Escriba el monto correcto y guarde.', 'El vecino verá qué cambió. Nada se borra.']]
 };

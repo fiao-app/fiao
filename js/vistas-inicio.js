@@ -255,7 +255,7 @@ V.inicio = () => {
   const copiaVieja = !t.demo && (dc === null ? Datos.movs.size > 15 : dc >= 7);
   const atr = lista.filter(x => x.e.tipo === 'atrasado'), deHoy = lista.filter(x => x.e.tipo === 'hoy');
   const suma = xs => xs.reduce((s, x) => s + x.e.saldo, 0);
-  const alDia = lista.filter(x => x.e.saldo <= 0).length;
+  const alDia = lista.filter(x => x.e.tipo !== 'atrasado').length;
   const tarjetaHoy = (clase, href, icono, texto, valor) => `<a class="aviso-hoy ${clase}" href="#${href}"><span class="i" aria-hidden="true">${ic(icono, 20, 2.4)}</span><span class="t">${texto}</span><b>${valor}</b></a>`;
   const avisosHoy = `<section class="avisos-hoy" aria-label="Hoy">
     ${atr.length ? tarjetaHoy('atr', 'cobros', 'atencion', `${atr.length} ${atr.length === 1 ? 'atrasado' : 'atrasados'}`, monto(suma(atr))) : ''}
@@ -265,6 +265,7 @@ V.inicio = () => {
   return {
     titulo: 'Libreta',
     html: `<div class="pantalla">${cab}<main class="contenido">${bandas}
+      ${iosSinInstalar() && !t.avisoIos ? `<div class="banda">${ic('celular', 20)}<span><b>En iPhone, instale Fiao</b> para que Safari no borre su libreta: toque ${ic('compartir', 18, 2.2)} Compartir y luego «Agregar a inicio».</span><button type="button" class="btn-mini sec" data-accion="ios-ok">Entendido</button></div>` : ''}
       ${copiaVieja ? `<div class="banda vieja">${ic('reloj', 20)}<span>${dc === null ? 'Aún no guarda una copia de su libreta.' : `Su última copia fue hace ${dc} días.`}</span><button type="button" class="btn-mini sec" data-accion="copia">Guardar</button></div>` : ''}
       ${avisosHoy}
       ${pasosHtml()}
@@ -297,9 +298,13 @@ V.anotar = () => {
 };
 function montarInicio(r) {
   Vista.despues = null;
+  /* Si las tarjetas de hoy no caben, la última se desvanece en vez de partir un número. */
+  const ah = r.querySelector('.avisos-hoy');
+  if (ah) requestAnimationFrame(() => ah.classList.toggle('desborda', ah.scrollWidth > ah.clientWidth + 2));
   if (Datos.clientes.size === 0) Vista.ultimoTotal = 0;
   r.querySelector('[data-accion="anotar"]').addEventListener('click', () => abrirAnotar());
   r.querySelector('[data-accion="instalar"]')?.addEventListener('click', instalar);
+  r.querySelector('[data-accion="ios-ok"]')?.addEventListener('click', async () => { const t = tienda(); t.avisoIos = true; await guardarTienda(t); mostrarRuta({ animar: false }); });
   r.querySelector('[data-accion="copia"]')?.addEventListener('click', async () => { if (await guardarCopia()) mostrarRuta({ animar: false }); });
   r.querySelector('[data-accion="ocultar-pasos"]')?.addEventListener('click', async () => { const t = tienda(); t.ocultarPasos = true; await guardarTienda(t); mostrarRuta({ animar: false }); avisar('Lista oculta. Puede volver a verla en Ajustes.', { icono: null }); });
   r.querySelector('[data-accion="salir-demo"]')?.addEventListener('click', async () => {
@@ -369,6 +374,13 @@ function formCliente(c) {
         const fallo = (msg, sel) => { err.textContent = msg; err.hidden = false; const f = r.querySelector(sel); f.setAttribute('aria-invalid', 'true'); if (f.closest('details')) f.closest('details').open = true; temblar(f); f.focus(); };
         if (!nombre) return fallo('Escriba el nombre o apodo.', '#c-nombre');
         if (celD && (celD.length !== 10 || (!/^3/.test(celD) && !tienda().demo))) return fallo('El celular tiene 10 números y empieza por 3.', '#c-cel');
+        const otro = clienteLlamado(nombre, nuevo ? null : c.id);
+        if (otro && r.dataset.repetido !== nombre) {
+          r.dataset.repetido = nombre; fallo(textoRepetido(otro), '#c-nombre');
+          r.querySelector('.pie .btn').textContent = 'Es otra persona: guardar';
+          return;
+        }
+        delete r.dataset.repetido;
         const cupoV = leer('cupo');
         const cupo = cupoV === 'sin' ? null : cupoV === 'otro' ? cupoOtro : Number(cupoV);
         const lista = r.querySelector('#c-lista').value.trim();

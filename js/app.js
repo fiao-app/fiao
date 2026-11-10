@@ -9,7 +9,7 @@ Vista.despues = null;
 Vista.prefill = '';
 
 const RUTAS_SIN_TIENDA = ['bienvenida', 'restaurar', 'guia', 'tienda'];
-const PROFUNDIDAD = { inicio: 0, cobros: 0, resumen: 0, ajustes: 0, cliente: 1, nuevo: 1, tienda: 1, mensajes: 1, resumenes: 1, restaurar: 1, guia: 1, editar: 2, mostrar: 2, corregir: 2 };
+const PROFUNDIDAD = { inicio: 0, cobros: 0, resumen: 0, ajustes: 0, cliente: 1, nuevo: 1, tienda: 1, mensajes: 1, resumenes: 1, restaurar: 1, guia: 1, editar: 2, mostrar: 2, cuenta: 2, corregir: 2 };
 const PASOS_BIENVENIDA = ['', 'letra', 'como', 'camino', 'tienda', 'nombre'];
 function profundidad(hash) {
   const [n, p = ''] = hash.split('-');
@@ -75,9 +75,36 @@ function mostrarRuta({ animar = true } = {}) {
     document.documentElement.dataset.dir = b > a ? 'adelante' : b < a ? 'atras' : 'lado';
     Mov.antesDeTransicion(antes, hash);
     const vt = document.startViewTransition(pintar);
-    vt.finished.finally(() => Mov.limpiar());
+    vt.ready.catch(() => {}); vt.updateCallbackDone.catch(() => {});
+    vt.finished.then(() => Mov.limpiar(), () => Mov.limpiar());
   } else { pintar(); Mov.desdeFila = false; Mov.limpiar(); }
 }
+
+/* Otra ventana de Fiao cambió la libreta: se vuelve a leer y se repinta (después de cerrar la hoja, si hay una abierta). */
+let _repintarAlCerrar = false;
+if (_canal) _canal.onmessage = async () => {
+  await recargarDatos(); aplicarPreferencias();
+  if (hojaAbierta()) _repintarAlCerrar = true; else mostrarRuta({ animar: false });
+};
+document.addEventListener('fiao', ev => { if (ev.detail && ev.detail.paso === 'hoja-cerrada' && _repintarAlCerrar) { _repintarAlCerrar = false; setTimeout(() => { if (!hojaAbierta()) mostrarRuta({ animar: false }); }, 50); } });
+
+/* Si el celular no deja guardar: una banda fija arriba, que no se va sola, con la salida a la mano. */
+function mostrarFalloGuardado() {
+  let b = document.getElementById('falla-guardado');
+  if (!b) {
+    b = document.createElement('div'); b.id = 'falla-guardado'; b.className = 'falla-guardado'; b.setAttribute('role', 'alert');
+    b.innerHTML = `${ic('atencion', 24, 2.2)}<p><b>No se pudo guardar en este celular.</b> Lo último que anotó todavía se ve, pero puede perderse al cerrar Fiao. Guarde una copia ahora.</p>
+      <div class="acciones"><button type="button" class="btn-mini" data-falla="copia">${ic('descargar', 18, 2.2)}Guardar copia</button><button type="button" class="btn-mini sec" data-falla="cerrar">Cerrar</button></div>`;
+    b.addEventListener('click', async ev => {
+      const x = ev.target.closest('[data-falla]'); if (!x) return;
+      if (x.dataset.falla === 'copia') { if (await guardarCopia()) b.remove(); } else b.remove();
+    });
+    document.body.appendChild(b);
+  }
+  if (typeof Voz !== 'undefined') Voz.decir('no-guardo');
+  vibrar([60, 80, 60]);
+}
+document.addEventListener('fiao', ev => { if (ev.detail && ev.detail.paso === 'guardado-fallo') mostrarFalloGuardado(); });
 
 /* Acciones presentes en varias pantallas */
 document.addEventListener('click', ev => {

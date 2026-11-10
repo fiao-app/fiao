@@ -59,7 +59,7 @@ V.cobros = () => {
       ${primero ? `<details class="mas"><summary>${ic('chat', 22)}Ver el mensaje que le llega</summary><div class="interior"><div class="burbuja" style="font-size:1rem;line-height:1.4">${esc(mensajeRecordatorio(primero.c, primero.e))}</div><a class="btn-link izq" href="#mensajes">Cambiar mis mensajes</a></div></details>` : ''}
     </main><div class="abajo">${nav('cobros')}</div></div>`,
     montar(r) {
-      r.addEventListener('click', async ev => {
+      r.firstElementChild.addEventListener('click', async ev => {
         const p = ev.target.closest('[data-permiso]'); if (p) { abrirPermiso(cliente(p.dataset.permiso)); return; }
         const b = ev.target.closest('[data-recordar]'); if (!b || b.disabled) return;
         const c = cliente(b.dataset.recordar); const e = estadoDe(c);
@@ -84,7 +84,7 @@ V.resumenes = () => {
         : `<div class="tarjeta" style="align-items:center;text-align:center">${selloOk(40)}<p><b>No hay resúmenes pendientes.</b></p></div>`}
     </main></div>`,
     montar(r) {
-      r.addEventListener('click', async ev => {
+      r.firstElementChild.addEventListener('click', async ev => {
         const b = ev.target.closest('[data-resumen]'); if (!b) return;
         const x = resumenesPendientes().find(p => p.c.id === b.dataset.resumen); if (!x) return;
         abrirWhatsApp(x.c.cel, mensajeResumen(x.c, x.nuevos));
@@ -103,19 +103,20 @@ V.resumen = mesParam => {
   const res = resumenDelMes(y, mm - 1);
   const top = quienesDebenMas(4); const max = top[0]?.s || 1;
   const revisar = aQuienRevisar().slice(0, 4);
-  const alDia = clientes().filter(c => saldoDe(c.id) <= 0).length;
+  /* «Al día» = sin pagos vencidos, aunque deba (así se dice en el barrio). */
+  const nCli = Datos.clientes.size, alDia = clientes().filter(c => estadoDe(c).tipo !== 'atrasado').length;
   const esActual = mesSel === isoDia().slice(0, 7);
   const total = totalEnLaCalle();
   const cuerpo = `<section class="cifra-cab" aria-labelledby="t-calle-r"><span class="rotulo" id="t-calle-r">En la calle</span><span class="cifra" id="k-calle">${monto(total)}</span>
-    <span class="extra"><span><b>${alDia} de ${Datos.clientes.size}</b> clientes están al día</span></span></section>`;
+    <span class="extra"><span><b>${alDia} de ${nCli}</b> ${nCli === 1 ? 'cliente está' : 'clientes están'} al día</span></span></section>`;
   return {
     titulo: 'Resumen',
     html: `<div class="pantalla">${cabMarca({ titulo: 'Resumen', sub: `${mayuscula(MESES[mm - 1])}${esActual ? ', hasta hoy' : ` de ${y}`}`, cuerpo })}<main class="contenido" style="gap:.875rem">
       ${consejo('resumen', 'Aquí ve cuánto le deben, cuánto recuperó y a quién revisar.')}
       ${meses.length > 1 ? `<div class="campo"><label for="r-mes" class="vh">Mes</label><select id="r-mes" class="entrada" style="appearance:auto">${meses.map(k => { const [a, b] = k.split('-').map(Number); return `<option value="${k}"${k === mesSel ? ' selected' : ''}>${mayuscula(MESES[b - 1])} de ${a}</option>`; }).join('')}</select></div>` : ''}
       <div class="kpis"><div class="kpi verde"><span>Recuperó</span><b>${monto(res.recuperado)}</b></div><div class="kpi"><span>Fió</span><b>${monto(res.fiado)}</b></div></div>
-      <section class="tarjeta" aria-labelledby="t-mas"><h2 class="titulo-seccion" id="t-mas">Quién debe más</h2>
-        ${top.length ? top.map(x => `<a class="dato" href="#cliente-${x.c.id}"><span class="par"><span class="nombre-dato">${esc(x.c.nombre)}</span><b>${monto(x.s)}</b></span><span class="barra-dato" aria-hidden="true"><span style="width:${Math.max(4, x.s / max * 100)}%"></span></span></a>`).join('') : '<p class="ayuda">Nadie le debe. ¡Libreta al día!</p>'}</section>
+      ${top.length === 1 ? `<section class="tarjeta" aria-labelledby="t-mas"><h2 class="titulo-seccion" id="t-mas">Quién le debe</h2><a class="dato" href="#cliente-${top[0].c.id}"><span class="par"><span class="nombre-dato">${esc(top[0].c.nombre)}</span><b>${monto(top[0].s)}</b></span></a><p class="ayuda">Cuando le deban varios, aquí verá quién debe más.</p></section>` : `<section class="tarjeta" aria-labelledby="t-mas"><h2 class="titulo-seccion" id="t-mas">Quién debe más</h2>
+        ${top.length ? top.map(x => `<a class="dato" href="#cliente-${x.c.id}"><span class="par"><span class="nombre-dato">${esc(x.c.nombre)}</span><b>${monto(x.s)}</b></span><span class="barra-dato" aria-hidden="true"><span style="width:${Math.max(4, x.s / max * 100)}%"></span></span></a>`).join('') : '<p class="ayuda">Nadie le debe. ¡Libreta al día!</p>'}</section>`}
       <section aria-labelledby="t-rev" style="display:flex;flex-direction:column;gap:.375rem"><h2 class="titulo-seccion" id="t-rev">A quién revisar</h2>
         ${revisar.length ? `<ul class="lista">${revisar.map(x => `<li><a class="fila" href="#cliente-${x.c.id}"><span class="ic-caja" style="color:${x.tipo === 'atrasado' ? 'var(--alerta)' : x.tipo === 'cupo' ? 'var(--azul-osc)' : 'var(--gris)'}">${ic(x.tipo === 'atrasado' ? 'atencion' : x.tipo === 'cupo' ? 'grafica' : 'reloj', 22, 2.2)}</span><span class="medio"><span class="nombre" style="font-size:1.0625rem">${esc(x.titulo)}</span><span class="detalle">${Vista.oculto ? 'Toque para ver' : esc(x.detalle)}</span></span>${ic('sigue', 20, 2.2)}</a></li>`).join('')}</ul>`
           : '<p class="ayuda">Todo en orden: nadie atrasado ni cerca del cupo.</p>'}</section>
@@ -192,7 +193,7 @@ V.ajustes = () => {
         <p class="ayuda">Cada vecino acepta los mensajes (Ley 1581 de 2012). Los recordatorios siguen el horario de la Ley 2300 de 2023.</p>
         <p class="ayuda">Fiao es una versión de prueba, sin fines comerciales. No es asesoría legal ni contable. Usted responde por los datos de sus clientes.</p></div></details>
       <button type="button" class="btn-sec peligro" data-accion="borrar">Borrar la libreta de este celular</button>
-      <p class="nota">Fiao · versión 3.1</p>
+      <p class="nota">Fiao · versión 3.2</p>
     </main><div class="abajo">${nav('ajustes')}</div></div>`,
     montar(r) {
       activarGrupos(r, async (g, v) => {
@@ -227,7 +228,7 @@ V.mensajes = () => {
       ${Object.entries(TIPOS_MENSAJE).map(([k, n]) => `<div class="campo"><label for="m-${k}">${n}</label><textarea class="entrada" id="m-${k}" data-clave="${k}" rows="4">${esc((t.mensajes || {})[k] || base[k])}</textarea><button type="button" class="btn-link izq" data-original="${k}" style="font-size:1rem;min-height:2.75rem">Volver al original</button></div>`).join('')}
     </form></main><div class="pie" role="region" aria-label="Acciones"><button type="submit" form="form-msj" class="btn">Guardar mis mensajes</button></div></div>`,
     montar(r) {
-      r.addEventListener('click', ev => { const b = ev.target.closest('[data-original]'); if (b) { r.querySelector(`#m-${b.dataset.original}`).value = base[b.dataset.original]; avisar('Volvió al mensaje original.', { icono: 'girar' }); } });
+      r.firstElementChild.addEventListener('click', ev => { const b = ev.target.closest('[data-original]'); if (b) { r.querySelector(`#m-${b.dataset.original}`).value = base[b.dataset.original]; avisar('Volvió al mensaje original.', { icono: 'girar' }); } });
       r.querySelector('#form-msj').addEventListener('submit', async ev => {
         ev.preventDefault();
         const propios = {};

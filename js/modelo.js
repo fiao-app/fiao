@@ -10,14 +10,38 @@ const MEDIOS = { efectivo: 'en efectivo', nequi: 'por Nequi', breb: 'por Bre-B',
 function tienda() { return Datos.tienda || {}; }
 function clientes() { return [...Datos.clientes.values()]; }
 function cliente(id) { return Datos.clientes.get(id); }
+/** Otro cliente con el mismo nombre (sin importar tildes ni mayúsculas), para no fiarle al equivocado. */
+function clienteLlamado(nombre, exceptoId = null) {
+  const k = normalizar(nombre).replace(/\s+/g, ' ').trim();
+  return clientes().find(c => c.id !== exceptoId && normalizar(c.nombre).replace(/\s+/g, ' ').trim() === k) || null;
+}
+function textoRepetido(c) { return `Ya tiene un cliente que se llama ${c.nombre}${c.detalle ? ` (${c.detalle})` : ''}. ¿Es otra persona? Agréguele algo que la distinga.`; }
+/** ¿Un monto fuera de lo normal? (un cero de más). Más de $500.000, o 5 veces su fiado más alto. */
+function montoInusual(c, monto) {
+  if (monto > 500000) return true;
+  let max = 0; for (const m of movsDe(c.id)) if (m.tipo === 'fiado' && !m.anulado && m.monto > max) max = m.monto;
+  return max > 0 && monto >= 50000 && monto > max * 5;
+}
 function mov(id) { return Datos.movs.get(id); }
 
-/** Movimientos de un cliente, del más reciente al más antiguo. */
-function movsDe(clienteId) {
-  return [...Datos.movs.values()].filter(m => m.clienteId === clienteId).sort((a, b) => b.fecha.localeCompare(a.fecha));
+/* Índice por cliente: las anotaciones de cada uno, ordenadas, y su saldo.
+   Se arma una vez y se descarta cuando algo cambia (db.js llama a invalidarIndice).
+   Así una libreta de 300 clientes con 2 años de historial se dibuja en milisegundos. */
+let _indice = null;
+function invalidarIndice() { _indice = null; }
+function _idx() {
+  if (_indice) return _indice;
+  const movs = new Map(), saldos = new Map(), contactos = new Map();
+  for (const m of Datos.movs.values()) { const a = movs.get(m.clienteId); if (a) a.push(m); else movs.set(m.clienteId, [m]); }
+  for (const [id, a] of movs) { a.sort((x, y) => y.fecha.localeCompare(x.fecha)); saldos.set(id, a.reduce((s, m) => s + efecto(m), 0)); }
+  for (const r of Datos.contactos.values()) { const a = contactos.get(r.clienteId); if (a) a.push(r); else contactos.set(r.clienteId, [r]); }
+  for (const a of contactos.values()) a.sort((x, y) => y.fecha.localeCompare(x.fecha));
+  return (_indice = { movs, saldos, contactos });
 }
+/** Movimientos de un cliente, del más reciente al más antiguo. */
+function movsDe(clienteId) { return (_idx().movs.get(clienteId) || []).slice(); }
 function efecto(m) { if (m.anulado) return 0; return m.tipo === 'pago' ? -m.monto : m.monto; }
-function saldoDe(clienteId) { let s = 0; for (const m of Datos.movs.values()) if (m.clienteId === clienteId) s += efecto(m); return s; }
+function saldoDe(clienteId) { return _idx().saldos.get(clienteId) || 0; }
 
 /** Fecha de pago según la costumbre del cliente. */
 function fechaPorPreferencia(pref, desde = new Date()) {
@@ -140,7 +164,7 @@ async function registrarContacto(clienteId, tipo, movId = null) {
   return r;
 }
 function contactosDe(clienteId, tipo) {
-  return [...Datos.contactos.values()].filter(r => r.clienteId === clienteId && (!tipo || r.tipo === tipo)).sort((a, b) => b.fecha.localeCompare(a.fecha));
+  return (_idx().contactos.get(clienteId) || []).filter(r => !tipo || r.tipo === tipo);
 }
 /** Recordatorio ya enviado hoy (la ley permite uno al día). */
 function recordadoHoy(clienteId, hoy = new Date()) {
