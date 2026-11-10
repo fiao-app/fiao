@@ -2,7 +2,7 @@
    No guarda datos de la libreta (esos viven en IndexedDB) ni toca internet por su cuenta. */
 'use strict';
 
-const VERSION = 'fiao-v3.1.0';
+const VERSION = 'fiao-v3.1.1';
 const ARCHIVOS = [
   './', './index.html', './manifest.webmanifest', './css/fiao.css',
   './fonts/figtree-400.woff2', './fonts/figtree-600.woff2', './fonts/jakarta-700.woff2', './fonts/jakarta-800.woff2',
