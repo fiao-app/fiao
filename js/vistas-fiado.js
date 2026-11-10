@@ -8,7 +8,7 @@ const Teclas = { fn: null };
 document.addEventListener('keydown', ev => { if (Teclas.fn && hojaAbierta()) Teclas.fn(ev); });
 
 function vistaMensaje(texto) { return esc(texto).replace(/https?:\/\/\S+/g, '<span class="enlace">enlace a su cuenta</span>'); }
-function avatar(c) { return `<span class="avatar" aria-hidden="true">${esc(iniciales(c.nombre))}</span>`; }
+function avatar(c) { return avatarHtml(c); }
 function debeTexto(c) { const s = saldoDe(c.id); return s > 0 ? `Debe ${monto(s)}${c.cupo ? ` de ${pesos(c.cupo)}` : ''}` : 'No debe nada'; }
 function teclado() {
   return `<div class="teclado" role="group" aria-label="Teclado del monto">${['1', '2', '3', '4', '5', '6', '7', '8', '9'].map(d => `<button type="button" data-tecla="${d}">${d}</button>`).join('')}
@@ -159,12 +159,13 @@ function pasoMonto(est) {
 function pasoCupo(est, tot) {
   Teclas.fn = null;
   const c = est.c, saldo = saldoDe(c.id), nuevo = saldo + tot, sube = Math.ceil(nuevo / 10000) * 10000;
-  pintarHoja(`<div style="display:flex;gap:.875rem;align-items:center"><span style="width:3.25rem;height:3.25rem;flex-shrink:0;border-radius:50%;background:var(--naranja-fondo);color:var(--naranja);display:flex;align-items:center;justify-content:center">${ic('atencion', 28, 2.2)}</span><h2>Esta compra pasa el cupo de ${esc(nombreCorto(c.nombre))}</h2></div>
+  pintarHoja(`<div style="display:flex;gap:.875rem;align-items:center"><span style="width:3.25rem;height:3.25rem;flex-shrink:0;border-radius:50%;background:var(--alerta-fondo);color:var(--alerta);display:flex;align-items:center;justify-content:center">${ic('atencion', 28, 2.2)}</span><h2>Esta compra pasa el cupo de ${esc(nombreCorto(c.nombre))}</h2></div>
     <p>Usted decide. Fiao solo le avisa. ${porQue('cupo', '¿Qué es el cupo?')}</p>
     <div class="tabla"><div><span>Debe ahora</span><b>${pesos(saldo)}</b></div><div><span>Con esta compra</span><b>${pesos(nuevo)}</b></div><div class="resaltada"><span>Su cupo</span><b>${pesos(c.cupo)}</b></div></div>
     <button type="button" class="btn" data-op="igual">Anotar igual</button>
     <button type="button" class="btn-sec" data-op="subir">Subir el cupo a ${pesos(sube)} y anotar</button>
     <button type="button" class="btn-link" data-op="volver">Cambiar el monto</button>`, d => {
+    if (typeof Voz !== 'undefined') Voz.decir('cupo');
     d.querySelector('[data-op="igual"]').addEventListener('click', () => guardarFiado(est, tot));
     d.querySelector('[data-op="subir"]').addEventListener('click', async () => { c.cupo = sube; await guardarCliente(c); guardarFiado(est, tot); });
     d.querySelector('[data-op="volver"]').addEventListener('click', () => pasoMonto(est));
@@ -288,45 +289,78 @@ function abrirPago(c) {
       d.querySelector('[data-accion="parte"]').addEventListener('click', pasoParte);
     });
   };
+  /* Pagó una parte: se desliza en saltos de $1.000 (el último salto es lo que debe exacto),
+     o se toca la pista, − y +, «Mitad», o se escribe el monto exacto con el teclado. */
   const pasoParte = () => {
-    pintarHoja(`<div class="hoja-cab"><button type="button" class="btn-icono" data-accion="atras" aria-label="Volver">${ic('volver', 26, 2.4)}</button><h2>¿Cuánto pagó ${n}?</h2><button type="button" class="cerrar-hoja" data-cerrar aria-label="Cerrar">${ic('cerrar', 24, 2.4)}</button></div>
-      <div class="monto-anotar"><output class="monto-grande" id="p-monto" aria-live="polite">$0</output><span class="suma" id="p-resta">Debe ${pesos(saldo)}</span></div>
-      ${teclado()}<p class="error" role="alert" hidden id="p-error"></p>
-      <button type="button" class="btn" id="p-seguir" disabled>Marque el monto</button>`, d => {
+    const N = Math.ceil(saldo / 1000);
+    const valorDe = k => Math.min(k * 1000, saldo);
+    const mitad = Math.round(saldo / 2 / 100) * 100;
+    pintarHoja(`<div class="hoja-cab"><button type="button" class="btn-icono" data-accion="atras" aria-label="Volver">${ic('volver', 26, 2.4)}</button><h2 tabindex="-1">¿Cuánto pagó ${n}?</h2><button type="button" class="cerrar-hoja" data-cerrar aria-label="Cerrar">${ic('cerrar', 24, 2.4)}</button></div>
+      <div class="monto-anotar"><output class="monto-grande" id="p-monto" for="p-rango" aria-live="polite">$0</output><span class="suma" id="p-resta">Debe ${pesos(saldo)}</span></div>
+      <div class="deslizador"><label for="p-rango" class="vh">Cuánto pagó ${n}</label>
+        <input type="range" id="p-rango" min="0" max="${N}" step="1" value="0" style="--color:var(--verde)">
+        <div class="limites" aria-hidden="true"><span>$0</span><span>Debe ${pesos(saldo)}</span></div>
+        <div class="control"><button type="button" class="paso-btn" data-paso="-1" aria-label="Mil pesos menos">${ic('menos', 24, 2.6)}</button>
+          <div class="chips" style="justify-content:center"><button type="button" class="chip" data-accion="mitad">Mitad</button></div>
+          <button type="button" class="paso-btn" data-paso="1" aria-label="Mil pesos más">${ic('mas', 24, 2.6)}</button></div></div>
+      <button type="button" class="btn-link" data-accion="teclado" aria-expanded="false" aria-controls="p-teclado">${ic('lapiz', 20, 2.2)}Escribir el monto exacto</button>
+      <div id="p-teclado" hidden>${teclado()}</div>
+      <p class="error" role="alert" hidden id="p-error"></p>
+      <button type="button" class="btn verde" id="p-seguir" disabled>Mueva la barra o marque el monto</button>`, d => {
       const out = d.querySelector('#p-monto'), resta = d.querySelector('#p-resta'), btn = d.querySelector('#p-seguir'), err = d.querySelector('#p-error');
-      const pintar = () => {
+      const rango = d.querySelector('#p-rango'), cajaT = d.querySelector('#p-teclado');
+      const pintar = ({ desdeRango = false } = {}) => {
+        const antes = out.textContent;
         out.textContent = pesos(est.monto); err.hidden = true;
+        if (antes !== out.textContent && !reducido()) { out.classList.remove('salta'); void out.offsetWidth; out.classList.add('salta'); }
         const q = saldo - est.monto;
-        resta.textContent = !est.monto ? `Debe ${pesos(saldo)}` : q > 0 ? `Queda debiendo ${pesos(q)}` : q === 0 ? 'Queda al día' : `Debe ${pesos(saldo)}`;
-        btn.disabled = !est.monto; btn.textContent = est.monto ? `Registrar ${pesos(est.monto)}` : 'Marque el monto';
+        resta.innerHTML = !est.monto ? `Debe ${pesos(saldo)}` : q > 0 ? `Queda debiendo <b>${pesos(q)}</b>` : q === 0 ? 'Queda al día' : `Debe ${pesos(saldo)}`;
+        if (!desdeRango) rango.value = Math.min(N, Math.round(est.monto / 1000));
+        rango.style.setProperty('--lleno', `${(rango.value / N) * 100}%`);
+        rango.setAttribute('aria-valuetext', est.monto ? `${pesos(est.monto)}. ${q > 0 ? `Queda debiendo ${pesos(q)}` : q === 0 ? 'Queda al día' : ''}` : 'Cero pesos');
+        btn.disabled = !est.monto; btn.innerHTML = est.monto ? `${ic('ok', 24, 2.6)}Registrar ${pesos(est.monto)}` : 'Mueva la barra o marque el monto';
       };
+      rango.addEventListener('input', () => { est.monto = valorDe(+rango.value); vibrar(4); pintar({ desdeRango: true }); });
+      d.querySelectorAll('[data-paso]').forEach(b => b.addEventListener('click', () => {
+        est.monto = Math.max(0, Math.min(saldo, (Math.round(est.monto / 1000) + Number(b.dataset.paso)) * 1000)); vibrar(6); pintar();
+      }));
+      d.querySelector('[data-accion="mitad"]').addEventListener('click', () => { est.monto = mitad; vibrar(8); pintar(); });
+      d.querySelector('[data-accion="teclado"]').addEventListener('click', ev => {
+        const abierto = cajaT.hidden; cajaT.hidden = !abierto; ev.currentTarget.setAttribute('aria-expanded', abierto);
+        if (abierto) { est.monto = 0; pintar(); }
+      });
       const tecla = x => { est.monto = teclear(est.monto, x); pintar(); };
-      d.querySelector('.teclado').addEventListener('click', ev => { const b = ev.target.closest('[data-tecla]'); if (b) tecla(b.dataset.tecla); });
-      Teclas.fn = ev => { if (/^\d$/.test(ev.key)) { tecla(ev.key); ev.preventDefault(); } else if (ev.key === 'Backspace') { tecla('borrar'); ev.preventDefault(); } else if (ev.key === 'Enter' && est.monto) { btn.click(); ev.preventDefault(); } };
+      cajaT.querySelector('.teclado').addEventListener('click', ev => { const b = ev.target.closest('[data-tecla]'); if (b) tecla(b.dataset.tecla); });
+      Teclas.fn = ev => { if (ev.target === rango && !/^\d$/.test(ev.key)) return; if (/^\d$/.test(ev.key)) { tecla(ev.key); ev.preventDefault(); } else if (ev.key === 'Backspace') { tecla('borrar'); ev.preventDefault(); } else if (ev.key === 'Enter' && est.monto) { btn.click(); ev.preventDefault(); } };
       d.querySelector('[data-accion="atras"]').addEventListener('click', pasoTodo);
       btn.addEventListener('click', () => {
         if (est.monto > saldo) { err.textContent = `Es más de lo que debe (${pesos(saldo)}).`; err.hidden = false; temblar(out); return; }
         if (est.monto === saldo) return guardar(saldo);
         pasoFecha();
       });
-      d.querySelector('h2').setAttribute('tabindex', '-1'); d.querySelector('h2').focus({ preventScroll: true });
+      d.querySelector('h2').focus({ preventScroll: true });
       pintar();
     });
   };
+  /* Cuándo paga el resto: una tira de días que se desliza de lado. */
   const pasoFecha = () => {
     Teclas.fn = null;
-    const hoy = new Date(), op = [];
-    const pon = (d, rot) => { const iso = isoDia(d); if (!op.some(o => o.iso === iso)) op.push({ iso, rot }); };
-    pon(sumarDias(hoy, 1), 'Mañana');
-    pon(fechaPorPreferencia('viernes', sumarDias(hoy, 1)), mayuscula(fechaCorta(fechaPorPreferencia('viernes', sumarDias(hoy, 1)))));
-    const qui = fechaPorPreferencia('quincena', sumarDias(hoy, 1)); pon(qui, `Quincena: ${fechaCorta(qui)}`);
-    pintarHoja(`<div class="hoja-cab"><button type="button" class="btn-icono" data-accion="atras" aria-label="Volver">${ic('volver', 26, 2.4)}</button><h2>¿Cuándo paga el resto?</h2><button type="button" class="cerrar-hoja" data-cerrar aria-label="Cerrar">${ic('cerrar', 24, 2.4)}</button></div>
+    const hoy = new Date();
+    const qui = isoDia(fechaPorPreferencia('quincena', sumarDias(hoy, 1)));
+    const dias = Array.from({ length: 21 }, (_, i) => sumarDias(hoy, i + 1));
+    const boton = (dd, i) => {
+      const iso = isoDia(dd), fest = nombreFestivo(dd);
+      const arriba = i === 0 ? 'Mañana' : mayuscula(DIAS[dd.getDay()]);
+      const nota = fest ? 'Festivo' : iso === qui ? 'Quincena' : '';
+      return `<button type="button" role="radio" aria-checked="${i === 0}" data-valor="${iso}" aria-label="${mayuscula(fechaLarga(dd))}${fest ? ', festivo' : ''}${iso === qui ? ', quincena' : ''}"><span>${arriba}</span><b>${dd.getDate()}</b>${nota ? `<span class="no"${iso === qui && !fest ? ' style="color:inherit"' : ''}>${nota}</span>` : ''}</button>`;
+    };
+    pintarHoja(`<div class="hoja-cab"><button type="button" class="btn-icono" data-accion="atras" aria-label="Volver">${ic('volver', 26, 2.4)}</button><h2 tabindex="-1">¿Cuándo paga el resto?</h2><button type="button" class="cerrar-hoja" data-cerrar aria-label="Cerrar">${ic('cerrar', 24, 2.4)}</button></div>
       <p>Pagó ${pesos(est.monto)}. Queda debiendo <b>${pesos(saldo - est.monto)}</b>.</p>
-      <div class="chips" role="radiogroup" aria-label="Fecha para el resto" data-grupo="fecha">${op.map((o, i) => chip(o.rot, i === 0, `data-valor="${o.iso}"`, 'radio')).join('')}${chip('Otro día', false, 'data-valor="otro"', 'radio')}</div>
+      <div class="tira-dias" role="radiogroup" aria-label="Día para pagar el resto" data-grupo="fecha">${dias.map(boton).join('')}<button type="button" role="radio" aria-checked="false" data-valor="otro"><span>Otro</span><b>${ic('calendario', 24, 2.2)}</b><span>día</span></button></div>
       <div class="campo" id="p-caja-dia" hidden><label for="p-dia">Fecha</label><input class="entrada" id="p-dia" type="date" min="${isoDia(sumarDias(hoy, 1))}"></div>
       <p class="ayuda" id="p-nota" hidden></p><p class="error" role="alert" hidden id="p-error2"></p>
-      <button type="button" class="btn" data-accion="guardar">${ic('ok', 24, 2.6)}Guardar pago</button>`, d => {
-      const leer = activarGrupos(d, (g, v) => { d.querySelector('#p-caja-dia').hidden = v !== 'otro'; if (v === 'otro') d.querySelector('#p-dia').focus(); nota(); });
+      <button type="button" class="btn verde" data-accion="guardar">${ic('ok', 24, 2.6)}Guardar pago</button>`, d => {
+      const leer = activarGrupos(d, (g, v) => { d.querySelector('#p-caja-dia').hidden = v !== 'otro'; if (v === 'otro') d.querySelector('#p-dia').focus(); nota(); vibrar(6); });
       const fecha = () => { const v = leer('fecha'); return v === 'otro' ? d.querySelector('#p-dia').value : v; };
       const nota = () => {
         const iso = fecha(), el = d.querySelector('#p-nota'); if (!iso || horarioLegal(diaDe(iso))) { el.hidden = true; return; }
@@ -338,6 +372,7 @@ function abrirPago(c) {
         const iso = fecha(); if (!iso) { const e = d.querySelector('#p-error2'); e.textContent = 'Elija el día.'; e.hidden = false; return; }
         guardar(est.monto, diaDe(iso));
       });
+      d.querySelector('h2').focus({ preventScroll: true });
     });
   };
   abrirHoja('', () => {}, { nombre: 'pago' });
@@ -350,7 +385,7 @@ V.mostrar = id => {
   const n = nombreCorto(c.nombre), s = saldoDe(c.id), pago = m.tipo === 'pago';
   return {
     titulo: `Para ${n}`,
-    html: `<div class="pantalla blanca"><header class="mostrar-barra"><span style="display:inline-flex;align-items:center;gap:.5rem">${ic('girar', 22, 2.2)}Gire el celular hacia ${esc(n)}</span><a class="btn-icono" href="#cliente-${c.id}" data-volver aria-label="Cerrar">${ic('cerrar', 26, 2.4)}</a></header>
+    html: `<div class="pantalla blanca"><header class="mostrar-barra"><span style="display:inline-flex;align-items:center;gap:.5rem">${ic('girar', 22, 2.2)}Gire el celular hacia ${esc(n)}</span><a class="btn-icono" href="#cliente-${c.id}" data-volver aria-label="Cerrar">${ic('cerrar', 26, 2.4)}</a></header><div class="toldo" aria-hidden="true"></div>
     <main class="mostrar">
       <h1 class="para" tabindex="-1">${esc(n)}, ${pago ? 'recibimos su pago:' : 'esto quedó anotado:'}</h1>
       <div style="display:flex;flex-direction:column;gap:.25rem"><span class="cifra-xl">${pesos(m.monto)}</span>${!pago && m.que ? `<span class="que">${esc(mayuscula(m.que))}</span>` : ''}${pago && MEDIOS[m.medio] ? `<span class="que">${esc(mayuscula(MEDIOS[m.medio]))}</span>` : ''}
@@ -392,22 +427,27 @@ V.cliente = (id, extra) => {
   const uso = usoCupo(c, e.saldo);
   const todo = extra === 'todo';
   const visibles = todo ? movs : movs.slice(0, 10);
-  const derecha = btnIcono('lapiz', 'Editar cliente', { href: `editar-${c.id}` });
+  const recordar = c.cel && permisoOk(c) && necesitaRecordatorio(c, e);
+  const yaRecordado = recordar && recordadoHoy(c.id);
+  const cuerpo = `${e.saldo > 0 ? `<div class="cifra-cab"><span class="rotulo">Debe</span><span class="cifra">${monto(e.saldo)}</span><span style="margin-top:.5rem">${estadoHtml(c, e)}</span></div>`
+      : `<span class="estado ok" style="font-size:1.25rem;line-height:1.75rem;align-self:flex-start">${ic('ok', 24, 2.8)}No debe nada</span>`}
+    ${c.cupo ? `<div style="display:flex;flex-direction:column;gap:.375rem"><div class="medidor${uso > 1 ? ' lleno' : ''}" role="meter" aria-label="Cupo usado" aria-valuemin="0" aria-valuemax="${c.cupo}" aria-valuenow="${Math.max(0, Math.min(e.saldo, c.cupo))}" aria-valuetext="${pesos(Math.max(0, e.saldo))} de ${pesos(c.cupo)}"><span style="width:${Math.max(0, Math.min(100, uso * 100))}%"></span></div>
+      <span class="par gris"><span>Cupo ${pesos(c.cupo)}</span><span${uso > 1 ? ' style="color:var(--blanco);font-weight:600"' : ''}>${uso > 1 ? `Se pasó ${pesos(e.saldo - c.cupo)}` : `Le quedan ${pesos(c.cupo - Math.max(0, e.saldo))}`}</span></span></div>` : ''}
+    ${p.de >= 2 ? `<span class="estado" style="color:var(--azul-claro-texto)">${ic('estrella', 18, 2.2)}Paga a tiempo ${p.a} de ${p.de} veces</span>` : ''}`;
+  const atajo = (clase, accion, icono, texto, extraAttr = '') => `<button type="button" class="atajo${clase ? ' ' + clase : ''}" data-accion="${accion}"${extraAttr}><span class="c" aria-hidden="true">${ic(icono, 26, 2.4)}</span>${texto}</button>`;
   return {
     titulo: c.nombre,
-    html: `<div class="pantalla">${barra({ titulo: esc(c.nombre), sub: esc(c.detalle || ''), volver: 'inicio', derecha })}
+    html: `<div class="pantalla">${cabMarca({ titulo: esc(c.nombre), sub: esc(c.detalle || ''), volver: 'inicio', botones: btnRedondo('lapiz', 'Editar cliente', { href: `editar-${c.id}` }), cuerpo })}
     <main class="contenido">
+      <div class="atajos">
+        ${atajo('principal', 'anotar', 'mas', 'Anotar')}
+        ${e.saldo > 0 ? atajo('pago', 'pago', 'dinero', 'Pagó') : ''}
+        ${recordar ? (yaRecordado ? atajo('', 'recordar', 'ok', 'Recordado', ' disabled') : atajo('', 'recordar', 'chat', 'Recordar')) : ''}
+        ${permisoOk(c) && e.saldo > 0 ? atajo('', 'cuenta', 'enviar', 'Enviar cuenta') : ''}
+      </div>
+      ${permisoOk(c) && e.saldo > 0 ? `<p class="ayuda" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:0 .25rem;margin-top:-.5rem">${porQue('enlace', '¿Qué ve el vecino en su cuenta?')}</p>` : ''}
       ${consejo('cliente', 'Toque una línea del historial para ver el detalle.')}
-      <section class="ficha-saldo" aria-label="Cuenta">
-        ${e.saldo > 0 ? `<div style="display:flex;flex-direction:column"><span class="ayuda">Debe</span><span class="cifra">${monto(e.saldo)}</span>${estadoHtml(c, e)}</div>`
-          : `<span class="estado ok" style="font-size:1.375rem;line-height:1.75rem">${ic('ok', 26, 2.8)}No debe nada</span>`}
-        ${c.cupo ? `<div style="display:flex;flex-direction:column;gap:.25rem"><div class="medidor${uso > 1 ? ' lleno' : ''}" role="meter" aria-label="Cupo usado" aria-valuemin="0" aria-valuemax="${c.cupo}" aria-valuenow="${Math.max(0, Math.min(e.saldo, c.cupo))}" aria-valuetext="${pesos(Math.max(0, e.saldo))} de ${pesos(c.cupo)}"><span style="width:${Math.max(0, Math.min(100, uso * 100))}%"></span></div>
-          <span class="par gris"><span>Cupo ${pesos(c.cupo)}</span><span${uso > 1 ? ' style="color:var(--naranja-texto);font-weight:600"' : ''}>${uso > 1 ? `Se pasó ${pesos(e.saldo - c.cupo)}` : `Le quedan ${pesos(c.cupo - Math.max(0, e.saldo))}`}</span></span></div>` : ''}
-        ${p.de >= 2 ? `<span class="estado">${ic('estrella', 18, 2.2)}Paga a tiempo ${p.a} de ${p.de} veces</span>` : ''}
-      </section>
-      <div class="fila-botones"><button type="button" class="btn" data-accion="anotar">${ic('mas', 24, 2.6)}Anotar</button>${e.saldo > 0 ? `<button type="button" class="btn verde" data-accion="pago">${ic('dinero', 24, 2.2)}Pagó</button>` : ''}</div>
       ${c.permiso?.estado === 'pedido' ? `<div class="info">${ic('chat', 22)}<p>¿${esc(nombreCorto(c.nombre))} ya aceptó los recibos?</p><button type="button" class="btn-mini sec" data-accion="permiso">Anotar respuesta</button></div>` : ''}
-      ${permisoOk(c) && e.saldo > 0 ? `<div style="display:flex;flex-wrap:wrap;align-items:center;gap:0 .5rem"><button type="button" class="btn-link izq" data-accion="cuenta">${ic('enviar', 20, 2.2)}Enviarle su cuenta</button>${porQue('enlace', '¿Qué ve?')}</div>` : ''}
       <section aria-labelledby="t-movs" style="display:flex;flex-direction:column;gap:.375rem"><h2 class="titulo-seccion" id="t-movs">Historial</h2>
         ${movs.length ? agruparPorDia(visibles).map(g => `<h3 class="dia-historial">${g.dia}</h3><ul class="lista">${g.items.map(filaMov).join('')}</ul>`).join('') : '<p class="vacio">Todavía no hay nada anotado.</p>'}
         ${!todo && movs.length > 10 ? `<a class="btn-sec" href="#cliente-${c.id}-todo">Ver todo el historial (${movs.length})</a>` : ''}
@@ -425,6 +465,13 @@ V.cliente = (id, extra) => {
         r.querySelector('#' + b.getAttribute('aria-controls')).hidden = abierto;
       }));
       r.querySelector('[data-accion="chat"]')?.addEventListener('click', () => { const u = `https://wa.me/${tienda().demo ? '' : celInternacional(c.cel)}`; const w = window.open(u, '_blank', 'noopener'); if (!w) location.href = u; });
+      r.querySelector('[data-accion="recordar"]:not([disabled])')?.addEventListener('click', async () => {
+        if (!puedeRecordarAhora()) { avisar(motivoNoRecordar(), { icono: 'reloj' }); return; }
+        if (recordadoHoy(c.id)) { avisar('Ya se le recordó hoy. La ley permite uno al día.', { icono: 'reloj' }); return; }
+        abrirWhatsApp(c.cel, mensajeRecordatorio(c, estadoDe(c)));
+        await registrarContacto(c.id, 'recordatorio');
+        mostrarRuta({ animar: false }); avisar(`Abrimos WhatsApp con el recordatorio para ${nombreCorto(c.nombre)}.`);
+      });
       r.querySelector('[data-accion="cuenta"]')?.addEventListener('click', async () => {
         abrirWhatsApp(c.cel, `Hola, ${nombreCorto(c.nombre)}. Esta es su cuenta en ${tienda().nombre}: va en ${pesos(saldoDe(c.id))}. Vea el detalle aquí: ${enlaceCuenta(c)}`);
         await registrarContacto(c.id, 'cuenta'); avisar('Abrimos WhatsApp con su cuenta.');
@@ -453,7 +500,7 @@ V.corregir = id => {
       <div class="info">${ic('lapiz', 22)}<p>${esc(n)} verá: «Corregido: decía ${pesos(m.monto)}, quedó en <b id="k-nuevo">…</b>».</p></div>
       ${permisoOk(c) ? `<label class="check"><input type="checkbox" id="k-avisar" checked>Avisarle a ${esc(n)} por WhatsApp</label>` : ''}
       <p id="k-error" class="error" role="alert" hidden></p>
-      <button type="button" class="btn-link izq" data-accion="anular" style="color:var(--naranja-texto)">Anular esta anotación</button>
+      <button type="button" class="btn-link izq" data-accion="anular" style="color:var(--alerta-texto)">Anular esta anotación</button>
     </form></main><div class="pie" role="region" aria-label="Acciones"><button type="submit" form="form-corregir" class="btn">Guardar corrección</button></div></div>`,
     montar(r) {
       const leer = activarGrupos(r);

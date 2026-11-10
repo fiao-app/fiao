@@ -30,12 +30,12 @@ V.bienvenida = (paso = '') => {
   if (paso === 'tienda' || paso === 'nombre') return pantallaPregunta(paso);
   return {
     titulo: 'Bienvenida',
-    html: `<div class="pantalla blanca"><main class="intro">
-      <div class="entra" style="display:flex;flex-direction:column;align-items:center;gap:1.25rem">${LOGO(96)}
-      <h1 tabindex="-1" style="font-size:2.75rem;line-height:3.125rem;font-weight:800">Fiao</h1>
-      <p style="font-size:1.375rem;line-height:1.875rem;color:var(--tinta)">El fiado claro, para usted y su vecino.</p></div>
+    html: `<div class="pantalla"><main class="bienvenida">
+      <header class="cab-marca"><div class="entra" style="display:flex;flex-direction:column;align-items:center;gap:1.25rem">${LOGO(104, '', 'logo-grande', true)}
+      <h1 tabindex="-1">Fiao</h1>
+      <p>El fiado claro, para usted y su vecino.</p></div></header><div class="toldo" aria-hidden="true"></div>
     </main>
-    <div class="pie" role="region" aria-label="Acciones">
+    <div class="pie" role="region" aria-label="Acciones" style="padding-top:1.5rem">
       <a class="btn" href="#bienvenida-letra">Empezar</a>
       <a class="btn-link" href="#restaurar">Ya tengo una copia de mi libreta</a>
       <p class="nota">Gratis. Sin registro. Versión de prueba.</p>
@@ -88,8 +88,8 @@ function pantallaCamino() {
     html: `<div class="pantalla">${soloVolver('bienvenida-como')}<main class="intro" style="justify-content:flex-start;padding-top:1rem">
       <h1 tabindex="-1" style="font-size:1.75rem;line-height:2.25rem">¿Cómo quiere empezar?</h1>
       <div class="caminos">
-        <a href="#bienvenida-tienda" class="fila" style="min-height:6rem;border-radius:1.25rem;box-shadow:var(--sombra);gap:1rem"><span class="ic" style="width:3.5rem;height:3.5rem;border-radius:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--azul);color:#fff">${ic('tienda', 30)}</span><span class="medio"><span class="nombre" style="font-size:1.1875rem">Con mi tienda</span><span class="detalle">Empiezo mi libreta ya.</span></span>${ic('sigue', 24, 2.4)}</a>
-        <button type="button" class="fila" data-accion="demo" style="min-height:6rem;border-radius:1.25rem;box-shadow:var(--sombra);gap:1rem"><span class="ic" style="width:3.5rem;height:3.5rem;border-radius:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--naranja-fondo);color:var(--naranja)">${ic('ojo', 30)}</span><span class="medio"><span class="nombre" style="font-size:1.1875rem">Ver un ejemplo</span><span class="detalle">Pruebo con una tienda inventada.</span></span>${ic('sigue', 24, 2.4)}</button>
+        <a href="#bienvenida-tienda" class="fila" style="min-height:6rem;border-radius:1.375rem;box-shadow:var(--sombra);gap:1rem"><span class="ic" style="width:3.5rem;height:3.5rem;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--azul);color:#fff">${ic('tienda', 30)}</span><span class="medio"><span class="nombre" style="font-size:1.1875rem">Con mi tienda</span><span class="detalle">Empiezo mi libreta ya.</span></span>${ic('sigue', 24, 2.4)}</a>
+        <button type="button" class="fila" data-accion="demo" style="min-height:6rem;border-radius:1.375rem;box-shadow:var(--sombra);gap:1rem"><span class="ic" style="width:3.5rem;height:3.5rem;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--moneda);color:var(--tinta)">${ic('ojo', 30)}</span><span class="medio"><span class="nombre" style="font-size:1.1875rem">Ver un ejemplo</span><span class="detalle">Pruebo con una tienda inventada.</span></span>${ic('sigue', 24, 2.4)}</button>
       </div></main></div>`,
     montar(r) {
       r.querySelector('[data-accion="demo"]').addEventListener('click', async () => {
@@ -227,12 +227,17 @@ V.tienda = () => {
 /* ───── Libreta (inicio) ───── */
 V.inicio = () => {
   const t = tienda();
-  const cab = barra({ titulo: esc(t.nombre || 'Mi tienda'), extra: chipAtiende() });
+  const hayClientes = Datos.clientes.size > 0;
+  const total = totalEnLaCalle(), hoy = totalesDelDia();
+  const cuerpo = hayClientes ? `<section class="cifra-cab" aria-labelledby="t-calle"><span class="rotulo" id="t-calle">En la calle</span><span class="cifra" id="cifra-calle">${monto(total)}</span>
+    <span class="extra"><span>Fiado hoy <b>${monto(hoy.fiado)}</b></span><span>Pagos hoy <b>${monto(hoy.pagos)}</b></span></span></section>` : '';
+  const botones = hayClientes ? btnRedondo('ojoNo', 'Ocultar montos', { accion: 'ocultar', presionado: Vista.oculto }) : '';
+  const cab = cabMarca({ titulo: esc(t.nombre || 'Mi tienda'), extra: chipAtiende(), botones, cuerpo });
   const inst = puedeInstalar();
   const bandas = `${t.demo ? `<div class="banda demo">${ic('ojo', 20)}<span>Está viendo una tienda de ejemplo.</span><button type="button" class="btn-mini sec" data-accion="salir-demo">Usar la mía</button></div>` : ''}
-    ${inst && !t.demo && !t.noInstalar ? `<div class="banda" style="background:var(--azul-fondo)">${ic('celular', 20)}<span>${inst === 'ios' ? 'Instale Fiao para que Safari no borre su libreta.' : 'Instale Fiao: abre sin internet.'}</span><button type="button" class="btn-mini" data-accion="instalar">${inst === 'ios' ? 'Cómo' : 'Instalar'}</button></div>` : ''}`;
-  const pie = `<div class="abajo"><div class="pie" role="region" aria-label="Acciones"><button type="button" class="btn" data-accion="anotar" data-guia="anotar">${ic('mas', 26, 2.6)}Anotar fiado</button></div>${nav('libreta')}</div>`;
-  if (Datos.clientes.size === 0) return {
+    ${inst && !t.demo && !t.noInstalar ? `<div class="banda">${ic('celular', 20)}<span>${inst === 'ios' ? 'Instale Fiao para que Safari no borre su libreta.' : 'Instale Fiao: abre sin internet.'}</span><button type="button" class="btn-mini" data-accion="instalar">${inst === 'ios' ? 'Cómo' : 'Instalar'}</button></div>` : ''}`;
+  const pie = `<div class="abajo"><button type="button" class="fab" data-accion="anotar" data-guia="anotar">${ic('mas', 24, 2.8)}Anotar fiado</button>${nav('libreta')}</div>`;
+  if (!hayClientes) return {
     titulo: 'Libreta',
     html: `<div class="pantalla">${cab}<main class="contenido">${bandas}
       <section aria-labelledby="vacia" class="tarjeta" style="align-items:center;text-align:center;padding:1.5rem 1rem;gap:.75rem">
@@ -246,17 +251,22 @@ V.inicio = () => {
     montar: montarInicio
   };
   const lista = clientesOrdenados();
-  const hoy = totalesDelDia();
   const dc = diasDesdeCopia();
   const copiaVieja = !t.demo && (dc === null ? Datos.movs.size > 15 : dc >= 7);
-  const total = totalEnLaCalle();
+  const atr = lista.filter(x => x.e.tipo === 'atrasado'), deHoy = lista.filter(x => x.e.tipo === 'hoy');
+  const suma = xs => xs.reduce((s, x) => s + x.e.saldo, 0);
+  const alDia = lista.filter(x => x.e.saldo <= 0).length;
+  const tarjetaHoy = (clase, href, icono, texto, valor) => `<a class="aviso-hoy ${clase}" href="#${href}"><span class="i" aria-hidden="true">${ic(icono, 20, 2.4)}</span><span class="t">${texto}</span><b>${valor}</b></a>`;
+  const avisosHoy = `<section class="avisos-hoy" aria-label="Hoy">
+    ${atr.length ? tarjetaHoy('atr', 'cobros', 'atencion', `${atr.length} ${atr.length === 1 ? 'atrasado' : 'atrasados'}`, monto(suma(atr))) : ''}
+    ${deHoy.length ? tarjetaHoy('hoy', 'cobros', 'reloj', `Hoy ${deHoy.length === 1 ? 'paga' : 'pagan'} ${deHoy.length}`, monto(suma(deHoy))) : ''}
+    ${!atr.length && !deHoy.length ? tarjetaHoy('ok', 'cobros', 'ok', 'Cobros de hoy', 'Ninguno') : ''}
+    ${lista.length > 1 ? tarjetaHoy('ok', 'resumen', 'estrella', 'Al día', `${alDia} de ${lista.length}`) : ''}</section>`;
   return {
     titulo: 'Libreta',
     html: `<div class="pantalla">${cab}<main class="contenido">${bandas}
-      ${copiaVieja ? `<div class="banda" style="background:var(--naranja-fondo)">${ic('reloj', 20)}<span>${dc === null ? 'Aún no guarda una copia de su libreta.' : `Su última copia fue hace ${dc} días.`}</span><button type="button" class="btn-mini sec" data-accion="copia">Guardar</button></div>` : ''}
-      <section class="total" aria-labelledby="t-calle"><span class="rotulo"><span id="t-calle">En la calle</span><button type="button" class="ocultar" data-accion="ocultar" aria-pressed="${Vista.oculto}">${ic(Vista.oculto ? 'ojo' : 'ojoNo', 18, 2.2)}${Vista.oculto ? 'Mostrar' : 'Ocultar'}</button></span>
-        <span class="cifra" id="cifra-calle">${monto(total)}</span>
-        <span class="hoy"><span>Fiado hoy <b>${monto(hoy.fiado)}</b></span><span>Pagos hoy <b>${monto(hoy.pagos)}</b></span></span></section>
+      ${copiaVieja ? `<div class="banda vieja">${ic('reloj', 20)}<span>${dc === null ? 'Aún no guarda una copia de su libreta.' : `Su última copia fue hace ${dc} días.`}</span><button type="button" class="btn-mini sec" data-accion="copia">Guardar</button></div>` : ''}
+      ${avisosHoy}
       ${pasosHtml()}
       <div class="buscador"><label for="buscar" class="vh">Buscar cliente</label>${ic('buscar', 24)}<input class="entrada" id="buscar" type="search" placeholder="Buscar cliente" autocomplete="off"></div>
       <div class="encabezado-lista"><h2 class="titulo-seccion" id="t-clientes">Clientes</h2><span id="cuantos">${lista.length}</span></div>
@@ -304,6 +314,7 @@ function formCliente(c) {
   c = c || { nombre: Vista.prefill || '', cel: '', cupo: null, pago: 'quincena', recibos: 'whatsapp', recordar: 'atraso', detalle: '', lista: null, permiso: { estado: 'ninguno' } };
   Vista.prefill = '';
   const cupoSel = c.cupo === null ? 'sin' : [50000, 100000].includes(c.cupo) ? String(c.cupo) : 'otro';
+  let cupoOtro = cupoSel === 'otro' && c.cupo ? c.cupo : 80000;
   const contactosApi = 'contacts' in navigator && 'ContactsManager' in window;
   const opc = '<span class="opcional">(opcional)</span>';
   const volver = nuevo ? 'inicio' : `cliente-${c.id}`;
@@ -318,7 +329,10 @@ function formCliente(c) {
       ${grupoOpciones('pago', '¿Cuándo suele pagar?', PREF_PAGO, c.pago)}
       <details class="mas"${nuevo ? '' : ' open'}><summary>${ic('ajustes', 22)}Más opciones: cupo, recibos y recordatorios</summary><div class="interior">
         ${grupoOpciones('cupo', 'Hasta cuánto le fía', { sin: 'Sin límite', 50000: '$50.000', 100000: '$100.000', otro: 'Otro' }, cupoSel)}
-        <div class="campo" id="caja-cupo"${cupoSel === 'otro' ? '' : ' hidden'}><label for="c-cupo">Cupo</label><input class="entrada" id="c-cupo" inputmode="numeric" value="${cupoSel === 'otro' && c.cupo ? pesos(c.cupo) : ''}" placeholder="$80.000"></div>
+        <div class="deslizador" id="caja-cupo"${cupoSel === 'otro' ? '' : ' hidden'}><label for="c-cupo" class="leyenda">Cupo: <b id="c-cupo-v">${pesos(cupoOtro)}</b></label>
+          <input type="range" id="c-cupo" min="1" max="50" step="1" value="${Math.min(50, Math.max(1, Math.round(cupoOtro / 10000)))}" aria-valuetext="${pesos(cupoOtro)}">
+          <div class="limites" aria-hidden="true"><span>$10.000</span><span>$500.000</span></div>
+          <div class="control"><button type="button" class="paso-btn" data-cupo="-1" aria-label="Diez mil pesos menos">${ic('menos', 24, 2.6)}</button><span class="ayuda">En saltos de $10.000</span><button type="button" class="paso-btn" data-cupo="1" aria-label="Diez mil pesos más">${ic('mas', 24, 2.6)}</button></div></div>
         ${grupoOpciones('recibos', 'Recibos', { whatsapp: 'Por WhatsApp', semanal: 'Uno por semana', mostrar: 'Solo en la tienda' }, c.recibos)}
         ${grupoOpciones('recordar', 'Recordarle el pago', { atraso: 'Si se atrasa', dia: 'El día de pago', nunca: 'Nunca' }, c.recordar)}
         ${nuevo ? '' : grupoOpciones('permiso', '¿Aceptó mensajes por WhatsApp?', { si: 'Sí', pedido: 'Le pregunté', no: 'No', ninguno: 'No le he preguntado' }, c.permiso?.estado || 'ninguno')}
@@ -332,8 +346,13 @@ function formCliente(c) {
       const leer = activarGrupos(r, (g, v) => {
         if (g === 'cupo') { r.querySelector('#caja-cupo').hidden = v !== 'otro'; if (v === 'otro') r.querySelector('#c-cupo').focus(); }
       });
+      const rCupo = r.querySelector('#c-cupo');
+      const pintarCupo = () => { r.querySelector('#c-cupo-v').textContent = pesos(cupoOtro); rCupo.setAttribute('aria-valuetext', pesos(cupoOtro)); rCupo.style.setProperty('--lleno', `${((rCupo.value - 1) / 49) * 100}%`); };
+      rCupo.addEventListener('input', () => { cupoOtro = rCupo.value * 10000; vibrar(4); pintarCupo(); });
+      r.querySelectorAll('[data-cupo]').forEach(b => b.addEventListener('click', () => { rCupo.value = Math.min(50, Math.max(1, Math.round(cupoOtro / 10000) + Number(b.dataset.cupo))); cupoOtro = rCupo.value * 10000; vibrar(6); pintarCupo(); }));
+      pintarCupo();
       const cel = r.querySelector('#c-cel');
-      ['#c-saldo', '#c-cupo'].forEach(s => { const i = r.querySelector(s); if (i) activarCampoPesos(i); });
+      ['#c-saldo'].forEach(s => { const i = r.querySelector(s); if (i) activarCampoPesos(i); });
       r.querySelector('[data-accion="contactos"]')?.addEventListener('click', async () => {
         try {
           const [ct] = await navigator.contacts.select(['name', 'tel'], { multiple: false });
@@ -351,8 +370,7 @@ function formCliente(c) {
         if (!nombre) return fallo('Escriba el nombre o apodo.', '#c-nombre');
         if (celD && (celD.length !== 10 || (!/^3/.test(celD) && !tienda().demo))) return fallo('El celular tiene 10 números y empieza por 3.', '#c-cel');
         const cupoV = leer('cupo');
-        const cupo = cupoV === 'sin' ? null : cupoV === 'otro' ? leerPesos(r.querySelector('#c-cupo').value) : Number(cupoV);
-        if (cupoV === 'otro' && !cupo) return fallo('Escriba el cupo o elija «Sin límite».', '#c-cupo');
+        const cupo = cupoV === 'sin' ? null : cupoV === 'otro' ? cupoOtro : Number(cupoV);
         const lista = r.querySelector('#c-lista').value.trim();
         const datos = { nombre, cel: celD, cupo, pago: leer('pago'), recibos: leer('recibos'), recordar: leer('recordar'), detalle: r.querySelector('#c-detalle').value.trim(),
           lista: lista ? { nombre: c.lista?.nombre || 'Lo de siempre', productos: lista, ultimoMonto: c.lista?.ultimoMonto } : null };

@@ -14,7 +14,7 @@ Fiao es una aplicación web instalable (PWA) para anotar, mostrar y cobrar el fi
 |---|---|
 | Anota un fiado en tres toques, sin salir de la libreta: elige al cliente, marca el monto y listo. Se puede deshacer en los segundos siguientes. | Recibe su recibo por WhatsApp, sin instalar nada. |
 | Ve lo que tiene "en la calle", quién está atrasado y quién paga hoy. | Abre un enlace con su cuenta: cada fiado, cada pago y el saldo anterior. |
-| Registra un pago completo con un toque, o un abono de cualquier monto con nueva fecha. | Paga con Bre-B, Nequi o en efectivo, y avisa "ya pagué" con un toque. |
+| Registra un pago completo con un toque, o un abono deslizando una barra (o con el teclado) y eligiendo el día del resto en una tira de días. | Paga con Bre-B, Nequi o en efectivo, y avisa "ya pagué" con un toque. |
 | Corrige o anula una anotación sin borrar nada: el cambio queda a la vista. | Ve las correcciones: nadie le cambia la cuenta en silencio. |
 | Recibe recordatorios redactados con respeto, solo en el horario de la ley. | Solo recibe recordatorios si se atrasa o si los pidió. |
 | Le muestra la cuenta al vecino en la pantalla, si está en el mostrador. | |
@@ -22,12 +22,19 @@ Fiao es una aplicación web instalable (PWA) para anotar, mostrar y cobrar el fi
 ## Primer uso guiado
 
 - Dos preguntas para empezar: el nombre de la tienda y el del tendero. Lo demás se pide justo cuando hace falta (el celular, el permiso y la forma de pago, al enviar el primer recibo).
-- Antes, el tendero elige el tamaño de la letra viendo cómo se ve, y puede ver cinco tarjetas de «Así funciona» o saltarlas.
+- Antes, el tendero elige el tamaño de la letra viendo cómo se ve, y puede ver seis tarjetas de «Así funciona» o saltarlas. La última, «Así se mueve por Fiao», nombra cada ícono del menú.
 - Una práctica guiada le señala dónde tocar para anotar su primer fiado de verdad. Con la tienda de ejemplo, un recorrido de cuatro pasos.
-- "Primeros pasos" en la libreta, consejos de una línea la primera vez que abre cada sección y un botón **Ayuda** en cada pantalla, con la opción de escucharla en voz alta.
+- "Primeros pasos" en la libreta, consejos de una línea la primera vez que abre cada sección y un botón de **Ayuda** en cada pantalla, con la opción de escucharla.
+- **La voz de Fiao:** después de cada acción (anotar, pagar, corregir, un error al escribir, cada paso de la guía) una voz femenina, cálida y clara dice una frase corta. Son 60 frases grabadas, guardadas dentro de la app: suenan igual en todos los celulares y funcionan sin internet. Nunca dicen nombres ni montos en voz alta. Se apaga en Ajustes.
 - Las razones y las leyes quedan detrás de un «¿Por qué?», no en la pantalla.
 
-El ícono: el toldo rayado de la tienda de barrio forma el brazo de la F, y la moneda naranja es el fiado que se anota y se paga.
+## Identidad visual (3.0)
+
+- **El toldo como firma.** El ícono es una F cuyo brazo es el toldo rayado de la tienda de barrio; la moneda naranja es el fiado. En la app, las cabeceras llevan las franjas del toldo y terminan en su borde ondulado.
+- **Color con reglas (60-30-10).** Papel de cuaderno y blanco de fondo, cobalto (#3346E0) para la marca y la acción principal, y la moneda (#FF8A3D) como acento. Los colores de estado nunca se usan como marca: rojo ladrillo solo para «atrasado», verde solo para «pagó» y «al día».
+- **Dos letras.** Plus Jakarta Sans para títulos y cifras, porque su 0 no se confunde con el 8; Figtree para leer.
+- **Menú flotante.** Una píldora con íconos; la sección activa muestra su nombre. Con letra Grande o Más grande se ven todos los nombres. «Anotar fiado» flota encima, en color moneda.
+- Cada cliente tiene un color propio en su avatar, calculado de su nombre.
 
 ## Decisiones que sostienen la confianza
 
@@ -49,14 +56,15 @@ El ícono: el toldo rayado de la tienda de barrio forma el brazo de la F, y la m
 
 ## Accesibilidad
 
-Pautas WCAG 2.2 nivel AA, auditadas con axe-core en 29 pantallas y hojas:
+Pautas WCAG 2.2 nivel AA, auditadas con axe-core en 33 pantallas y hojas:
 
 - Texto de 18 px de base y tres tamaños de letra (Normal, Grande, Más grande). Modo "Más contraste".
-- Áreas táctiles de 48 px o más. La acción principal mide 60 px y va abajo, al alcance del pulgar.
-- Contraste del texto entre 6:1 y 15,9:1. Bordes de campos y opciones de 5,6:1.
+- Áreas táctiles de 48 px o más. La acción principal va abajo, al alcance del pulgar.
+- Lo que se desliza también se hace con un toque (WCAG 2.5.7): la barra del pago se puede tocar en cualquier punto, tiene botones − y +, flechas del teclado y el teclado de números a un toque.
+- Contraste del texto de 4,5:1 o más (la mayoría entre 5,4:1 y 15,5:1). Bordes de campos y opciones de 4,5:1.
 - Nunca solo color: cada estado lleva palabra e ícono. Los días y meses van completos, sin abreviaturas.
 - Las animaciones son cortas y se apagan si el celular tiene activado "reducir movimiento". El botón Atrás del celular cierra las hojas.
-- Tipografía Atkinson Hyperlegible Next (Braille Institute), incluida en el proyecto para que funcione sin internet.
+- Las letras van incluidas en el proyecto para que funcionen sin internet.
 - Botón para ocultar los montos cuando hay gente en el mostrador.
 
 ## Cómo probarla
@@ -94,11 +102,13 @@ js/mensajes.js          Mensajes de WhatsApp en tres tonos, editables
 js/demo.js              Tienda de ejemplo, ficticia
 js/ui.js                Íconos, hojas, avisos con Deshacer, ayuda, animaciones
 js/guia.js              Guía del primer uso: práctica, recorrido y primeros pasos
+js/voz.js               La voz de Fiao: qué frase suena en cada momento
 js/ilustraciones.js     Ilustraciones del primer acceso, con un mismo sistema de composición
 js/vistas-*.js          Las pantallas y las hojas (anotar, pagó, permiso)
 js/app.js               Rutas y arranque
 js/vecino.js            Pantalla del vecino
-sw.js                   Funciona sin internet
+audio/                  Las 60 frases grabadas de la voz de Fiao
+sw.js                   Funciona sin internet (y avisa cuando hay una versión nueva)
 manifest.webmanifest    Instalación como app
 ```
 
@@ -112,7 +122,9 @@ El calendario de festivos se calcula según la ley vigente en noviembre de 2026.
 
 Componentes de terceros, con sus propias licencias:
 
-- Atkinson Hyperlegible Next · Braille Institute of America · SIL Open Font License 1.1 (`fonts/OFL.txt`)
+- Plus Jakarta Sans · The Plus Jakarta Sans Project Authors · SIL Open Font License 1.1 (`fonts/OFL-plus-jakarta-sans.txt`)
+- Figtree · The Figtree Project Authors · SIL Open Font License 1.1 (`fonts/OFL-figtree.txt`)
+- Voz de las frases grabadas: generada con ElevenLabs (voz «Diana») para este proyecto académico.
 - lz-string 1.5.0 · Pieroxy · Licencia MIT (`vendor/lz-string.min.js`)
 
 WhatsApp, Nequi, Daviplata y Bre-B son marcas de sus dueños. Fiao no está afiliada a ellas y solo las nombra para indicar medios de contacto y de pago.

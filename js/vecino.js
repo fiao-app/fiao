@@ -18,7 +18,7 @@ function pintarVecino() {
   if (!k) {
     document.title = 'Enlace incompleto · Fiao';
     app.innerHTML = `<div class="pantalla"><header class="vecino-barra">${ic('enlace', 18, 2.2)}Enlace personal</header><main class="contenido holgado" style="justify-content:center;text-align:center;align-items:center">
-      <span style="color:var(--naranja)">${ic('atencion', 48, 2)}</span><h1 style="font-size:1.5rem;line-height:1.875rem">Este enlace está incompleto</h1>
+      <span style="color:var(--alerta)">${ic('atencion', 48, 2)}</span><h1 style="font-size:1.5rem;line-height:1.875rem">Este enlace está incompleto</h1>
       <p style="font-size:1.125rem;line-height:1.625rem">Puede que se haya cortado al copiarlo. Pídale a la tienda que se lo envíe de nuevo.</p></main></div>`;
     return;
   }
@@ -36,15 +36,15 @@ function pintarVecino() {
   const debe = k.s > 0;
   document.title = `Su cuenta en ${k.t} · Fiao`;
   app.innerHTML = `<div class="pantalla">
-    <header class="vecino-barra">${ic('enlace', 18, 2.2)}<span>Su cuenta al ${diaMes(g)}, ${hora(g)}</span></header>
-    <main class="contenido" style="gap:.75rem">
+    <header class="cab-marca vecino-cab">
+      <div class="fila-cab"><div class="titulos"><span class="tienda-vecino">${ic('tienda', 22, 2.2)}<b>${esc(k.t)}</b></span><span class="sub">Su cuenta al ${diaMes(g)}, ${hora(g)}</span></div></div>
+      <section class="cifra-cab" aria-labelledby="t-cuenta"><h1 id="t-cuenta" style="font-size:1.25rem;line-height:1.625rem;margin-bottom:.375rem">${esc(k.n)}, así iba su cuenta</h1>
+        ${debe ? `<span class="rotulo">Usted debe</span><span class="cifra">${pesos(k.s)}</span>` : `<span class="cifra" style="font-size:2rem;line-height:2.5rem">No debe nada</span>`}
+        ${debe && k.a ? `<span class="extra"><span style="display:inline-flex;align-items:center;gap:.375rem">${ic('calendario', 18, 2.2)}Acordaron pagar el ${fechaLarga(diaDe(k.a))}</span></span>` : ''}</section>
+    </header><div class="toldo" aria-hidden="true"></div>
+    <main class="contenido" style="gap:.875rem">
       ${k.e ? `<div class="banda demo">${ic('atencion', 20)}<span><b>Cuenta de ejemplo.</b> Los nombres y montos son inventados: no pague nada.</span></div>` : ''}
-      <section class="saldo-vecino" aria-labelledby="t-cuenta">
-        <h1 id="t-cuenta">${esc(k.n)}, así iba su cuenta en ${esc(k.t)}</h1>
-        ${debe ? `<span class="debe"><span style="font-size:1.0625rem">Usted debe</span><b>${pesos(k.s)}</b></span>` : `<span class="debe"><b style="color:var(--verde)">No debe nada</b></span>`}
-        ${debe && k.a ? `<span class="estado" style="color:var(--azul);font-weight:600">${ic('calendario', 18)}Acordaron pagar el ${fechaLarga(diaDe(k.a))}</span>` : ''}
-      </section>
-      ${filas ? `<section aria-labelledby="t-mov" style="display:flex;flex-direction:column;gap:.375rem"><h2 class="titulo-seccion" id="t-mov">Historial</h2>${filas}${ant}</section>` : ''}
+      ${filas ? `<section class="recibo" aria-labelledby="t-mov"><h2 class="titulo-seccion" id="t-mov">Historial</h2>${filas}${ant}</section>` : ''}
       ${debe ? `<section class="tarjeta" aria-labelledby="t-pagar"><h2 class="titulo-seccion" id="t-pagar">¿Cómo pagar?</h2>
         ${k.b ? copiable('Llave Bre-B', k.b, 'llave') : ''}${k.q ? copiable('Nequi', celLegible(k.q), 'nequi') : ''}
         <span>O en efectivo, en la tienda.</span>

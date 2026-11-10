@@ -18,6 +18,7 @@ const Foco = {
     this.burbuja.innerHTML = `${paso ? `<span class="paso">${paso}</span>` : ''}<p>${html}</p><div class="acciones">${acciones || '<button type="button" class="btn-link izq" data-guia-saltar>Saltar guía</button>'}</div>`;
     raiz.append(this.capa, this.burbuja);
     anunciar(this.burbuja.querySelector('p').textContent);
+    if (typeof Voz !== 'undefined') Voz.decirTexto(this.burbuja.querySelector('p').textContent);
     this.burbuja.querySelector('[data-guia-saltar]')?.addEventListener('click', () => Guia.terminar());
     const seguir = () => { this.ubicar(); this.raf = requestAnimationFrame(seguir); };
     this.raf = requestAnimationFrame(seguir);
@@ -50,7 +51,7 @@ const Guia = {
   ],
   /* ── Recorrido de la tienda de ejemplo ── */
   recorrido: [
-    { sel: '.total', texto: 'Esto es lo que le deben entre todos.' },
+    { sel: '.cifra-cab', texto: 'Esto es lo que le deben entre todos.' },
     { sel: '#app .lista li:first-child', texto: 'Primero salen los atrasados y los que pagan hoy.' },
     { sel: '[data-guia="anotar"]', texto: 'Con este botón anota un fiado en segundos.' },
     { sel: '.nav a[href="#cobros"]', texto: 'Aquí ve a quién recordar y cuándo lo permite la ley.' }
@@ -82,7 +83,7 @@ const Guia = {
     const b = Object.assign(document.createElement('div'), { className: 'guia-burbuja' });
     b.setAttribute('role', 'dialog'); b.setAttribute('aria-label', 'Guía'); b.style.top = '1rem';
     b.innerHTML = `<span class="paso">Práctica terminada</span><p>¡Muy bien! Así de fácil anota un fiado.</p><p style="font-weight:400;font-size:1.0625rem">Si fue de prueba, toque «Deshacer» abajo.</p><div class="acciones"><span></span><button type="button" class="btn-mini">Entendido</button></div>`;
-    document.body.appendChild(b); anunciar('¡Muy bien! Así de fácil anota un fiado.');
+    document.body.appendChild(b); anunciar('¡Muy bien! Así de fácil anota un fiado.'); if (typeof Voz !== 'undefined') Voz.decir('practica');
     b.querySelector('button').focus();
     b.querySelector('button').addEventListener('click', () => { b.remove(); this.terminar(); });
   },

@@ -41,9 +41,12 @@ V.cobros = () => {
   const primero = [...atrasados, ...deHoy].find(x => necesitaRecordatorio(x.c, x.e) && permisoOk(x.c) && !recordadoHoy(x.c.id, ahora));
   const fila = ({ c, e }, detalle) => `<li><div class="fila" style="padding-right:.75rem"><a href="#cliente-${c.id}" class="medio" style="text-decoration:none;color:inherit;min-height:3rem;justify-content:center"><span class="nombre">${esc(c.nombre)}</span>${detalle}</a>${accionCobro(c, e, ahora)}</div></li>`;
   const sub = puedeRecordarAhora(ahora) ? `Puede recordar hasta las ${horarioLegal(ahora).hasta - 12}:00 p. m.` : '';
+  const porCobrar = [...atrasados, ...deHoy];
+  const cuerpo = porCobrar.length ? `<section class="cifra-cab" aria-labelledby="t-porcobrar"><span class="rotulo" id="t-porcobrar">Por cobrar hoy</span><span class="cifra">${monto(porCobrar.reduce((t, x) => t + x.e.saldo, 0))}</span>
+    <span class="extra"><span>${porCobrar.length} ${porCobrar.length === 1 ? 'persona' : 'personas'}</span>${atrasados.length ? `<span><b>${atrasados.length}</b> ${atrasados.length === 1 ? 'atrasada' : 'atrasadas'}</span>` : ''}</span></section>` : '';
   return {
     titulo: 'Cobros',
-    html: `<div class="pantalla">${barra({ titulo: 'Cobros', sub })}<main class="contenido" style="gap:.875rem">
+    html: `<div class="pantalla">${cabMarca({ titulo: 'Cobros', sub, cuerpo })}<main class="contenido" style="gap:.875rem">
       ${consejo('cobros', 'Aquí salen quienes deben pagar. Fiao respeta el horario de la ley.')}
       ${puedeRecordarAhora(ahora) ? '' : `<div class="info atencion" id="motivo-ley">${ic('reloj', 22)}<p>${motivoNoRecordar(ahora)} ${porQue('horario')}</p></div>`}
       ${atrasados.length ? `<section aria-labelledby="t-atr" style="display:flex;flex-direction:column;gap:.375rem"><h2 class="titulo-seccion" id="t-atr">Se atrasaron</h2>
@@ -103,17 +106,18 @@ V.resumen = mesParam => {
   const alDia = clientes().filter(c => saldoDe(c.id) <= 0).length;
   const esActual = mesSel === isoDia().slice(0, 7);
   const total = totalEnLaCalle();
+  const cuerpo = `<section class="cifra-cab" aria-labelledby="t-calle-r"><span class="rotulo" id="t-calle-r">En la calle</span><span class="cifra" id="k-calle">${monto(total)}</span>
+    <span class="extra"><span><b>${alDia} de ${Datos.clientes.size}</b> clientes están al día</span></span></section>`;
   return {
     titulo: 'Resumen',
-    html: `<div class="pantalla">${barra({ titulo: 'Resumen', sub: `${mayuscula(MESES[mm - 1])}${esActual ? ', hasta hoy' : ` de ${y}`}` })}<main class="contenido" style="gap:.875rem">
+    html: `<div class="pantalla">${cabMarca({ titulo: 'Resumen', sub: `${mayuscula(MESES[mm - 1])}${esActual ? ', hasta hoy' : ` de ${y}`}`, cuerpo })}<main class="contenido" style="gap:.875rem">
       ${consejo('resumen', 'Aquí ve cuánto le deben, cuánto recuperó y a quién revisar.')}
       ${meses.length > 1 ? `<div class="campo"><label for="r-mes" class="vh">Mes</label><select id="r-mes" class="entrada" style="appearance:auto">${meses.map(k => { const [a, b] = k.split('-').map(Number); return `<option value="${k}"${k === mesSel ? ' selected' : ''}>${mayuscula(MESES[b - 1])} de ${a}</option>`; }).join('')}</select></div>` : ''}
-      <div class="kpis"><div class="kpi principal"><span>En la calle</span><b id="k-calle">${monto(total)}</b><span>${alDia} de ${Datos.clientes.size} clientes están al día</span></div>
-        <div class="kpi verde"><span>Recuperó</span><b>${monto(res.recuperado)}</b></div><div class="kpi"><span>Fió</span><b>${monto(res.fiado)}</b></div></div>
+      <div class="kpis"><div class="kpi verde"><span>Recuperó</span><b>${monto(res.recuperado)}</b></div><div class="kpi"><span>Fió</span><b>${monto(res.fiado)}</b></div></div>
       <section class="tarjeta" aria-labelledby="t-mas"><h2 class="titulo-seccion" id="t-mas">Quién debe más</h2>
         ${top.length ? top.map(x => `<a class="dato" href="#cliente-${x.c.id}"><span class="par"><span class="nombre-dato">${esc(x.c.nombre)}</span><b>${monto(x.s)}</b></span><span class="barra-dato" aria-hidden="true"><span style="width:${Math.max(4, x.s / max * 100)}%"></span></span></a>`).join('') : '<p class="ayuda">Nadie le debe. ¡Libreta al día!</p>'}</section>
       <section aria-labelledby="t-rev" style="display:flex;flex-direction:column;gap:.375rem"><h2 class="titulo-seccion" id="t-rev">A quién revisar</h2>
-        ${revisar.length ? `<ul class="lista">${revisar.map(x => `<li><a class="fila" href="#cliente-${x.c.id}"><span class="ic-caja" style="color:${x.tipo === 'atrasado' ? 'var(--naranja)' : x.tipo === 'cupo' ? 'var(--azul)' : 'var(--gris)'}">${ic(x.tipo === 'atrasado' ? 'atencion' : x.tipo === 'cupo' ? 'grafica' : 'reloj', 22, 2.2)}</span><span class="medio"><span class="nombre" style="font-size:1.0625rem">${esc(x.titulo)}</span><span class="detalle">${Vista.oculto ? 'Toque para ver' : esc(x.detalle)}</span></span>${ic('sigue', 20, 2.2)}</a></li>`).join('')}</ul>`
+        ${revisar.length ? `<ul class="lista">${revisar.map(x => `<li><a class="fila" href="#cliente-${x.c.id}"><span class="ic-caja" style="color:${x.tipo === 'atrasado' ? 'var(--alerta)' : x.tipo === 'cupo' ? 'var(--azul-osc)' : 'var(--gris)'}">${ic(x.tipo === 'atrasado' ? 'atencion' : x.tipo === 'cupo' ? 'grafica' : 'reloj', 22, 2.2)}</span><span class="medio"><span class="nombre" style="font-size:1.0625rem">${esc(x.titulo)}</span><span class="detalle">${Vista.oculto ? 'Toque para ver' : esc(x.detalle)}</span></span>${ic('sigue', 20, 2.2)}</a></li>`).join('')}</ul>`
           : '<p class="ayuda">Todo en orden: nadie atrasado ni cerca del cupo.</p>'}</section>
     </main><div class="abajo">${nav('resumen')}</div></div>`,
     montar(r) {
@@ -153,14 +157,15 @@ V.ajustes = () => {
   const t = tienda(); const dc = diasDesdeCopia(); const inst = puedeInstalar();
   const letra = t.letra || 'normal', tono = t.tono || 'cercano';
   const interruptor = (clave, titulo, ayuda, valor) => `<div class="ajuste"><span><b id="a-${clave}">${titulo}</b>${ayuda ? `<span class="ayuda">${ayuda}</span>` : ''}</span><button type="button" class="interruptor" role="switch" aria-checked="${!!valor}" aria-labelledby="a-${clave}" data-interruptor="${clave}"><span class="pista"><span class="bola"></span></span></button></div>`;
-  const enlace = (href, icono, texto, accion = '') => `<li>${accion ? `<button type="button" class="fila" data-accion="${accion}">` : `<a class="fila" href="#${href}">`}<span class="ic-caja" style="color:var(--azul)">${ic(icono, 24, 2.2)}</span><span class="medio"><span class="nombre" style="font-size:1.0625rem">${texto}</span></span>${ic('sigue', 22, 2.2)}${accion ? '</button>' : '</a>'}</li>`;
+  const enlace = (href, icono, texto, accion = '') => `<li>${accion ? `<button type="button" class="fila" data-accion="${accion}">` : `<a class="fila" href="#${href}">`}<span class="ic-caja" style="width:2.5rem;height:2.5rem;border-radius:50%;background:var(--azul-fondo);color:var(--azul-osc)">${ic(icono, 22, 2.2)}</span><span class="medio"><span class="nombre" style="font-size:1.0625rem">${texto}</span></span>${ic('sigue', 22, 2.2)}${accion ? '</button>' : '</a>'}</li>`;
   return {
     titulo: 'Ajustes',
-    html: `<div class="pantalla">${barra({ titulo: 'Ajustes' })}<main class="contenido" style="gap:.875rem">
+    html: `<div class="pantalla">${cabMarca({ titulo: 'Ajustes' })}<main class="contenido" style="gap:.875rem">
       <section class="tarjeta" aria-labelledby="t-letra"><h2 class="titulo-seccion" id="t-letra">Tamaño de la letra</h2>
         <div class="segmento" role="radiogroup" aria-labelledby="t-letra" data-grupo="letra">${[['normal', 'Normal', '1rem'], ['grande', 'Grande', '1.125rem'], ['mas', 'Más grande', '1.25rem']].map(([k, n, f]) => `<button type="button" role="radio" aria-checked="${k === letra}" data-valor="${k}" style="font-size:${f}">${n}</button>`).join('')}</div>
         ${interruptor('contraste', 'Más contraste', 'Letras y bordes más oscuros', t.contraste)}
-        ${interruptor('ocultar', 'Ocultar montos al abrir', 'Para cuando hay gente en el mostrador', t.ocultarAlAbrir)}</section>
+        ${interruptor('ocultar', 'Ocultar montos al abrir', 'Para cuando hay gente en el mostrador', t.ocultarAlAbrir)}
+        ${interruptor('voz', 'Voz de Fiao', 'Una frase corta después de cada acción', t.voz !== false)}</section>
       <section class="tarjeta" aria-labelledby="t-tono"><h2 class="titulo-seccion" id="t-tono">Cómo suenan sus mensajes</h2>
         <div class="segmento" role="radiogroup" aria-labelledby="t-tono" data-grupo="tono">${Object.entries(TONOS_CORTOS).map(([k, n]) => `<button type="button" role="radio" aria-checked="${k === tono}" data-valor="${k}">${n}</button>`).join('')}</div>
         <div class="burbuja" id="a-ejemplo" style="font-size:1rem;line-height:1.45" aria-live="polite">${vistaMensaje(ejemploMensaje(tono))}</div>
@@ -181,7 +186,7 @@ V.ajustes = () => {
         <p class="ayuda">Cada vecino acepta los mensajes (Ley 1581 de 2012). Los recordatorios siguen el horario de la Ley 2300 de 2023.</p>
         <p class="ayuda">Fiao es una versión de prueba, sin fines comerciales. No es asesoría legal ni contable. Usted responde por los datos de sus clientes.</p></div></details>
       <button type="button" class="btn-sec peligro" data-accion="borrar">Borrar la libreta de este celular</button>
-      <p class="nota">Fiao · versión 2.1</p>
+      <p class="nota">Fiao · versión 3.0</p>
     </main><div class="abajo">${nav('ajustes')}</div></div>`,
     montar(r) {
       activarGrupos(r, async (g, v) => {
@@ -189,7 +194,9 @@ V.ajustes = () => {
         if (g === 'tono') { t.tono = v; await guardarTienda(t); r.querySelector('#a-ejemplo').innerHTML = vistaMensaje(ejemploMensaje(v)); }
       });
       r.querySelectorAll('[data-interruptor]').forEach(b => b.addEventListener('click', async () => {
-        const k = b.dataset.interruptor, campo = k === 'ocultar' ? 'ocultarAlAbrir' : 'contraste';
+        const k = b.dataset.interruptor;
+        if (k === 'voz') { t.voz = t.voz === false; b.setAttribute('aria-checked', t.voz); await guardarTienda(t); vibrar(10); if (t.voz) Voz.decir('cambios'); else Voz.callar(); return; }
+        const campo = k === 'ocultar' ? 'ocultarAlAbrir' : 'contraste';
         t[campo] = !t[campo]; b.setAttribute('aria-checked', t[campo]); await guardarTienda(t); aplicarPreferencias(); vibrar(10);
       }));
       r.querySelector('[data-accion="copia"]').addEventListener('click', async () => { if (await guardarCopia()) mostrarRuta({ animar: false }); });

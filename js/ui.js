@@ -9,6 +9,7 @@ const ICONOS = {
   buscar: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>',
   ajustes: '<path d="M9.28 4.90 L10.09 2.18 L13.91 2.18 L14.72 4.90 L15.09 5.06 L17.59 3.71 L20.29 6.41 L18.94 8.91 L19.10 9.28 L21.82 10.09 L21.82 13.91 L19.10 14.72 L18.94 15.09 L20.29 17.59 L17.59 20.29 L15.09 18.94 L14.72 19.10 L13.91 21.82 L10.09 21.82 L9.28 19.10 L8.91 18.94 L6.41 20.29 L3.71 17.59 L5.06 15.09 L4.90 14.72 L2.18 13.91 L2.18 10.09 L4.90 9.28 L5.06 8.91 L3.71 6.41 L6.41 3.71 L8.91 5.06Z"/><circle cx="12" cy="12" r="3.2"/>',
   mas: '<path d="M12 5v14M5 12h14"/>',
+  menos: '<path d="M5 12h14"/>',
   ok: '<path d="M20 6L9 17l-5-5"/>',
   atencion: '<path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>',
   reloj: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
@@ -44,7 +45,10 @@ function ic(nombre, tam = 24, grosor = 2) {
 }
 /** El ícono de Fiao: el toldo rayado de la tienda de barrio forma el brazo de la F;
     la moneda naranja es el fiado que se anota y se paga. */
-const LOGO = (t = 56, etiqueta = 'Fiao') => `<svg width="${t}" height="${t}" viewBox="0 0 56 56" ${etiqueta ? `role="img" aria-label="${etiqueta}"` : 'aria-hidden="true"'}><rect width="56" height="56" rx="13" fill="#2346A0"/><path d="M13 14Q13 11 16 11H23V19A5 5 0 0 1 13 19Z" fill="#FFFFFF"/><path d="M23 11H33V19A5 5 0 0 1 23 19Z" fill="#F28C5B"/><path d="M33 11H40Q43 11 43 14V19A5 5 0 0 1 33 19Z" fill="#FFFFFF"/><path d="M18 22V44M18 33H28.5" stroke="#FFFFFF" stroke-width="6.2" stroke-linecap="round" fill="none"/><circle cx="35.5" cy="33" r="4.4" fill="#F28C5B"/></svg>`;
+const LOGO = (t = 56, etiqueta = 'Fiao', clase = '', invertido = false) => {
+  const fondo = invertido ? '#FFFFFF' : '#3346E0', trazo = invertido ? '#3346E0' : '#FFFFFF';
+  return `<svg${clase ? ` class="${clase}"` : ''} width="${t}" height="${t}" viewBox="0 0 56 56" ${etiqueta ? `role="img" aria-label="${etiqueta}"` : 'aria-hidden="true"'}><rect width="56" height="56" rx="13" fill="${fondo}"/><path d="M13 14Q13 11 16 11H23V19A5 5 0 0 1 13 19Z" fill="${trazo}"/><path d="M23 11H33V19A5 5 0 0 1 23 19Z" fill="#FF8A3D"/><path d="M33 11H40Q43 11 43 14V19A5 5 0 0 1 33 19Z" fill="${trazo}"/><path d="M18 22V44M18 33H28.5" stroke="${trazo}" stroke-width="6.2" stroke-linecap="round" fill="none"/><circle cx="35.5" cy="33" r="4.4" fill="#FF8A3D"/></svg>`;
+};
 
 const reducido = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 function vibrar(patron = 12) { try { if (!reducido() && navigator.vibrate) navigator.vibrate(patron); } catch (e) { /* nada */ } }
@@ -54,10 +58,21 @@ const Vista = { oculto: false };
 function monto(n) { return Vista.oculto ? '$ •••••' : pesos(n); }
 
 /* ───── Encabezado ───── */
-function btnAyuda() { return `<button type="button" class="btn-ayuda" data-accion="ayuda">${ic('ayuda', 22, 2.2)}Ayuda</button>`; }
+function btnAyuda(clase = 'btn-ayuda') { return `<button type="button" class="${clase}" data-accion="ayuda" aria-label="Ayuda">${ic('ayuda', 24, 2.2)}</button>`; }
+/** Barra blanca de las pantallas secundarias (formularios, corregir, recuperar…). */
 function barra({ titulo, volver = null, sub = '', derecha = '', ayuda = true, extra = '' }) {
   const v = volver ? `<a class="btn-icono" href="#${volver}" data-volver aria-label="Volver">${ic('volver', 28, 2.4)}</a>` : '';
   return `<header class="barra${volver ? '' : ' sin-volver'}">${v}<div class="titulos"><h1 tabindex="-1">${titulo}</h1>${sub ? `<span class="sub">${sub}</span>` : ''}${extra}</div>${derecha}${ayuda ? btnAyuda() : ''}</header>`;
+}
+/** Cabecera de marca: franjas del toldo en cobalto, su borde ondulado y, si hace falta,
+    la cifra principal de la pantalla en blanco (cuerpo). */
+function cabMarca({ titulo, volver = null, sub = '', botones = '', ayuda = true, extra = '', cuerpo = '' }) {
+  const v = volver ? `<a class="btn-redondo" href="#${volver}" data-volver aria-label="Volver">${ic('volver', 26, 2.4)}</a>` : '';
+  return `<header class="cab-marca"><div class="fila-cab">${v}<div class="titulos"><h1 tabindex="-1">${titulo}</h1>${sub ? `<span class="sub">${sub}</span>` : ''}${extra}</div><div class="botones">${botones}${ayuda ? btnAyuda('btn-redondo') : ''}</div></div>${cuerpo}</header><div class="toldo" aria-hidden="true"></div>`;
+}
+function btnRedondo(icono, etiqueta, { href = null, accion = '', presionado = null, clase = '' } = {}) {
+  if (href) return `<a class="btn-redondo${clase ? ' ' + clase : ''}" href="#${href}" aria-label="${etiqueta}">${ic(icono, 24, 2.2)}</a>`;
+  return `<button type="button" class="btn-redondo${clase ? ' ' + clase : ''}" data-accion="${accion}" aria-label="${etiqueta}"${presionado !== null ? ` aria-pressed="${presionado}"` : ''}>${ic(icono, 24, 2.2)}</button>`;
 }
 function btnIcono(icono, etiqueta, { href = null, accion = '', presionado = null } = {}) {
   if (href) return `<a class="btn-icono" href="#${href}" aria-label="${etiqueta}">${ic(icono, 26)}</a>`;
@@ -73,7 +88,7 @@ function chipAtiende() {
 /* ───── Navegación inferior ───── */
 function nav(activa) {
   const g = cuentaCobrosPendientes();
-  const it = (clave, icono, rotulo, globo = 0) => `<a href="#${clave === 'libreta' ? 'inicio' : clave}"${clave === activa ? ' aria-current="page"' : ''}><span class="ico">${ic(icono, 24, clave === activa ? 2.4 : 2)}${globo ? `<span class="globo" aria-hidden="true">${globo}</span>` : ''}</span>${rotulo}${globo ? `<span class="vh">, ${globo} ${globo === 1 ? 'pendiente' : 'pendientes'}</span>` : ''}</a>`;
+  const it = (clave, icono, rotulo, globo = 0) => `<a href="#${clave === 'libreta' ? 'inicio' : clave}"${clave === activa ? ' aria-current="page"' : ''}><span class="ico">${ic(icono, 24, clave === activa ? 2.4 : 2)}${globo ? `<span class="globo" aria-hidden="true">${globo}</span>` : ''}</span><span class="rot">${rotulo}</span>${globo ? `<span class="vh">, ${globo} ${globo === 1 ? 'pendiente' : 'pendientes'}</span>` : ''}</a>`;
   return `<nav class="nav" aria-label="Secciones">${it('libreta', 'libreta', 'Libreta')}${it('cobros', 'campana', 'Cobros', g)}${it('resumen', 'grafica', 'Resumen')}${it('ajustes', 'ajustes', 'Ajustes')}</nav>`;
 }
 function cuentaCobrosPendientes(hoy = new Date()) {
@@ -114,10 +129,14 @@ function estadoHtml(c, e) {
   if (e.tipo === 'nada') return `<span class="estado ok">${ic('ok', 16, 2.6)}${t}</span>`;
   return `<span class="estado">${t}</span>`;
 }
+/** Cada cliente con un color fijo, calculado de su nombre, para reconocerlo de un vistazo. */
+const TONOS_AVATAR = [228, 262, 292, 335, 18, 38, 152, 172, 198, 95];
+function tonoDe(nombre = '') { let h = 0; for (const ch of normalizar(nombre)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return TONOS_AVATAR[h % TONOS_AVATAR.length]; }
+function avatarHtml(c) { return `<span class="avatar" style="--h:${tonoDe(c.nombre)}" aria-hidden="true">${esc(iniciales(c.nombre))}</span>`; }
 /** Fila de cliente para listas. */
 function filaCliente(c, e, href) {
   const m = e.saldo > 0 ? `<span class="monto">${monto(e.saldo)}</span>` : '';
-  return `<li><a class="fila" href="#${href}"><span class="avatar" aria-hidden="true">${esc(iniciales(c.nombre))}</span><span class="medio"><span class="nombre">${esc(c.nombre)}</span>${estadoHtml(c, e)}</span>${m}</a></li>`;
+  return `<li><a class="fila" href="#${href}">${avatarHtml(c)}<span class="medio"><span class="nombre">${esc(c.nombre)}</span>${estadoHtml(c, e)}</span>${m}</a></li>`;
 }
 
 /* ───── Avisos abajo, con acciones y "Deshacer" ─────
@@ -125,13 +144,17 @@ function filaCliente(c, e, href) {
 let _avisoT = 0;
 function anunciar(texto) { const a = document.getElementById('anuncio'); if (a) { a.textContent = ''; setTimeout(() => { a.textContent = texto; }, 30); } }
 function ocultarAviso() { const a = document.getElementById('aviso'); if (!a) return; clearTimeout(_avisoT); a.classList.remove('ver'); a.inert = true; }
-function avisar(texto, { acciones = [], ms = null, icono = 'ok' } = {}) {
+function avisar(texto, { acciones = [], ms = null, icono = 'ok', voz = null } = {}) {
   const a = document.getElementById('aviso'); if (!a) return;
   anunciar(texto + (acciones.length ? `. Opciones: ${acciones.map(x => x.texto).join(', ')}.` : ''));
+  if (typeof Voz !== 'undefined' && voz !== false) Voz.decir(voz || Voz.claveDe(texto));
   a.innerHTML = `<div class="linea"><span class="texto">${icono ? ic(icono, 22, 2.6) : ''}<span>${esc(texto)}</span></span><button type="button" class="cerrar" data-i="x" aria-label="Cerrar aviso">${ic('cerrar', 20, 2.4)}</button></div>
     ${acciones.length ? `<div class="acciones">${acciones.map((x, i) => `<button type="button" data-i="${i}"${x.fuerte ? ' class="fuerte"' : ''}>${esc(x.texto)}</button>`).join('')}</div>` : ''}`;
-  const abajo = document.querySelector('#app .abajo');
-  a.style.bottom = abajo ? `calc(${Math.round(abajo.getBoundingClientRect().height) + 12}px)` : 'calc(1rem + env(safe-area-inset-bottom, 0px))';
+  /* Nunca encima del menú ni de los botones de abajo de la pantalla. */
+  const abajo = document.querySelector('#app .abajo'), pie = document.querySelector('#app .pie');
+  const rp = pie && pie.getBoundingClientRect();
+  a.style.bottom = abajo ? `calc(${Math.round(abajo.getBoundingClientRect().height) + 12}px)`
+    : rp && rp.height && rp.top < innerHeight ? `${Math.round(innerHeight - rp.top) + 8}px` : 'calc(1rem + env(safe-area-inset-bottom, 0px))';
   a.inert = false; a.classList.add('ver');
   a.querySelectorAll('[data-i]').forEach(b => b.addEventListener('click', () => { ocultarAviso(); const x = acciones[+b.dataset.i]; if (x) x.fn(); }));
   const dura = ms ?? (acciones.length ? 8000 : 3200);
@@ -202,7 +225,13 @@ function activarCampoPesos(input, alCambiar = () => {}) {
 }
 
 /* ───── Movimiento y celebración (todo se apaga con "reducir movimiento") ───── */
-function temblar(el) { if (!el) return; vibrar([20, 40, 20]); if (reducido()) return; el.classList.remove('tiembla'); void el.offsetWidth; el.classList.add('tiembla'); }
+function temblar(el) {
+  if (!el) return; vibrar([20, 40, 20]);
+  /* La voz dice el error que acaba de aparecer junto al campo. */
+  const err = typeof Voz !== 'undefined' && (el.closest('form, .cuerpo, main') || document).querySelector('.error:not([hidden])');
+  if (err) Voz.decirTexto(err.textContent);
+  if (reducido()) return; el.classList.remove('tiembla'); void el.offsetWidth; el.classList.add('tiembla');
+}
 /** La cifra cuenta desde el valor anterior hasta el nuevo (0,6 s). */
 function contar(el, desde, hasta) {
   if (!el || Vista.oculto || reducido() || desde === hasta) return;
@@ -214,7 +243,7 @@ function celebrar() {
   vibrar([30, 60, 30]);
   if (reducido()) return;
   const capa = document.createElement('div'); capa.className = 'celebracion'; capa.setAttribute('aria-hidden', 'true');
-  const colores = ['#2346A0', '#F28C5B', '#17703F', '#F2C94C', '#5B8DEF'];
+  const colores = ['#3346E0', '#FF8A3D', '#127A45', '#FFC233', '#8C9BFF'];
   for (let i = 0; i < 22; i++) {
     const p = document.createElement('i'); const ang = (Math.PI * 2 * i) / 22 + Math.random() * 0.4; const r = 120 + Math.random() * 140;
     p.style.background = colores[i % colores.length];
@@ -237,7 +266,7 @@ const POR_QUE = {
 function porQue(clave, texto = '¿Por qué?') { return `<button type="button" class="por-que" data-porque="${clave}">${ic('ayuda', 18, 2.2)}${texto}</button>`; }
 function abrirPorQue(clave) {
   const [t, x] = POR_QUE[clave] || []; if (!t) return;
-  abrirHoja(`${cabHoja(t)}<p style="font-size:1.125rem;line-height:1.6">${x}</p>${botonEscuchar(`${t} ${x}`)}<button type="button" class="btn" data-cerrar>Entendido</button>`, montarEscuchar);
+  abrirHoja(`${cabHoja(t)}<p style="font-size:1.125rem;line-height:1.6">${x}</p>${botonEscuchar(`${t} ${x}`, `porque-${clave}`)}<button type="button" class="btn" data-cerrar>Entendido</button>`, montarEscuchar);
 }
 
 /* ───── Ayuda: corta, por pantalla, con "Escuchar" ───── */
@@ -260,10 +289,14 @@ const AYUDA = {
   mostrar: ['Mostrar la cuenta', ['Gire el celular hacia el vecino.', 'Si el vecino está de acuerdo, toque el botón de abajo.']],
   corregir: ['Corregir', ['Escriba el monto correcto y guarde.', 'El vecino verá qué cambió. Nada se borra.']]
 };
-function botonEscuchar(texto) { return 'speechSynthesis' in window ? `<button type="button" class="btn-sec" data-escuchar="${esc(texto)}">${ic('altavoz', 22, 2.2)}Escuchar</button>` : ''; }
+function botonEscuchar(texto, clave = '') { return 'speechSynthesis' in window || (typeof Voz !== 'undefined' && clave) ? `<button type="button" class="btn-sec" data-escuchar="${esc(texto)}" data-voz="${esc(clave)}">${ic('altavoz', 22, 2.2)}Escuchar</button>` : ''; }
+/** «Escuchar»: la frase grabada con la voz de Fiao; si no hay grabación, la voz del celular. */
 function montarEscuchar(d) {
-  d.querySelector('[data-escuchar]')?.addEventListener('click', ev => {
+  d.querySelector('[data-escuchar]')?.addEventListener('click', async ev => {
     const b = ev.currentTarget;
+    d.addEventListener('close', () => { if (typeof Voz !== 'undefined') Voz.callar(); }, { once: true });
+    if (typeof Voz !== 'undefined' && b.dataset.voz && await Voz.decir(b.dataset.voz, { forzar: true })) return;
+    if (!('speechSynthesis' in window)) return;
     try {
       speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(b.dataset.escuchar); u.lang = 'es-CO'; u.rate = 0.95;
@@ -275,11 +308,11 @@ function montarEscuchar(d) {
   });
 }
 function abrirAyuda() {
-  const ruta = location.hash.slice(1).split('-')[0] || 'inicio';
-  const [t, lineas] = AYUDA[ruta] || AYUDA.inicio;
+  const r0 = location.hash.slice(1).split('-')[0] || 'inicio', ruta = AYUDA[r0] ? r0 : 'inicio';
+  const [t, lineas] = AYUDA[ruta];
   abrirHoja(`${cabHoja(`Ayuda · ${t}`)}
     <ul style="margin:0;padding-left:1.25rem;display:flex;flex-direction:column;gap:.5rem;font-size:1.125rem;line-height:1.5">${lineas.map(l => `<li>${l}</li>`).join('')}</ul>
-    ${botonEscuchar(lineas.join(' '))}
+    ${botonEscuchar(lineas.join(' '), `ayuda-${ruta}`)}
     <details class="mas"><summary>${ic('libreta', 22)}Palabras de Fiao</summary><div class="interior"><dl style="margin:0;display:flex;flex-direction:column;gap:.5rem;font-size:1.0625rem">${GLOSARIO.map(([p, d]) => `<div><dt style="display:inline;font-weight:600">${p}:</dt> <dd style="display:inline;margin:0">${d}</dd></div>`).join('')}</dl></div></details>
     <a class="btn-link" href="#guia">Ver cómo funciona Fiao</a>`, montarEscuchar, { nombre: 'ayuda' });
 }

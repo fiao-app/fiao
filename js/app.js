@@ -107,6 +107,13 @@ async function arrancar() {
   _rutaAnterior = location.hash.slice(1);
   mostrarRuta();
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    // Si ya había una versión guardada y llega otra, se ofrece actualizar en vez de esperar a la próxima apertura.
+    const habia = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!habia || Vista.avisoVersion) return;
+      Vista.avisoVersion = true;
+      avisar('Hay una versión nueva de Fiao.', { icono: 'girar', ms: 15000, acciones: [{ texto: 'Actualizar', fuerte: true, fn: () => location.reload() }] });
+    });
     navigator.serviceWorker.register('sw.js').catch(() => { /* sin modo sin internet, la app igual funciona */ });
   }
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
