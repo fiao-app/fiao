@@ -251,7 +251,8 @@ function cuentaParaEnlace(c) {
     ant,
     m: ult.map(m => [m.fecha, m.tipo === 'pago' ? 'p' : m.tipo === 'saldo' ? 's' : 'f', m.monto, m.tipo === 'pago' ? (MEDIOS[m.medio] || '') : (m.que || ''),
       m.correcciones && m.correcciones.length ? m.correcciones[0].de : null, m.anulado ? 1 : 0]),
-    b: t.llave || '', q: t.nequi || '', w: t.whatsapp || '', e: t.demo ? 1 : 0
+    b: t.llave || '', q: t.nequi || '', w: t.whatsapp || '', e: t.demo ? 1 : 0,
+    i: c.id // para que el aviso de pago del vecino abra esta cuenta en Fiao
   };
 }
 function urlBase() { return location.href.replace(/#.*$/, '').replace(/[^/]*$/, ''); }

@@ -269,9 +269,12 @@ V.inicio = () => {
       ${copiaVieja ? `<div class="banda vieja">${ic('reloj', 20)}<span>${dc === null ? 'Aún no guarda una copia de su libreta.' : `Su última copia fue hace ${dc} días.`}</span><button type="button" class="btn-mini sec" data-accion="copia">Guardar</button></div>` : ''}
       ${avisosHoy}
       ${pasosHtml()}
-      <div class="buscador"><label for="buscar" class="vh">Buscar cliente</label>${ic('buscar', 24)}<input class="entrada" id="buscar" type="search" placeholder="Buscar cliente" autocomplete="off"></div>
+      <div class="buscador"><label for="buscar" class="vh">Buscar cliente por nombre o celular</label>${ic('buscar', 24)}<input class="entrada" id="buscar" type="search" placeholder="Buscar por nombre o celular" autocomplete="off"></div>
+      ${lista.length ? consejo('deslizar', 'Deslice un cliente a la izquierda para borrarlo.') : ''}
       <div class="encabezado-lista"><h2 class="titulo-seccion" id="t-clientes">Clientes</h2><span id="cuantos">${lista.length}</span></div>
-      <ul class="lista" id="lista-clientes" aria-labelledby="t-clientes">${lista.map(({ c, e }) => filaCliente(c, e, `cliente-${c.id}`)).join('')}</ul>
+      <ul class="lista lista-borrable" id="lista-clientes" aria-labelledby="t-clientes">${lista.map(({ c, e }) => filaCliente(c, e, `cliente-${c.id}`)
+        .replace('<a class="fila"', '<a class="fila" draggable="false"')
+        .replace(/<\/li>$/, `<button type="button" class="fila-borrar" data-borrar="${esc(c.id)}" aria-label="Borrar a ${esc(c.nombre)}">${ic('basura', 24, 2.2)}<span>Borrar</span></button></li>`)).join('')}</ul>
       <p class="vacio" id="sin-resultados" hidden></p>
       <a class="btn-link" href="#nuevo">${ic('mas', 20, 2.4)}Agregar cliente</a>
     </main>${pie}</div>`,
@@ -281,16 +284,107 @@ V.inicio = () => {
       if (typeof Vista.ultimoTotal === 'number' && Vista.ultimoTotal !== total) contar(cifra, Vista.ultimoTotal, total);
       Vista.ultimoTotal = total;
       const b = r.querySelector('#buscar'), ul = r.querySelector('#lista-clientes'), sin = r.querySelector('#sin-resultados'), cuantos = r.querySelector('#cuantos');
+      /* Se busca por nombre o, si solo escribe números, por celular (sin importar espacios ni el +57). */
+      const filas = [...ul.children];
+      filas.forEach((li, i) => {
+        const c = lista[i].c; if (!c.cel) return;
+        const x = document.createElement('span'); x.className = 'cel-hallado'; x.hidden = true; li.querySelector('.medio').appendChild(x);
+      });
       b.addEventListener('input', () => {
-        const q = normalizar(b.value); let n = 0;
-        ul.querySelectorAll('li').forEach((li, i) => { const si = !q || normalizar(lista[i].c.nombre).includes(q); li.hidden = !si; if (si) n++; });
+        const q = normalizar(b.value), dig = b.value.replace(/\D/g, '');
+        const porNumero = dig.length > 0 && !/\p{L}/u.test(q);
+        const qd = porNumero && dig.startsWith('57') && (dig.length > 10 || /^\s*\+/.test(b.value)) ? dig.slice(2) : dig;
+        let n = 0;
+        filas.forEach((li, i) => {
+          const c = lista[i].c, cel = celDigitos(c.cel), x = li.querySelector('.cel-hallado');
+          const si = !q || (porNumero ? !!cel && cel.includes(qd) : normalizar(c.nombre).includes(q));
+          li.hidden = !si; if (si) n++;
+          if (x) { x.hidden = !(si && porNumero); if (si && porNumero) x.innerHTML = `${ic('celular', 18, 2.2)}<span>${celResaltado(cel, qd)}</span>`; }
+        });
         cuantos.textContent = q ? `${n} de ${lista.length}` : lista.length;
-        sin.hidden = n > 0; sin.innerHTML = n ? '' : `Nadie se llama «${esc(b.value)}». <a href="#nuevo" data-prefill>Agregarlo</a>`;
+        sin.hidden = n > 0;
+        sin.innerHTML = n ? '' : porNumero ? `Nadie tiene un celular con «${esc(b.value.trim())}».` : `Nadie se llama «${esc(b.value)}». <a href="#nuevo" data-prefill>Agregarlo</a>`;
       });
       sin.addEventListener('click', ev => { if (ev.target.closest('[data-prefill]')) Vista.prefill = b.value.trim(); });
+      /* Deslizar para borrar: la basurita que aparece abre la confirmación. */
+      Deslizar.abierta = null;
+      ul.addEventListener('click', ev => {
+        const bt = ev.target.closest('.fila-borrar'); if (!bt) return;
+        const c = cliente(bt.dataset.borrar), li = bt.closest('li'); if (!c) return;
+        pedirBorrarCliente(c, 'libreta', () => Deslizar.cerrar(li));
+      });
     }
   };
 };
+/* ───── Deslizar un cliente a la izquierda (Libreta) ─────
+   Solo muestra la basurita; borrar siempre pide confirmar. Vertical sigue siendo para bajar la lista. */
+const Deslizar = {
+  abierta: null, toque: null, suprimir: false,
+  ancho(li) { return li.querySelector('.fila-borrar').offsetWidth; },
+  mover(li, x) { li.querySelector('.fila').style.transform = x ? `translateX(${x}px)` : ''; },
+  abrir(li) {
+    if (this.abierta && this.abierta !== li) this.cerrar(this.abierta);
+    li.classList.remove('deslizando', 'cerrando'); li.classList.add('abierta'); this.mover(li, -this.ancho(li)); this.abierta = li;
+  },
+  cerrar(li = this.abierta) {
+    if (!li) return;
+    const estaba = li.classList.contains('abierta') || li.classList.contains('deslizando');
+    li.classList.remove('abierta', 'deslizando'); this.mover(li, 0);
+    if (this.abierta === li) this.abierta = null;
+    if (!estaba || reducido()) return;
+    /* La basurita sigue visible mientras la fila vuelve a su sitio. */
+    li.classList.add('cerrando'); clearTimeout(li._t); li._t = setTimeout(() => li.classList.remove('cerrando'), 260);
+  }
+};
+document.addEventListener('pointerdown', ev => {
+  const li = ev.target.closest('.lista-borrable > li');
+  if (Deslizar.abierta && li !== Deslizar.abierta) {
+    /* Tocar otra fila con una abierta: solo se cierra, no se entra a la cuenta. */
+    if (li) Deslizar.suprimir = true;
+    Deslizar.cerrar();
+  }
+  Deslizar.toque = null;
+  if (!li || (ev.target.closest('.fila-borrar') && li !== Deslizar.abierta) || (ev.pointerType === 'mouse' && ev.button !== 0)) return;
+  Deslizar.toque = { li, id: ev.pointerId, x: ev.clientX, y: ev.clientY, base: li === Deslizar.abierta ? -Deslizar.ancho(li) : 0, dx: 0, activo: false };
+}, true);
+document.addEventListener('pointermove', ev => {
+  const t = Deslizar.toque; if (!t || ev.pointerId !== t.id) return;
+  const dx = ev.clientX - t.x, dy = ev.clientY - t.y;
+  if (!t.activo) {
+    if (Math.abs(dy) > 10 && Math.abs(dy) >= Math.abs(dx)) { Deslizar.toque = null; return; }
+    if (Math.abs(dx) < 10 || Math.abs(dx) < Math.abs(dy) * 1.4) return;
+    if (t.base === 0 && dx > 0) { Deslizar.toque = null; return; }
+    t.activo = true; t.ancho = Deslizar.ancho(t.li) || 88;
+    if (Deslizar.abierta && Deslizar.abierta !== t.li) Deslizar.cerrar();
+    t.li.classList.remove('cerrando'); t.li.classList.add('deslizando');
+    try { t.li.setPointerCapture(ev.pointerId); } catch (e) { /* nada */ }
+  }
+  t.dx = dx;
+  let x = t.base + dx;
+  if (x > 0) x = 0;
+  if (x < -t.ancho) x = -t.ancho + (x + t.ancho) * 0.3;
+  Deslizar.mover(t.li, x);
+}, { passive: true });
+function _soltarDeslizar(ev) {
+  const t = Deslizar.toque; if (!t || ev.pointerId !== t.id) return;
+  Deslizar.toque = null;
+  if (!t.activo) return;
+  Deslizar.suprimir = true; setTimeout(() => { Deslizar.suprimir = false; }, 400);
+  if (ev.type !== 'pointercancel' && t.base + t.dx < -t.ancho / 2) Deslizar.abrir(t.li); else Deslizar.cerrar(t.li);
+}
+document.addEventListener('pointerup', _soltarDeslizar, true);
+document.addEventListener('pointercancel', _soltarDeslizar, true);
+/* Antes que cualquier otro: un toque que fue deslizar (o que cierra una fila abierta) no abre la cuenta. */
+window.addEventListener('click', ev => {
+  const enLista = ev.target.closest && ev.target.closest('.lista-borrable');
+  if (!enLista) { Deslizar.suprimir = false; return; }
+  if (Deslizar.suprimir) { ev.preventDefault(); ev.stopPropagation(); Deslizar.suprimir = false; return; }
+  if (ev.target.closest('.fila-borrar')) return;
+  const li = ev.target.closest('.lista-borrable > li.abierta');
+  if (li) { ev.preventDefault(); ev.stopPropagation(); Deslizar.cerrar(li); }
+}, true);
+window.addEventListener('scroll', () => { if (Deslizar.abierta && !Deslizar.toque) Deslizar.cerrar(); }, { passive: true });
+
 /** Atajo del ícono instalado ("Anotar fiado"): abre la libreta con la hoja de anotar. */
 V.anotar = () => {
   const v = V.inicio();

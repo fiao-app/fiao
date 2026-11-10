@@ -56,6 +56,12 @@ Correcciones de la evaluación final (heurística, crítica de diseño, usabilid
 - **Dos ventanas sincronizadas.** Si Fiao está abierta en la app instalada y en el navegador, lo que se anota en una aparece en la otra.
 - **iPhone:** si Fiao se abre en Safari sin instalar, una banda explica cómo agregarla a la pantalla de inicio, porque Safari puede borrar los datos de los sitios que no se abren en días.
 
+## Borrar clientes, aviso de pago y búsqueda por celular (3.3)
+
+- **Borrar un cliente.** Con la basurita de su ficha o deslizándolo a la izquierda en la Libreta. Deslizar solo muestra el botón; borrar siempre pregunta, y si el cliente debe, pregunta otra vez mostrando cuánto («No borrar» es la opción principal). Después quedan unos segundos para «Deshacer», que lo devuelve con todo su historial. «Nada se borra» sigue valiendo para las anotaciones: lo que se borra es el cliente entero, por ejemplo uno creado por error. El enlace que el vecino ya tiene no cambia, porque su cuenta viaja dentro del enlace.
+- **Aviso de pago con enlace.** Cuando el vecino avisa «Ya pagué», su mensaje trae «Confirmar en Fiao»: el enlace abre la cuenta de ese cliente con el aviso arriba («Luz Marina dice que le pagó $15.000 por Nequi») y pide revisar en Nequi o en el banco que la plata llegó. «Ya llegó: anotar pago» abre Pagó con el monto y el medio puestos; Fiao nunca lo anota por su cuenta. Si ya hay un pago igual de los últimos días, lo advierte. En iPhone con Fiao en la pantalla de inicio, WhatsApp abre el enlace en Safari (que guarda otra libreta): Fiao lo explica en vez de quedar en blanco.
+- **Buscar por nombre o celular.** Si se escriben números, la Libreta busca en los celulares (sin importar espacios ni el +57) y muestra el número con la parte encontrada resaltada.
+
 ## Decisiones que sostienen la confianza
 
 - **Los datos viven en el celular.** La libreta se guarda en el navegador (IndexedDB). No hay servidor, cuentas, contraseñas, cookies ni herramientas de medición.

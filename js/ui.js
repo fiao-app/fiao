@@ -34,6 +34,7 @@ const ICONOS = {
   girar: '<path d="M4 12a8 8 0 0 1 14-5.3L20 9"/><path d="M20 4v5h-5"/><path d="M20 12a8 8 0 0 1-14 5.3L4 15"/><path d="M4 20v-5h5"/>',
   cerrar: '<path d="M18 6L6 18M6 6l12 12"/>',
   borrar: '<path d="M21 5H9l-6 7 6 7h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1z"/><path d="M17 9l-5 6M12 9l5 6"/>',
+  basura: '<path d="M4 6h16"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/><path d="M6 6l1 13.1a2 2 0 0 0 2 1.9h6a2 2 0 0 0 2-1.9L18 6"/><path d="M10 10.5v6M14 10.5v6"/>',
   tienda: '<path d="M3 9l1.5-5h15L21 9"/><path d="M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0"/><path d="M5 12v8h14v-8"/><path d="M10 20v-5h4v5"/>',
   ayuda: '<circle cx="12" cy="12" r="9.5"/><path d="M9.3 9.3a2.8 2.8 0 0 1 5.4 1c0 1.9-2.7 2.4-2.7 4"/><path d="M12 17.6h.01"/>',
   altavoz: '<path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/>',
@@ -82,9 +83,9 @@ function barra({ titulo, volver = null, sub = '', derecha = '', ayuda = true, ex
 }
 /** Cabecera de marca: franjas del toldo en cobalto, su borde ondulado y, si hace falta,
     la cifra principal de la pantalla en blanco (cuerpo). */
-function cabMarca({ titulo, volver = null, sub = '', botones = '', ayuda = true, extra = '', cuerpo = '' }) {
+function cabMarca({ titulo, volver = null, sub = '', botones = '', ayuda = true, extra = '', cuerpo = '', tituloAbajo = false }) {
   const v = volver ? `<a class="btn-redondo" href="#${volver}" data-volver aria-label="Volver">${ic('volver', 26, 2.4)}</a>` : '';
-  return `<header class="cab-marca"><div class="fila-cab">${v}<div class="titulos"><h1 tabindex="-1">${titulo}</h1>${sub ? `<span class="sub">${sub}</span>` : ''}${extra}</div><div class="botones">${botones}${ayuda ? btnAyuda('btn-redondo') : ''}</div></div>${cuerpo}</header><div class="toldo" aria-hidden="true"></div>`;
+  return `<header class="cab-marca${tituloAbajo ? ' titulo-abajo' : ''}"><div class="fila-cab">${v}<div class="titulos"><h1 tabindex="-1">${titulo}</h1>${sub ? `<span class="sub">${sub}</span>` : ''}${extra}</div><div class="botones">${botones}${ayuda ? btnAyuda('btn-redondo') : ''}</div></div>${cuerpo}</header><div class="toldo" aria-hidden="true"></div>`;
 }
 function btnRedondo(icono, etiqueta, { href = null, accion = '', presionado = null, clase = '' } = {}) {
   if (href) return `<a class="btn-redondo${clase ? ' ' + clase : ''}" href="#${href}" aria-label="${etiqueta}">${ic(icono, 24, 2.2)}</a>`;
@@ -304,8 +305,8 @@ const GLOSARIO = [
   ['En la calle', 'lo que le deben entre todos.']
 ];
 const AYUDA = {
-  inicio: ['Libreta', ['Arriba ve cuánto le deben entre todos.', 'Primero salen los atrasados y los que pagan hoy.', 'Toque un nombre para ver su cuenta.', 'Con «Anotar fiado» anota en segundos.']],
-  cliente: ['Cuenta del cliente', ['Arriba ve cuánto debe y su cupo.', '«Anotar» suma un fiado. «Pagó» registra un pago.', 'Toque una línea del historial para ver el detalle o corregirla.']],
+  inicio: ['Libreta', ['Arriba ve cuánto le deben entre todos.', 'Primero salen los atrasados y los que pagan hoy.', 'Toque un nombre para ver su cuenta. Puede buscarlo por nombre o por celular.', 'Para borrar un cliente, deslícelo a la izquierda.', 'Con «Anotar fiado» anota en segundos.']],
+  cliente: ['Cuenta del cliente', ['Arriba ve cuánto debe y su cupo.', '«Anotar» suma un fiado. «Pagó» registra un pago.', 'Toque una línea del historial para ver el detalle o corregirla.', 'La basurita de arriba borra al cliente. Antes de borrar, Fiao le pregunta.']],
   cobros: ['Cobros', ['Aquí salen quienes se atrasaron o pagan hoy.', '«Recordar» abre WhatsApp con el mensaje listo.', 'Solo se puede en el horario que permite la ley.']],
   resumen: ['Resumen', ['Vea cuánto le deben, cuánto recuperó y cuánto fió este mes.', 'Abajo ve a quién conviene revisar.']],
   ajustes: ['Ajustes', ['Cambie el tamaño de la letra, la apariencia y el movimiento, y cómo suenan sus mensajes.', 'Guarde una copia de su libreta cada semana.']],

@@ -191,6 +191,10 @@ html[data-movimiento="reducido"]::view-transition-old(*), html[data-movimiento="
 .cab-marca .sub { font-size: 1rem; line-height: 1.375rem; color: var(--azul-claro-texto); }
 .cab-marca a:not(.btn-redondo), .cab-marca .por-que { color: var(--blanco); }
 .cab-marca .botones { display: flex; gap: 0.5rem; flex-shrink: 0; }
+/* Ficha del cliente: tres botones arriba y el nombre debajo, entero, sin partirse. */
+.cab-marca.titulo-abajo .fila-cab { flex-wrap: wrap; row-gap: 0.75rem; }
+.cab-marca.titulo-abajo .titulos { order: 3; flex-basis: 100%; padding-top: 0; }
+.cab-marca.titulo-abajo .botones { margin-left: auto; }
 .btn-redondo { width: 3rem; height: 3rem; flex-shrink: 0; border: none; border-radius: 50%; background: rgba(255, 255, 255, 0.16); color: var(--blanco); display: inline-flex; align-items: center; justify-content: center; padding: 0; text-decoration: none; transition: background var(--rapido), transform var(--rapido) var(--suave); }
 .btn-redondo:hover { background: rgba(255, 255, 255, 0.26); }
 .btn-redondo:active { transform: scale(0.92); }
@@ -341,6 +345,24 @@ a.fila:active, button.fila:active { background: var(--azul-fondo); }
 .fila .nombre { font-size: 1.125rem; line-height: 1.4375rem; font-weight: 600; overflow-wrap: anywhere; }
 .fila .monto { font-family: var(--letra-titulo); font-size: 1.125rem; line-height: 1.5rem; font-weight: 700; white-space: nowrap; }
 .fila .detalle { font-size: 1rem; line-height: 1.3125rem; color: var(--gris); }
+/* Libreta: al deslizar un cliente a la izquierda aparece «Borrar». En reposo no se ve nada. */
+.lista-borrable > li { position: relative; touch-action: pan-y pinch-zoom; }
+.lista-borrable .fila { position: relative; z-index: 1; -webkit-user-select: none; user-select: none; }
+.lista-borrable > li.deslizando .fila { transition: none; }
+.fila-borrar { position: absolute; top: 0; right: 0; bottom: 0; width: 5.5rem; border: none; padding: 0; background: var(--alerta); color: #FFFFFF; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.25rem; font-size: 0.9375rem; line-height: 1.25rem; font-weight: 600; visibility: hidden; }
+.lista-borrable > li:is(.deslizando, .abierta, .cerrando) .fila-borrar { visibility: visible; }
+.fila .cel-hallado { display: inline-flex; align-items: center; gap: 0.375rem; font-size: 1rem; line-height: 1.3125rem; color: var(--gris); font-variant-numeric: tabular-nums; }
+.fila .cel-hallado[hidden] { display: none; }
+.fila .cel-hallado b { color: var(--tinta); font-weight: 700; }
+.fila .cel-hallado > span { white-space: nowrap; }
+/* Aviso de pago del vecino, arriba de su cuenta: lo que dice, y que usted revise antes de anotar. */
+.aviso-pago { display: flex; flex-direction: column; gap: 0.75rem; padding: 1rem; border-radius: 1.375rem; background: var(--verde-fondo); box-shadow: var(--sombra); }
+.aviso-pago .ap-cab { display: flex; gap: 0.625rem; align-items: flex-start; }
+.aviso-pago .ap-cab > svg { flex-shrink: 0; margin-top: 0.125rem; color: var(--verde); }
+.aviso-pago h2 { font-size: 1.25rem; line-height: 1.625rem; }
+.aviso-pago p { font-size: 1.0625rem; line-height: 1.5rem; }
+.aviso-pago .ap-nota { display: flex; gap: 0.5rem; align-items: flex-start; color: var(--alerta-texto); }
+.aviso-pago .ap-nota > svg { flex-shrink: 0; margin-top: 0.125rem; }
 /* Cada cliente con su color, calculado de su nombre (--h). */
 .avatar { --h: 228; width: 2.75rem; height: 2.75rem; flex-shrink: 0; border-radius: 50%; background: hsl(var(--h) 70% 92%); color: hsl(var(--h) 60% 28%); font-family: var(--letra-titulo); font-size: 1rem; font-weight: 700; display: flex; align-items: center; justify-content: center; }
 .estado { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 1rem; line-height: 1.3125rem; color: var(--gris); }
@@ -641,6 +663,7 @@ html[data-tema="tinta"] .tira-dias button[aria-checked="true"] .no { color: #FFF
 /* Avisos y consejos: papel con borde */
 html[data-tema="tinta"] .info, html[data-tema="tinta"] .consejo, html[data-tema="tinta"] .banda { background: #FFFFFF; box-shadow: inset 0 0 0 2px #1D3BA8; }
 html[data-tema="tinta"] .info.atencion, html[data-tema="tinta"] .banda.demo, html[data-tema="tinta"] .banda.vieja { box-shadow: inset 0 0 0 2px #111111; }
+html[data-tema="tinta"] .aviso-pago { background: #FFFFFF; box-shadow: inset 0 0 0 2px #1D3BA8; }
 html[data-tema="tinta"] .banda.vieja { background: #111111; color: #FFFFFF; }
 html[data-tema="tinta"] .banda.vieja .btn-mini.sec { background: #FFFFFF; color: #111111; box-shadow: none; }
 html[data-tema="tinta"] .consejo button { box-shadow: inset 0 0 0 2px #111111; }

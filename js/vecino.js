@@ -86,7 +86,9 @@ function montarVecino(app, k) {
   const actualizar = () => {
     const v = leerPesos(inp.value), medio = leer('medio');
     const por = medio === 'breb' ? 'por Bre-B' : medio === 'nequi' ? 'por Nequi' : '';
-    const texto = `Hola, le escribe ${k.n}. Le acabo de pagar ${pesos(v)}${por ? ' ' + por : ''} a mi cuenta en ${k.t}. ¿Me confirma, por favor?`;
+    /* Con el enlace, la tienda abre la cuenta en Fiao de un toque (en los enlaces nuevos, que traen quién es). */
+    const confirmar = k.i ? `\nConfirmar en Fiao: ${location.href.replace(/#.*$/, '').replace(/c\/(index\.html)?$/, '')}#pago-${encodeURIComponent(k.i)}-${v}.${medio}` : '';
+    const texto = `Hola, le escribe ${k.n}. Le acabo de pagar ${pesos(v)}${por ? ' ' + por : ''} a mi cuenta en ${k.t}. ¿Me confirma, por favor?${confirmar}`;
     env.href = enlaceWhatsApp(k.w || '', texto);
   };
   ya.addEventListener('click', () => { caja.hidden = !caja.hidden; ya.setAttribute('aria-expanded', !caja.hidden); if (!caja.hidden) inp.focus(); });

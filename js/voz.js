@@ -21,6 +21,9 @@ const VOZ = {
   'anulada': 'Anotación anulada.',
   'visto': 'Quedó registrado que lo vio.',
   'cupo': 'Esta compra pasa el cupo. Usted decide.',
+  'cliente-borrado': 'Cliente borrado. Si fue un error, toque Deshacer.',
+  'borrar-debe': 'Este cliente todavía le debe. Si lo borra, pierde el registro de esa plata.',
+  'aviso-pago': 'Antes de anotar el pago, revise que la plata sí le llegó.',
   // WhatsApp
   'recibo-wa': 'Abrimos WhatsApp con el recibo listo.',
   'recordatorio-wa': 'Abrimos WhatsApp con el recordatorio.',
@@ -72,7 +75,7 @@ for (const [k, [t, x]] of Object.entries(POR_QUE)) VOZ[`porque-${k}`] = `${t} ${
 /** Texto que se ve en pantalla → clave de la frase grabada (montos y nombres no se dicen). */
 const VOZ_REGLAS = [
   [/^\$[\d.]+ a .+\. Va en /, 'anotado'], [/^Pago de \$/, 'pago'], [/ quedó al día\.$/, 'al-dia'],
-  [/^Listo, se deshizo\.$/, 'deshecho'], [/^Ya no se puede deshacer/, 'no-deshacer'], [/ quedó en su libreta\.$/, 'cliente-nuevo'],
+  [/^Listo, se deshizo\.$/, 'deshecho'], [/^Ya no se puede deshacer/, 'no-deshacer'], [/ quedó en su libreta\.$/, 'cliente-nuevo'], [/^Borró a .+ de su libreta\.$/, 'cliente-borrado'],
   [/^Cambios guardados\.$/, 'cambios'], [/^Corrección guardada\.$/, 'correccion'], [/^Anotación anulada\.$/, 'anulada'],
   [/^Quedó registrado que /, 'visto'], [/^Abrimos WhatsApp con el recibo/, 'recibo-wa'], [/^Abrimos WhatsApp con el recordatorio/, 'recordatorio-wa'],
   [/^Abrimos WhatsApp con su cuenta/, 'cuenta-wa'], [/^Abrimos WhatsApp con el resumen/, 'resumen-wa'], [/ aceptó sus recibos\.$/, 'permiso-si'],

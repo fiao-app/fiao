@@ -280,10 +280,11 @@ function pedirDatosPago(sigue) {
 }
 
 /* ═════ Hoja "Pagó" ═════ */
-function abrirPago(c) {
+function abrirPago(c, pre = {}) {
   const saldo = saldoDe(c.id); if (saldo <= 0) return;
   const t = tienda(), n = esc(nombreCorto(c.nombre));
-  const est = { medio: 'efectivo', monto: 0 };
+  /* Desde el aviso de pago del vecino llegan el monto y el medio ya puestos. */
+  const est = { medio: pre.medio || 'efectivo', monto: pre.monto > 0 && pre.monto < saldo ? pre.monto : 0 };
   const medios = () => `<div class="chips" role="radiogroup" aria-label="¿Cómo pagó?" data-grupo="medio">${Object.entries({ efectivo: 'Efectivo', nequi: 'Nequi', breb: 'Bre-B', otro: 'Otro' }).map(([k, x]) => chip(x, k === est.medio, `data-valor="${k}"`, 'radio')).join('')}</div>`;
   const guardar = async (v, nuevaFecha = null) => {
     const m = await registrarPago({ c, monto: v, medio: est.medio, recibio: t.atiendeAhora, nuevaFecha });
@@ -392,7 +393,7 @@ function abrirPago(c) {
     });
   };
   abrirHoja('', () => {}, { nombre: 'pago' });
-  pasoTodo();
+  if (est.monto) pasoParte(); else pasoTodo();
 }
 
 /* ═════ Mostrárselo al vecino en la tienda ═════ */
@@ -461,6 +462,91 @@ function filaMov(m) {
     <div class="mov-detalle" id="d-${m.id}" hidden><span>${det.join(' · ')}</span>${corr}${anul}${m.visto ? `<span>${ic('ok', 16, 2.6)} El vecino lo vio.</span>` : ''}${m.enviado ? `<span>${ic('enviar', 16, 2.2)} Recibo enviado.</span>` : ''}
       ${m.anulado ? '' : `<div class="fila-botones"><a class="btn-mini sec" href="#corregir-${m.id}">${ic('lapiz', 18, 2.2)}Corregir</a><a class="btn-mini sec" href="#mostrar-${m.id}">${ic('girar', 18, 2.2)}Mostrar</a></div>`}</div></li>`;
 }
+/* ───── Borrar un cliente: con la basurita de su ficha o deslizándolo en la Libreta ─────
+   Siempre se pregunta. Si debe, se pregunta otra vez mostrando cuánto. Luego, unos segundos para «Deshacer». */
+function pedirBorrarCliente(c, desde = 'libreta', alCerrar = () => {}) {
+  const saldo = saldoDe(c.id), cuantos = movsDe(c.id).length, n = esc(nombreCorto(c.nombre));
+  let borrando = false;
+  const enfocar = d => { const h = d.querySelector('h2'); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); } };
+  const paso1 = d => pintarHoja(`<h2>¿Borrar a ${esc(c.nombre)}?</h2>
+    <p style="font-size:1.125rem;line-height:1.55">${cuantos ? `Se borra de su libreta con su historial (${cuantos} ${cuantos === 1 ? 'anotación' : 'anotaciones'}). El enlace que ya tiene ${n} no cambia.` : 'Se borra de su libreta. No tiene nada anotado.'}</p>
+    <button type="button" class="btn-sec peligro" data-accion="si-borrar">${ic('basura', 22, 2.2)}Sí, borrar</button>
+    <button type="button" class="btn-link" data-cerrar>Cancelar</button>`, d => {
+    d.querySelector('[data-accion="si-borrar"]').addEventListener('click', () => saldo > 0 ? paso2(d) : borrar());
+  }, d);
+  const paso2 = d => {
+    pintarHoja(`<h2>${n} todavía le debe ${pesos(saldo)}</h2>
+      <div class="info atencion">${ic('atencion', 22)}<p>Si lo borra, pierde el registro de esa plata. Si ya le pagó, mejor anote el pago primero.</p></div>
+      <button type="button" class="btn" data-cerrar>No borrar</button>
+      <button type="button" class="btn-sec peligro" data-accion="si-borrar">${ic('basura', 22, 2.2)}Borrar aunque debe</button>`, d => {
+      d.querySelector('[data-accion="si-borrar"]').addEventListener('click', borrar);
+    }, d);
+    enfocar(d);
+    if (typeof Voz !== 'undefined') Voz.decir('borrar-debe');
+  };
+  const borrar = async () => {
+    if (borrando) return; borrando = true;
+    const b = await borrarCliente(c.id);
+    if (!b) { borrando = false; cerrarHoja(); avisar('No se pudo borrar. Intente otra vez.', { icono: 'atencion' }); return; }
+    ir('inicio');
+    avisar(`Borró a ${nombreCorto(c.nombre)} de su libreta.`, { acciones: [{ texto: 'Deshacer', fuerte: true, fn: async () => {
+      if (Datos.clientes.has(c.id)) return;
+      await restaurarCliente(b);
+      if (desde === 'ficha' && location.hash.slice(1) === 'inicio' && !hojaAbierta()) ir(`cliente-${c.id}`); else mostrarRuta({ animar: false });
+      avisar('Listo, se deshizo.');
+    } }] });
+  };
+  const d = abrirHoja('', () => {}, { nombre: 'borrar-cliente' });
+  paso1(d); enfocar(d);
+  d.addEventListener('close', () => { if (!borrando) alCerrar(); }, { once: true });
+}
+
+/* ───── Aviso de pago del vecino: «Confirmar en Fiao» lleva aquí ─────
+   #pago-<cliente>-<monto>.<medio>. Abre la cuenta con el aviso arriba; nunca anota solo. */
+const MEDIO_AVISO = { nequi: ['por Nequi', 'en su Nequi'], breb: ['por Bre-B', 'en su banco'], otro: ['', ''] };
+V.pago = (id, x = '') => {
+  const [m, md] = String(x).split('.');
+  const montoAviso = /^\d{1,9}$/.test(m || '') ? +m : 0, medio = MEDIO_AVISO[md] ? md : 'otro';
+  const c = Datos.tienda ? cliente(id) : null;
+  if (!c) {
+    return {
+      titulo: 'Aviso de pago',
+      html: `<div class="pantalla">${barra({ titulo: 'Aviso de pago', volver: Datos.tienda ? 'inicio' : null, ayuda: false })}<main class="contenido holgado">
+        <div class="info atencion">${ic('atencion', 22)}<p>${Datos.tienda ? 'Este cliente no está en la libreta de este celular.' : 'En este navegador no hay una libreta de Fiao.'}</p></div>
+        <p style="font-size:1.125rem;line-height:1.55">Puede pasar si borró al cliente o si su libreta está en otro celular.</p>
+        <p style="font-size:1.125rem;line-height:1.55"><b>En iPhone, con Fiao en la pantalla de inicio:</b> WhatsApp abre los enlaces en Safari, que guarda otra libreta. Abra Fiao desde su pantalla de inicio y busque al cliente por nombre o celular.</p>
+        <a class="btn" href="#${Datos.tienda ? 'inicio' : 'bienvenida'}">${ic('libreta', 24, 2.2)}${Datos.tienda ? 'Ir a mi libreta' : 'Ir a Fiao'}</a>
+      </main></div>`,
+      montar() {}
+    };
+  }
+  const v = V.cliente(c.id);
+  return { ...v, montar(r) {
+    /* La dirección queda como la de la cuenta: al volver o recargar no se repite el aviso. */
+    history.replaceState(history.state, '', `#cliente-${c.id}`); _rutaAnterior = `cliente-${c.id}`;
+    v.montar(r);
+    mostrarAvisoPago(r, c, montoAviso, medio);
+  } };
+};
+function mostrarAvisoPago(r, c, montoAviso, medio) {
+  const saldo = saldoDe(c.id), n = esc(nombreCorto(c.nombre)), [por, donde] = MEDIO_AVISO[medio];
+  const hace3 = Date.now() - 3 * 86400000;
+  const igual = montoAviso && movsDe(c.id).find(m => m.tipo === 'pago' && !m.anulado && m.monto === montoAviso && new Date(m.fecha) > hace3);
+  const caja = document.createElement('section');
+  caja.className = 'aviso-pago'; caja.setAttribute('aria-labelledby', 'ap-titulo');
+  caja.innerHTML = `<div class="ap-cab">${ic('dinero', 24, 2.2)}<h2 id="ap-titulo" tabindex="-1">${n} dice que le pagó${montoAviso ? ` ${pesos(montoAviso)}` : ''}${por ? ` ${por}` : ''}</h2></div>
+    ${saldo > 0 ? `<p>Antes de anotarlo, revise${donde ? ` ${donde}` : ''} que la plata sí llegó.</p>` : `<p>Su cuenta ya está al día: puede que ya haya anotado este pago.</p>`}
+    ${igual ? `<p class="ap-nota">${ic('atencion', 20, 2.2)}<span>Ya anotó un pago de ${pesos(igual.monto)} ${elDia(igual.fecha)} a las ${hora(igual.fecha)}. Revise que no sea el mismo.</span></p>` : ''}
+    ${montoAviso > saldo && saldo > 0 ? `<p class="ap-nota">${ic('atencion', 20, 2.2)}<span>Es más de lo que debe (${pesos(saldo)}).</span></p>` : ''}
+    ${saldo > 0 ? `<button type="button" class="btn verde" data-accion="ap-anotar">${ic('ok', 24, 2.6)}Ya llegó: anotar pago</button>` : ''}
+    <button type="button" class="btn-link" data-accion="ap-cerrar">${saldo > 0 ? 'Todavía no ha llegado' : 'Entendido'}</button>`;
+  const main = r.querySelector('.contenido'); main.insertBefore(caja, main.firstElementChild);
+  caja.querySelector('[data-accion="ap-anotar"]')?.addEventListener('click', () => abrirPago(c, { monto: montoAviso, medio }));
+  caja.querySelector('[data-accion="ap-cerrar"]').addEventListener('click', () => { caja.remove(); r.querySelector('h1')?.focus({ preventScroll: true }); });
+  requestAnimationFrame(() => caja.querySelector('h2').focus({ preventScroll: true }));
+  if (saldo > 0 && typeof Voz !== 'undefined') Voz.decir('aviso-pago');
+}
+
 V.cliente = (id, extra) => {
   const c = cliente(id); if (!c) return null;
   const e = estadoDe(c); const p = puntualidad(c); const movs = movsDe(c.id);
@@ -477,7 +563,7 @@ V.cliente = (id, extra) => {
   const atajo = (clase, accion, icono, texto, extraAttr = '') => `<button type="button" class="atajo${clase ? ' ' + clase : ''}" data-accion="${accion}"${extraAttr}><span class="c" aria-hidden="true">${ic(icono, 26, 2.4)}</span>${texto}</button>`;
   return {
     titulo: c.nombre,
-    html: `<div class="pantalla">${cabMarca({ titulo: esc(c.nombre), sub: esc(c.detalle || ''), volver: 'inicio', botones: btnRedondo('lapiz', 'Editar cliente', { href: `editar-${c.id}` }), cuerpo })}
+    html: `<div class="pantalla">${cabMarca({ titulo: esc(c.nombre), sub: esc(c.detalle || ''), volver: 'inicio', botones: btnRedondo('lapiz', 'Editar cliente', { href: `editar-${c.id}` }) + btnRedondo('basura', `Borrar a ${esc(c.nombre)}`, { accion: 'borrar-cliente' }), cuerpo, tituloAbajo: true })}
     <main class="contenido">
       <div class="atajos">
         ${atajo('principal', 'anotar', 'mas', 'Anotar')}
@@ -506,6 +592,7 @@ V.cliente = (id, extra) => {
       }
       saldos[c.id] = e.saldo;
       r.querySelector('[data-accion="anotar"]').addEventListener('click', () => abrirAnotar(c));
+      r.querySelector('[data-accion="borrar-cliente"]').addEventListener('click', () => pedirBorrarCliente(c, 'ficha'));
       r.querySelector('[data-accion="pago"]')?.addEventListener('click', () => abrirPago(c));
       r.querySelector('[data-accion="permiso"]')?.addEventListener('click', () => abrirPermiso(c));
       r.querySelectorAll('.mov').forEach(b => b.addEventListener('click', () => {

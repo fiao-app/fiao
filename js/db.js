@@ -113,6 +113,44 @@ function guardarContacto(c) { Datos.contactos.set(c.id, c); return _escribir('co
 /** Solo para "Deshacer" en los segundos siguientes a anotar: lo demás se corrige o se anula. */
 function borrarMov(id) { Datos.movs.delete(id); return _escribir('movimientos', id, true); }
 
+/** Varias escrituras en una sola operación: o quedan todas o ninguna. ops: [almacén, registro o id, ¿borrar?] */
+function _escribirVarios(ops) {
+  if (typeof invalidarIndice === 'function') invalidarIndice();
+  if (!_bd) return Promise.resolve(_respaldoLocal());
+  return new Promise(ok => {
+    let fallo = false;
+    const mal = () => { if (!fallo) { fallo = true; _falloAlGuardar(); } ok(false); };
+    try {
+      const tx = _bd.transaction([...new Set(ops.map(o => o[0]))], 'readwrite');
+      for (const [a, r, borrar] of ops) borrar ? tx.objectStore(a).delete(r) : tx.objectStore(a).put(r);
+      tx.oncomplete = () => { _avisarCambio(); ok(true); };
+      tx.onerror = mal;
+      tx.onabort = mal;
+    } catch (e) { mal(); }
+  });
+}
+/** Borra un cliente con todo lo suyo (fiados, pagos y recordatorios), de una sola vez.
+    Devuelve lo borrado para poder deshacerlo; si no se pudo guardar, todo queda como estaba. */
+async function borrarCliente(id) {
+  const c = Datos.clientes.get(id); if (!c) return null;
+  const movs = [...Datos.movs.values()].filter(m => m.clienteId === id);
+  const contactos = [...Datos.contactos.values()].filter(r => r.clienteId === id);
+  Datos.clientes.delete(id); movs.forEach(m => Datos.movs.delete(m.id)); contactos.forEach(r => Datos.contactos.delete(r.id));
+  const ok = await _escribirVarios([['clientes', id, true], ...movs.map(m => ['movimientos', m.id, true]), ...contactos.map(r => ['contactos', r.id, true])]);
+  const borrado = { c, movs, contactos };
+  if (!ok && Datos.modo !== 'memoria') { _ponerDeVuelta(borrado); return null; }
+  return borrado;
+}
+function _ponerDeVuelta({ c, movs, contactos }) {
+  Datos.clientes.set(c.id, c); movs.forEach(m => Datos.movs.set(m.id, m)); contactos.forEach(r => Datos.contactos.set(r.id, r));
+  if (typeof invalidarIndice === 'function') invalidarIndice();
+}
+/** «Deshacer» de borrar un cliente: vuelve todo, tal cual. */
+function restaurarCliente(b) {
+  _ponerDeVuelta(b);
+  return _escribirVarios([['clientes', b.c], ...b.movs.map(m => ['movimientos', m]), ...b.contactos.map(r => ['contactos', r])]);
+}
+
 /** Todo en un objeto, para la copia de respaldo. */
 function exportarLibreta() {
   return {

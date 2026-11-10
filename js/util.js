@@ -111,6 +111,20 @@ function celInternacional(cel) {
   return ''; // número no válido (o de ejemplo): WhatsApp deja elegir el chat
 }
 /** 3XX XXX XXXX */
+/** Solo los números del celular, sin el 57 de Colombia (para buscar). */
+function celDigitos(cel) { return String(cel ?? '').replace(/\D/g, '').replace(/^57(?=3\d{9}$)/, ''); }
+/** El celular legible con la parte buscada en negrita. */
+function celResaltado(digitos, buscado) {
+  const ini = buscado ? digitos.indexOf(buscado) : -1, fin = ini + (buscado || '').length;
+  let html = '', k = 0;
+  for (const ch of celLegible(digitos)) {
+    if (ch === ' ') { html += ' '; continue; }
+    if (k === ini) html += '<b>';
+    html += ch; k++;
+    if (k === fin && ini >= 0) html += '</b>';
+  }
+  return html;
+}
 function celLegible(cel) {
   const d = String(cel ?? '').replace(/\D/g, '').replace(/^57(?=3\d{9}$)/, '');
   return d.length === 10 ? `${d.slice(0, 3)} ${d.slice(3, 6)} ${d.slice(6)}` : d;
