@@ -20,7 +20,7 @@ function teclear(actual, t) {
   vibrar(8);
   if (t === 'borrar') return Math.floor(actual / 10);
   const s = String(actual || '') + t;
-  return s.replace(/^0+/, '').length <= 8 ? (parseInt(s, 10) || 0) : actual;
+  return s.replace(/^0+/, '').length <= 7 ? (parseInt(s, 10) || 0) : actual; // 3.4 · tope $9.999.999
 }
 
 /* ═════ Hoja "Anotar fiado" ═════ */
@@ -61,9 +61,9 @@ function pasoNuevo(est, nombre) {
   const contactosApi = 'contacts' in navigator && 'ContactsManager' in window;
   pintarHoja(`${cabHoja(hayClientes ? 'Cliente nuevo' : '¿A quién le fía?')}
     <form id="h-nuevo" novalidate data-guia="cliente-nuevo" style="display:flex;flex-direction:column;gap:.875rem">
-      <div class="campo"><label for="n-nombre">Nombre o apodo</label><input class="entrada" id="n-nombre" value="${esc(nombre)}" placeholder="Ej.: Rosiris, la de la esquina" autocomplete="off" enterkeyhint="next" aria-describedby="n-error"></div>
+      <div class="campo"><label for="n-nombre">Nombre o apodo</label><input class="entrada" id="n-nombre" value="${esc(String(nombre).slice(0, LIMITES.nombre))}" maxlength="${LIMITES.nombre}" placeholder="Ej.: Rosiris, la de la esquina" autocomplete="off" enterkeyhint="next" aria-describedby="n-error"></div>
       <details class="mas"><summary>${ic('mas', 22, 2.4)}Celular y día de pago <span class="opcional">(opcional)</span></summary><div class="interior">
-        <div class="campo"><label for="n-cel">Celular con WhatsApp</label><div class="con-prefijo"><span class="prefijo" aria-hidden="true">+57</span><input class="entrada" id="n-cel" type="tel" inputmode="tel" placeholder="10 números" autocomplete="off">${contactosApi ? `<button type="button" class="btn-cuadro" data-accion="contactos" aria-label="Elegir de mis contactos">${ic('contactos', 26)}</button>` : ''}</div></div>
+        <div class="campo"><label for="n-cel">Celular con WhatsApp</label><div class="con-prefijo"><span class="prefijo" aria-hidden="true">+57</span><input class="entrada" id="n-cel" type="tel" inputmode="tel" maxlength="${LIMITES.cel}" placeholder="10 números" autocomplete="off">${contactosApi ? `<button type="button" class="btn-cuadro" data-accion="contactos" aria-label="Elegir de mis contactos">${ic('contactos', 26)}</button>` : ''}</div></div>
         ${grupoOpciones('pago', '¿Cuándo suele pagar?', PREF_PAGO, 'quincena')}
       </div></details>
       <p class="error" id="n-error" role="alert" hidden></p>
@@ -75,11 +75,11 @@ function pasoNuevo(est, nombre) {
     setTimeout(() => inp.focus(), 280);
     d.querySelector('[data-accion="lista"]')?.addEventListener('click', () => pasoCliente(est));
     d.querySelector('[data-accion="contactos"]')?.addEventListener('click', async () => {
-      try { const [ct] = await navigator.contacts.select(['name', 'tel'], { multiple: false }); if (!ct) return; if (ct.tel?.[0]) cel.value = celLegible(ct.tel[0].replace(/^\+?57/, '')); if (!inp.value && ct.name?.[0]) inp.value = ct.name[0]; } catch (e) { /* sin contactos */ }
+      try { const [ct] = await navigator.contacts.select(['name', 'tel'], { multiple: false }); if (!ct) return; if (ct.tel?.[0]) cel.value = celLegible(ct.tel[0].replace(/^\+?57/, '')); if (!inp.value && ct.name?.[0]) inp.value = ct.name[0].slice(0, LIMITES.nombre); } catch (e) { /* sin contactos */ }
     });
     d.querySelector('#h-nuevo').addEventListener('submit', async ev => {
       ev.preventDefault();
-      const n = inp.value.trim(), celD = cel.value.replace(/\D/g, '').replace(/^57(?=3\d{9}$)/, ''), err = d.querySelector('#n-error');
+      const n = inp.value.trim().slice(0, LIMITES.nombre), celD = cel.value.replace(/\D/g, '').replace(/^57(?=3\d{9}$)/, ''), err = d.querySelector('#n-error');
       const fallo = (msg, el) => { err.textContent = msg; err.hidden = false; el.setAttribute('aria-invalid', 'true'); if (el.closest('details')) el.closest('details').open = true; temblar(el); el.focus(); };
       if (!n) return fallo('Escriba el nombre o apodo.', inp);
       if (celD && (celD.length !== 10 || (!/^3/.test(celD) && !tienda().demo))) return fallo('El celular tiene 10 números y empieza por 3.', cel);
@@ -112,8 +112,8 @@ function pasoMonto(est) {
         <button type="button" class="chip" aria-pressed="${est.detalle}" aria-controls="h-detalle" data-accion="detalle">${ic('lapiz', 18, 2.2)}Detalle</button>
       </div>
       <div id="h-detalle" style="display:flex;flex-direction:column;gap:.625rem"${est.detalle ? '' : ' hidden'}>
-        <div class="campo"><label for="h-que">¿Qué se llevó? <span class="opcional">(opcional)</span></label><input class="entrada" id="h-que" value="${esc(est.que)}" placeholder="Ej.: pan, leche y huevos" autocomplete="off"></div>
-        <div class="campo"><label for="h-llevo">¿Quién lo llevó? <span class="opcional">(opcional)</span></label><input class="entrada" id="h-llevo" value="${esc(est.llevo)}" placeholder="Ej.: su hijo Daniel" autocomplete="off"></div>
+        <div class="campo"><label for="h-que">¿Qué se llevó? <span class="opcional">(opcional)</span></label><input class="entrada" id="h-que" value="${esc(est.que)}" maxlength="${LIMITES.que}" placeholder="Ej.: pan, leche y huevos" autocomplete="off"></div>
+        <div class="campo"><label for="h-llevo">¿Quién lo llevó? <span class="opcional">(opcional)</span></label><input class="entrada" id="h-llevo" value="${esc(est.llevo)}" maxlength="${LIMITES.llevo}" placeholder="Ej.: su hijo Daniel" autocomplete="off"></div>
       </div>
       ${teclado()}
       <button type="button" class="btn" id="h-anotar" disabled>Marque el monto</button>
@@ -223,7 +223,7 @@ async function enviarRecibo(c, m) {
 function pedirCelular(c, m) {
   const n = esc(nombreCorto(c.nombre));
   abrirHoja(`${cabHoja(`¿Cuál es el celular de ${n}?`)}<form id="h-cel" novalidate style="display:flex;flex-direction:column;gap:.875rem">
-    <div class="campo"><label for="h-celular" class="vh">Celular con WhatsApp</label><div class="con-prefijo"><span class="prefijo" aria-hidden="true">+57</span><input class="entrada" id="h-celular" type="tel" inputmode="tel" placeholder="10 números" autocomplete="off"></div></div>
+    <div class="campo"><label for="h-celular" class="vh">Celular con WhatsApp</label><div class="con-prefijo"><span class="prefijo" aria-hidden="true">+57</span><input class="entrada" id="h-celular" type="tel" inputmode="tel" maxlength="${LIMITES.cel}" placeholder="10 números" autocomplete="off"></div></div>
     <p class="error" role="alert" hidden></p><button type="submit" class="btn">Guardar y seguir</button></form>
     <button type="button" class="btn-link" data-accion="mostrar">Mejor se lo muestro aquí</button>`, d => {
     const inp = d.querySelector('#h-celular'); setTimeout(() => inp.focus(), 280);
@@ -267,8 +267,8 @@ function abrirPermiso(c, sigue = null, m = null) {
 function pedirDatosPago(sigue) {
   const t = tienda();
   abrirHoja(`${cabHoja('¿Cómo le pueden pagar?')}<p>Va en sus recibos, para que le paguen fácil.</p>
-    <div class="campo"><label for="h-llave">Llave Bre-B <span class="opcional">(opcional)</span></label><input class="entrada" id="h-llave" value="${esc(t.llave || '')}" placeholder="Como sale en su banco" autocomplete="off"></div>
-    <div class="campo"><label for="h-nequi">Nequi o Daviplata <span class="opcional">(opcional)</span></label><input class="entrada" id="h-nequi" type="tel" inputmode="tel" value="${esc(celLegible(t.nequi || ''))}" placeholder="10 números"></div>
+    <div class="campo"><label for="h-llave">Llave Bre-B <span class="opcional">(opcional)</span></label><input class="entrada" id="h-llave" value="${esc(t.llave || '')}" maxlength="${LIMITES.llave}" placeholder="Como sale en su banco" autocomplete="off"></div>
+    <div class="campo"><label for="h-nequi">Nequi o Daviplata <span class="opcional">(opcional)</span></label><input class="entrada" id="h-nequi" type="tel" inputmode="tel" maxlength="${LIMITES.cel}" value="${esc(celLegible(t.nequi || ''))}" placeholder="10 números"></div>
     <button type="button" class="btn" data-accion="guardar">Guardar y seguir</button><button type="button" class="btn-link" data-accion="no">Ahora no, solo en la tienda</button>`, d => {
     const fin = async guardar => {
       if (guardar) { t.llave = d.querySelector('#h-llave').value.trim(); t.nequi = d.querySelector('#h-nequi').value.replace(/\D/g, ''); }
@@ -402,7 +402,7 @@ V.mostrar = id => {
   const n = nombreCorto(c.nombre), s = saldoDe(c.id), pago = m.tipo === 'pago';
   return {
     titulo: `Para ${n}`,
-    html: `<div class="pantalla blanca"><header class="mostrar-barra"><span style="display:inline-flex;align-items:center;gap:.5rem">${ic('girar', 22, 2.2)}Gire el celular hacia ${esc(n)}</span><a class="btn-icono" href="#cliente-${c.id}" data-volver aria-label="Cerrar">${ic('cerrar', 26, 2.4)}</a></header><div class="toldo" aria-hidden="true"></div>
+    html: `<div class="pantalla blanca"><header class="mostrar-barra"><span style="display:inline-flex;align-items:center;gap:.5rem">${ic('girar', 22, 2.2)}<span class="gire">Gire el celular hacia ${esc(n)}</span></span><a class="btn-icono" href="#cliente-${c.id}" data-volver aria-label="Cerrar">${ic('cerrar', 26, 2.4)}</a></header><div class="toldo" aria-hidden="true"></div>
     <main class="mostrar">
       <h1 class="para" tabindex="-1">${esc(n)}, ${pago ? 'recibimos su pago:' : 'esto quedó anotado:'}</h1>
       <div style="display:flex;flex-direction:column;gap:.25rem"><span class="cifra-xl">${pesos(m.monto)}</span>${!pago && m.que ? `<span class="que">${esc(mayuscula(m.que))}</span>` : ''}${pago && MEDIOS[m.medio] ? `<span class="que">${esc(mayuscula(MEDIOS[m.medio]))}</span>` : ''}
@@ -433,7 +433,7 @@ V.cuenta = id => {
   const historial = agruparPorDia(ult).map(g => `<h3 class="dia-historial">${g.dia}</h3><ul class="lista movs-vecino">${g.items.map(fila).join('')}</ul>`).join('');
   return {
     titulo: `Cuenta de ${n}`,
-    html: `<div class="pantalla blanca"><header class="mostrar-barra"><span style="display:inline-flex;align-items:center;gap:.5rem">${ic('girar', 22, 2.2)}Gire el celular hacia ${esc(n)}</span><a class="btn-icono" href="#cliente-${c.id}" data-volver aria-label="Cerrar">${ic('cerrar', 26, 2.4)}</a></header><div class="toldo" aria-hidden="true"></div>
+    html: `<div class="pantalla blanca"><header class="mostrar-barra"><span style="display:inline-flex;align-items:center;gap:.5rem">${ic('girar', 22, 2.2)}<span class="gire">Gire el celular hacia ${esc(n)}</span></span><a class="btn-icono" href="#cliente-${c.id}" data-volver aria-label="Cerrar">${ic('cerrar', 26, 2.4)}</a></header><div class="toldo" aria-hidden="true"></div>
     <main class="mostrar">
       <h1 class="para" tabindex="-1">${esc(n)}, así va su cuenta:</h1>
       <div style="display:flex;flex-direction:column;gap:.25rem">${s > 0 ? `<span style="font-size:1.375rem">Debe</span><span class="cifra-xl">${pesos(s)}</span>
@@ -503,54 +503,117 @@ function pedirBorrarCliente(c, desde = 'libreta', alCerrar = () => {}) {
 
 /* ───── Aviso de pago del vecino: «Confirmar en Fiao» lleva aquí ─────
    #pago-<cliente>-<monto>.<medio>. Abre la cuenta con el aviso arriba; nunca anota solo. */
-const MEDIO_AVISO = { nequi: ['por Nequi', 'en su Nequi'], breb: ['por Bre-B', 'en su banco'], otro: ['', ''] };
-V.pago = (id, x = '') => {
-  const [m, md] = String(x).split('.');
-  const montoAviso = /^\d{1,9}$/.test(m || '') ? +m : 0, medio = MEDIO_AVISO[md] ? md : 'otro';
-  const c = Datos.tienda ? cliente(id) : null;
-  if (!c) {
-    /* El cliente no está aquí. En iPhone pasa siempre con Fiao instalada: WhatsApp abre el enlace en Safari,
-       y Safari no ve la libreta de la app de la pantalla de inicio. Puente: copiar el aviso y pegarlo en el buscador de Fiao. */
-    const ios = esIOS(), enlace = `${location.href.replace(/#.*$/, '')}#pago-${id}-${x}`, [por] = MEDIO_AVISO[medio];
-    return {
-      titulo: 'Aviso de pago',
-      html: `<div class="pantalla">${barra({ titulo: 'Aviso de pago', volver: Datos.tienda ? 'inicio' : null, ayuda: false })}<main class="contenido holgado">
-        <section class="aviso-pago" aria-labelledby="ap-titulo"><div class="ap-cab">${ic('dinero', 24, 2.2)}<h2 id="ap-titulo">Un cliente le avisó un pago${montoAviso ? ` de ${pesos(montoAviso)}` : ''}${por ? ` ${por}` : ''}</h2></div>
-          <p>${Datos.tienda ? 'Pero ese cliente no está en la libreta de este navegador.' : 'Pero su libreta de Fiao no está en este navegador.'}</p></section>
-        <p style="font-size:1.125rem;line-height:1.55">${ios ? 'En iPhone, WhatsApp abre los enlaces en Safari, y Safari no ve la libreta de Fiao que tiene en su pantalla de inicio.' : 'Puede pasar si su libreta está en otro navegador o en otro celular, o si borró al cliente.'}</p>
-        <ol class="pasos-copiar">
-          <li><span><b>Copie el aviso</b> con el botón de abajo.</span></li>
-          <li><span><b>Abra Fiao</b> ${ios ? 'desde su pantalla de inicio' : 'donde la usa'}.</span></li>
-          <li><span><b>Péguelo en el buscador</b> de la Libreta: mantenga el dedo encima y toque «Pegar».</span></li>
-        </ol>
-        <button type="button" class="btn" data-accion="copiar-aviso">${ic('copiar', 24, 2.2)}Copiar aviso</button>
-        <p class="ayuda enlace-aviso" id="enlace-aviso">${esc(enlace)}</p>
-        ${Datos.tienda ? `<a class="btn-link" href="#inicio">Ir a la libreta de este navegador</a>` : ''}
-      </main></div>`,
-      montar(r) {
-        const bt = r.querySelector('[data-accion="copiar-aviso"]');
-        bt.addEventListener('click', async () => {
-          try {
-            await navigator.clipboard.writeText(enlace);
-            bt.innerHTML = `${ic('ok', 24, 2.6)}Aviso copiado`;
-            avisar('Aviso copiado. Ahora abra Fiao y péguelo en el buscador.');
-          } catch (e) {
-            const rango = document.createRange(); rango.selectNodeContents(r.querySelector('#enlace-aviso'));
-            const sel = getSelection(); sel.removeAllRanges(); sel.addRange(rango);
-            avisar('Quedó marcado. Manténgalo presionado y toque «Copiar».', { icono: null });
-          }
-        });
-      }
-    };
-  }
+/** El cliente del aviso no está aquí. En iPhone pasa siempre con Fiao instalada: WhatsApp abre el enlace en Safari,
+    y Safari no ve la libreta de la app de la pantalla de inicio. Puente: copiar el aviso y pegarlo en el buscador de Fiao.
+    3.4 · La misma pantalla sirve para el aviso de pago, la fecha que pide el vecino y «algo no me cuadra». */
+function pantallaSinCliente({ titulo, icono, h2, ruta }) {
+  const ios = esIOS(), enlace = `${location.href.replace(/#.*$/, '')}#${ruta}`;
+  return {
+    titulo,
+    html: `<div class="pantalla">${barra({ titulo, volver: Datos.tienda ? 'inicio' : null, ayuda: false })}<main class="contenido holgado">
+      <section class="aviso-pago" aria-labelledby="ap-titulo"><div class="ap-cab">${ic(icono, 24, 2.2)}<h2 id="ap-titulo">${h2}</h2></div>
+        <p>${Datos.tienda ? 'Pero ese cliente no está en la libreta de este navegador.' : 'Pero su libreta de Fiao no está en este navegador.'}</p></section>
+      <p style="font-size:1.125rem;line-height:1.55">${ios ? 'En iPhone, WhatsApp abre los enlaces en Safari, y Safari no ve la libreta de Fiao que tiene en su pantalla de inicio.' : 'Puede pasar si su libreta está en otro navegador o en otro celular, o si borró al cliente.'}</p>
+      <ol class="pasos-copiar">
+        <li><span><b>Copie el aviso</b> con el botón de abajo.</span></li>
+        <li><span><b>Abra Fiao</b> ${ios ? 'desde su pantalla de inicio' : 'donde la usa'}.</span></li>
+        <li><span><b>Péguelo en el buscador</b> de la Libreta: mantenga el dedo encima y toque «Pegar».</span></li>
+      </ol>
+      <button type="button" class="btn" data-accion="copiar-aviso">${ic('copiar', 24, 2.2)}Copiar aviso</button>
+      <p class="ayuda enlace-aviso" id="enlace-aviso">${esc(enlace)}</p>
+      ${Datos.tienda ? `<a class="btn-link" href="#inicio">Ir a la libreta de este navegador</a>` : ''}
+    </main></div>`,
+    montar(r) {
+      const bt = r.querySelector('[data-accion="copiar-aviso"]');
+      bt.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(enlace);
+          bt.innerHTML = `${ic('ok', 24, 2.6)}Aviso copiado`;
+          avisar('Aviso copiado. Ahora abra Fiao y péguelo en el buscador.');
+        } catch (e) {
+          const rango = document.createRange(); rango.selectNodeContents(r.querySelector('#enlace-aviso'));
+          const sel = getSelection(); sel.removeAllRanges(); sel.addRange(rango);
+          avisar('Quedó marcado. Manténgalo presionado y toque «Copiar».', { icono: null });
+        }
+      });
+    }
+  };
+}
+/** Abre la ficha del cliente con una banda arriba (aviso de pago, otra fecha, algo no cuadra). */
+function fichaConAviso(c, poner) {
   const v = V.cliente(c.id);
   return { ...v, montar(r) {
     /* La dirección queda como la de la cuenta: al volver o recargar no se repite el aviso. */
     history.replaceState(history.state, '', `#cliente-${c.id}`); _rutaAnterior = `cliente-${c.id}`;
     v.montar(r);
-    mostrarAvisoPago(r, c, montoAviso, medio);
+    poner(r);
   } };
+}
+const MEDIO_AVISO = { nequi: ['por Nequi', 'en su Nequi'], breb: ['por Bre-B', 'en su banco'], otro: ['', ''] };
+V.pago = (id, x = '') => {
+  const [m, md] = String(x).split('.');
+  const montoAviso = /^\d{1,9}$/.test(m || '') ? +m : 0, medio = MEDIO_AVISO[md] ? md : 'otro';
+  const c = Datos.tienda ? cliente(id) : null;
+  if (!c) return pantallaSinCliente({ titulo: 'Aviso de pago', icono: 'dinero', ruta: `pago-${id}-${x}`,
+    h2: `Un cliente le avisó un pago${montoAviso ? ` de ${pesos(montoAviso)}` : ''}${MEDIO_AVISO[medio][0] ? ` ${MEDIO_AVISO[medio][0]}` : ''}` });
+  return fichaConAviso(c, r => mostrarAvisoPago(r, c, montoAviso, medio));
 };
+
+/* ═════ 3.4 · El vecino pide otro día (#fecha-<cliente>-AAAAMMDD) ═════ */
+V.fecha = (id, x = '') => {
+  const m = String(x).match(/^(\d{4})(\d{2})(\d{2})$/), iso = m ? `${m[1]}-${m[2]}-${m[3]}` : '';
+  const c = Datos.tienda ? cliente(id) : null;
+  if (!c) return pantallaSinCliente({ titulo: 'Otro día de pago', icono: 'calendario', ruta: `fecha-${id}-${x}`,
+    h2: `Un cliente le pide pagar${iso ? ` el ${fechaLarga(diaDe(iso))}` : ' otro día'}` });
+  if (!iso) return null;
+  return fichaConAviso(c, r => mostrarAvisoFecha(r, c, iso));
+};
+function mostrarAvisoFecha(r, c, iso) {
+  const n = esc(nombreCorto(c.nombre)), dia = diaDe(iso), pasada = iso < isoDia(new Date()), igual = c.proximaFecha === iso;
+  const caja = document.createElement('section');
+  caja.className = 'aviso-pago aviso-vecino'; caja.setAttribute('aria-labelledby', 'ap-titulo');
+  caja.innerHTML = `<div class="ap-cab">${ic('calendario', 24, 2.2)}<h2 id="ap-titulo" tabindex="-1">${n} pide pagar el ${fechaLarga(dia)}</h2></div>
+    <p>${c.proximaFecha ? `Tenían acordado ${elDia(diaDe(c.proximaFecha))}.` : 'No tenían un día acordado.'}</p>
+    ${pasada ? `<p class="ap-nota">${ic('atencion', 20, 2.2)}<span>Esa fecha ya pasó.</span></p>` : igual ? `<p>Ese ya es el día acordado.</p>` : ''}
+    ${pasada || igual ? '' : `<button type="button" class="btn" data-accion="ap-aceptar">${ic('ok', 24, 2.6)}Aceptar el ${fechaCorta(dia)}</button>`}
+    <button type="button" class="btn-link" data-accion="ap-cerrar">${pasada || igual ? 'Entendido' : 'No por ahora'}</button>`;
+  const main = r.querySelector('.contenido'); main.insertBefore(caja, main.firstElementChild);
+  caja.querySelector('[data-accion="ap-aceptar"]')?.addEventListener('click', async () => {
+    c.proximaFecha = iso; await guardarCliente(c);
+    mostrarRuta({ animar: false });
+    avisar(`Quedó para el ${fechaLarga(dia)}.`, { voz: 'cambios', acciones: c.cel ? [{ texto: 'Avisarle', fuerte: true, fn: () => abrirWhatsApp(c.cel, mensajeFechaAceptada(c, iso)) }] : [] });
+  });
+  caja.querySelector('[data-accion="ap-cerrar"]').addEventListener('click', () => { caja.remove(); r.querySelector('h1')?.focus({ preventScroll: true }); });
+  requestAnimationFrame(() => caja.querySelector('h2').focus({ preventScroll: true }));
+}
+
+/* ═════ 3.4 · El vecino dice que algo no le cuadra (#revisar-<cliente>-<motivo>) ═════ */
+const MOTIVO_REVISAR = { monto: 'dice que un monto no le cuadra', llevo: 'dice que aparece algo que no llevó', pago: 'dice que falta un pago que hizo', otro: 'dice que algo no le cuadra' };
+V.revisar = (id, x = '') => {
+  const motivo = MOTIVO_REVISAR[x] ? x : 'otro';
+  const c = Datos.tienda ? cliente(id) : null;
+  if (!c) return pantallaSinCliente({ titulo: 'Revisar una cuenta', icono: 'chat', ruta: `revisar-${id}-${motivo}`, h2: `Un cliente ${MOTIVO_REVISAR[motivo]}` });
+  return fichaConAviso(c, r => mostrarAvisoRevisar(r, c, motivo));
+};
+function mostrarAvisoRevisar(r, c, motivo) {
+  const n = esc(nombreCorto(c.nombre)), saldo = saldoDe(c.id);
+  const caja = document.createElement('section');
+  caja.className = 'aviso-pago aviso-vecino'; caja.setAttribute('aria-labelledby', 'ap-titulo');
+  caja.innerHTML = `<div class="ap-cab">${ic('chat', 24, 2.2)}<h2 id="ap-titulo" tabindex="-1">${n} ${MOTIVO_REVISAR[motivo]}</h2></div>
+    <p>Revise el historial. Si algo está mal, toque esa línea y corríjala: Fiao le avisa con el enlace.</p>
+    <button type="button" class="btn" data-accion="ap-historial">${ic('libreta', 24, 2.2)}Ver el historial</button>
+    ${motivo === 'pago' && saldo > 0 ? `<button type="button" class="btn-sec" data-accion="ap-pago">${ic('dinero', 22, 2.2)}Anotar el pago</button>` : ''}
+    <button type="button" class="btn-link" data-accion="ap-cerrar">Entendido</button>`;
+  const main = r.querySelector('.contenido'); main.insertBefore(caja, main.firstElementChild);
+  const cerrar = () => caja.remove();
+  caja.querySelector('[data-accion="ap-historial"]').addEventListener('click', () => {
+    cerrar(); const h = [...r.querySelectorAll('h2')].find(x => /^Historial$/.test(x.textContent.trim()));
+    if (h) { h.setAttribute('tabindex', '-1'); h.scrollIntoView({ block: 'start', behavior: reducido() ? 'auto' : 'smooth' }); h.focus({ preventScroll: true }); }
+  });
+  caja.querySelector('[data-accion="ap-pago"]')?.addEventListener('click', () => abrirPago(c));
+  caja.querySelector('[data-accion="ap-cerrar"]').addEventListener('click', () => { cerrar(); r.querySelector('h1')?.focus({ preventScroll: true }); });
+  requestAnimationFrame(() => caja.querySelector('h2').focus({ preventScroll: true }));
+}
 function mostrarAvisoPago(r, c, montoAviso, medio) {
   const saldo = saldoDe(c.id), n = esc(nombreCorto(c.nombre)), [por, donde] = MEDIO_AVISO[medio];
   const hace3 = Date.now() - 3 * 86400000;
@@ -622,7 +685,7 @@ V.cliente = (id, extra) => {
         const abierto = b.getAttribute('aria-expanded') === 'true'; b.setAttribute('aria-expanded', !abierto);
         r.querySelector('#' + b.getAttribute('aria-controls')).hidden = abierto;
       }));
-      r.querySelector('[data-accion="chat"]')?.addEventListener('click', () => { const u = `https://wa.me/${tienda().demo ? '' : celInternacional(c.cel)}`; const w = window.open(u, '_blank', 'noopener'); if (!w) location.href = u; });
+      r.querySelector('[data-accion="chat"]')?.addEventListener('click', () => { const u = `https://wa.me/${tienda().demo ? '' : celInternacional(c.cel)}`; recordarSalida(); if (esIOS()) return abrirWhatsAppIOS(enlaceWhatsAppApp(c.cel), u, ''); const w = window.open(u, '_blank', 'noopener'); if (!w) location.href = u; });
       r.querySelector('[data-accion="recordar"]:not([disabled])')?.addEventListener('click', async () => {
         if (!puedeRecordarAhora()) { avisar(motivoNoRecordar(), { icono: 'reloj' }); return; }
         if (recordadoHoy(c.id)) { avisar('Ya se le recordó hoy. La ley permite uno al día.', { icono: 'reloj' }); return; }

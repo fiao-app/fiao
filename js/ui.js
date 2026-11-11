@@ -236,19 +236,103 @@ function confirmar({ titulo, texto, si, no = 'Cancelar', peligro = false }) {
   });
 }
 
-/** Abre WhatsApp con el mensaje escrito. El tendero toca Enviar allá. */
-function abrirWhatsApp(cel, texto) {
+/** Abre WhatsApp con el mensaje escrito. El tendero toca Enviar allá.
+    3.4 · En iPhone se abre por la dirección propia de WhatsApp: wa.me abría un navegador encima de Fiao
+    que quedaba en blanco al volver. En Android y en el computador sigue igual. */
+function abrirWhatsApp(cel, texto, { recordar = true } = {}) {
+  if (recordar) recordarSalida();
+  if (esIOS()) return abrirWhatsAppIOS(enlaceWhatsAppApp(cel, texto), enlaceWhatsApp(cel, texto), texto);
   const url = enlaceWhatsApp(cel, texto);
   const w = window.open(url, '_blank', 'noopener');
   if (!w) location.href = url;
 }
+function irFuera(url) { location.href = url; }
+/** Si a los 2,5 s Fiao sigue a la vista (WhatsApp no abrió), se ofrece la página de WhatsApp o copiar el mensaje. */
+function abrirWhatsAppIOS(app, web, texto) {
+  let salio = false;
+  const marcar = () => { salio = true; }, oculta = () => { if (document.hidden) salio = true; };
+  addEventListener('blur', marcar); addEventListener('pagehide', marcar); document.addEventListener('visibilitychange', oculta);
+  irFuera(app);
+  setTimeout(() => {
+    removeEventListener('blur', marcar); removeEventListener('pagehide', marcar); document.removeEventListener('visibilitychange', oculta);
+    if (!salio && !document.hidden) planBWhatsApp(web, texto);
+  }, 2500);
+}
+function planBWhatsApp(web, texto) {
+  abrirHoja(`${cabHoja('¿No se abrió WhatsApp?')}<p style="font-size:1.125rem;line-height:1.55">Si este celular no tiene WhatsApp, ábralo en la página de WhatsApp${texto ? ' o copie el mensaje' : ''}.</p>
+    <a class="btn" href="${esc(web)}" target="_blank" rel="noopener" data-accion="pagina-wa">${ic('chat', 22, 2.2)}Abrir la página de WhatsApp</a>
+    ${texto ? `<button type="button" class="btn-sec" data-accion="copiar-msj">${ic('copiar', 22, 2.2)}Copiar el mensaje</button><p class="burbuja" id="msj-wa" hidden>${esc(texto)}</p>` : ''}
+    <button type="button" class="btn-link" data-cerrar>Cerrar</button>`, d => {
+    d.querySelector('[data-accion="pagina-wa"]').addEventListener('click', () => cerrarHoja());
+    d.querySelector('[data-accion="copiar-msj"]')?.addEventListener('click', async ev => {
+      try { await navigator.clipboard.writeText(texto); cerrarHoja(); avisar('Mensaje copiado.'); }
+      catch (e) { const p = d.querySelector('#msj-wa'); p.hidden = false; ev.currentTarget.hidden = true; const r = document.createRange(); r.selectNodeContents(p); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+    });
+  }, { nombre: 'plan-b-wa' });
+  /* Si WhatsApp sí abrió (tarde, después de la pregunta del iPhone), al volver esta hoja ya no hace falta. */
+  const vigilar = () => {
+    if (!document.hidden) return;
+    document.removeEventListener('visibilitychange', vigilar);
+    const alVolver = () => { if (document.hidden) return; document.removeEventListener('visibilitychange', alVolver); if (hojaAbierta()?.dataset.nombre === 'plan-b-wa') cerrarHoja(); };
+    document.addEventListener('visibilitychange', alVolver);
+  };
+  document.addEventListener('visibilitychange', vigilar);
+}
+/* 3.4 · Si el celular cierra Fiao mientras usted está en WhatsApp, al volver Fiao abre la misma cuenta (hasta 10 minutos). */
+function recordarSalida() { try { localStorage.setItem('fiao-salida', JSON.stringify({ ruta: location.hash.slice(1), t: Date.now() })); } catch (e) { /* sin almacenamiento */ } }
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { try { localStorage.removeItem('fiao-salida'); } catch (e) { /* nada */ } } });
 /** Campo de pesos que se formatea solo mientras se escribe. */
 function activarCampoPesos(input, alCambiar = () => {}) {
+  input._ultimo = leerPesos(input.value);
   input.addEventListener('input', () => {
-    const v = leerPesos(input.value); input.value = v ? pesos(v) : '';
+    let v = leerPesos(input.value);
+    /* 3.4 · Tope por anotación ($9.999.999): una cifra de más no entra, como en el teclado. */
+    if (v > TOPE_MONTO && v !== input._ultimo) { v = input._ultimo; vibrar(15); }
+    input._ultimo = v;
+    input.value = v ? pesos(v) : '';
     alCambiar(v);
   });
 }
+
+/* ───── 3.4 · Cerca del límite de letras, el campo dice cuántas quedan ───── */
+document.addEventListener('input', ev => {
+  const i = ev.target;
+  if (!(i instanceof HTMLInputElement || i instanceof HTMLTextAreaElement) || i.type === 'tel' || !(i.maxLength > 0)) return;
+  const quedan = i.maxLength - i.value.length;
+  let s = i._quedan;
+  if (quedan > 5) { if (s) s.hidden = true; return; }
+  if (!s) {
+    s = document.createElement('span'); s.className = 'quedan'; s.setAttribute('aria-live', 'polite');
+    (i.parentElement.classList.contains('con-prefijo') ? i.parentElement : i).insertAdjacentElement('afterend', s); i._quedan = s;
+  }
+  s.hidden = false;
+  s.textContent = quedan <= 0 ? `Llegó al límite de ${i.maxLength} letras.` : quedan === 1 ? 'Queda 1 letra.' : `Quedan ${quedan} letras.`;
+}, true);
+
+/* ───── 3.4 · Las cifras grandes se achican solas, y solo cuando no caben (montos altos o letra Más grande) ───── */
+const CIFRAS_GRANDES = '.cifra, .cifra-xl, .cifra-l, .monto-grande';
+function encajarCifra(el) {
+  if (el.dataset.encaja) { el.style.fontSize = el.dataset.fs0 || ''; el.style.lineHeight = el.dataset.lh0 || ''; delete el.dataset.encaja; }
+  const p = el.parentElement; if (!p || !el.offsetWidth) return;
+  const cp = getComputedStyle(p), libre = p.clientWidth - parseFloat(cp.paddingLeft) - parseFloat(cp.paddingRight);
+  const necesita = Math.max(el.scrollWidth, el.offsetWidth);
+  if (libre <= 0 || necesita <= libre + 1) return;
+  const ce = getComputedStyle(el), k = libre / necesita, lh = parseFloat(ce.lineHeight);
+  el.dataset.fs0 = el.style.fontSize; el.dataset.lh0 = el.style.lineHeight; el.dataset.encaja = '1';
+  el.style.fontSize = `${Math.floor(parseFloat(ce.fontSize) * k * 10) / 10}px`;
+  if (lh) el.style.lineHeight = `${Math.round(lh * Math.max(k, 0.8))}px`;
+}
+function encajarCifras() { document.querySelectorAll(CIFRAS_GRANDES).forEach(encajarCifra); }
+(function vigilarCifras() {
+  const empezar = () => {
+    new MutationObserver(encajarCifras).observe(document.body, { childList: true, subtree: true, characterData: true });
+    new MutationObserver(encajarCifras).observe(document.documentElement, { attributes: true, attributeFilter: ['data-letra'] });
+    addEventListener('resize', encajarCifras);
+    if (document.fonts) document.fonts.ready.then(encajarCifras);
+    encajarCifras();
+  };
+  if (document.body) empezar(); else document.addEventListener('DOMContentLoaded', empezar);
+})();
 
 /* ───── Movimiento y celebración (todo se apaga con "reducir movimiento") ───── */
 function temblar(el) {
@@ -318,6 +402,8 @@ const AYUDA = {
 function botonEscuchar(texto, clave = '') { return 'speechSynthesis' in window || (typeof Voz !== 'undefined' && clave) ? `<button type="button" class="btn-sec" data-escuchar="${esc(texto)}" data-voz="${esc(clave)}">${ic('altavoz', 22, 2.2)}Escuchar</button>` : ''; }
 /** «Escuchar»: la frase grabada con la voz de Fiao; si no hay grabación, la voz del celular. */
 function montarEscuchar(d) {
+  /* 3.4 · El audio de esta hoja se prepara al abrirla, para que «Escuchar» suene apenas se toca. */
+  if (typeof Voz !== 'undefined') Voz.alistar(d.querySelector('[data-escuchar]')?.dataset.voz);
   d.querySelector('[data-escuchar]')?.addEventListener('click', async ev => {
     const b = ev.currentTarget;
     d.addEventListener('close', () => { if (typeof Voz !== 'undefined') Voz.callar(); }, { once: true });

@@ -282,7 +282,7 @@ V.mensajes = () => {
     titulo: 'Mis mensajes',
     html: `<div class="pantalla">${barra({ titulo: 'Mis mensajes', volver: 'ajustes', ayuda: false })}<main class="contenido"><form style="display:flex;flex-direction:column;gap:inherit" id="form-msj" novalidate>
       <div class="info">${ic('lapiz', 22)}<p>Escríbalos como usted habla. Lo que va entre llaves se llena solo: <b>{nombre}</b>, <b>{monto}</b>, <b>{saldo}</b>, <b>{fecha}</b>. Deje <b>{enlace}</b>: ahí el vecino ve su cuenta.</p></div>
-      ${Object.entries(TIPOS_MENSAJE).map(([k, n]) => `<div class="campo"><label for="m-${k}">${n}</label><textarea class="entrada" id="m-${k}" data-clave="${k}" rows="4">${esc((t.mensajes || {})[k] || base[k])}</textarea><button type="button" class="btn-link izq" data-original="${k}" style="font-size:1rem;min-height:2.75rem">Volver al original</button></div>`).join('')}
+      ${Object.entries(TIPOS_MENSAJE).map(([k, n]) => `<div class="campo"><label for="m-${k}">${n}</label><textarea class="entrada" id="m-${k}" data-clave="${k}" rows="4" maxlength="${LIMITES.mensaje}">${esc((t.mensajes || {})[k] || base[k])}</textarea><button type="button" class="btn-link izq" data-original="${k}" style="font-size:1rem;min-height:2.75rem">Volver al original</button></div>`).join('')}
     </form></main><div class="pie" role="region" aria-label="Acciones"><button type="submit" form="form-msj" class="btn">Guardar mis mensajes</button></div></div>`,
     montar(r) {
       r.firstElementChild.addEventListener('click', ev => { const b = ev.target.closest('[data-original]'); if (b) { r.querySelector(`#m-${b.dataset.original}`).value = base[b.dataset.original]; avisar('Volvió al mensaje original.', { icono: 'girar' }); } });

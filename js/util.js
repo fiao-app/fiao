@@ -25,6 +25,11 @@ function leerPesos(texto) {
   return d ? parseInt(d, 10) : 0;
 }
 
+/** 3.4 · Largo máximo de lo que se escribe, para que todo quepa en pantalla y en los mensajes. */
+const LIMITES = { nombre: 24, detalle: 40, lista: 80, que: 80, llevo: 30, tienda: 30, persona: 24, llave: 60, cel: 20, mensaje: 500 };
+/** Tope por anotación: $9.999.999. */
+const TOPE_MONTO = 9999999;
+
 /** Identificador corto, solo letras y números. */
 function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -133,4 +138,10 @@ function celLegible(cel) {
 function enlaceWhatsApp(cel, texto) {
   const n = (typeof Datos !== 'undefined' && Datos.tienda && Datos.tienda.demo) ? '' : celInternacional(cel);
   return `https://wa.me/${n}?text=${encodeURIComponent(texto)}`;
+}
+/** 3.4 · La dirección propia de WhatsApp (iPhone): abre la app directo, sin pasar por una página. */
+function enlaceWhatsAppApp(cel, texto = '') {
+  const n = (typeof Datos !== 'undefined' && Datos.tienda && Datos.tienda.demo) ? '' : celInternacional(cel);
+  const q = [n ? `phone=${n}` : '', texto ? `text=${encodeURIComponent(texto)}` : ''].filter(Boolean).join('&');
+  return `whatsapp://send${q ? '?' + q : ''}`;
 }

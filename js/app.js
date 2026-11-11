@@ -8,8 +8,8 @@ Vista.limpiar = [];
 Vista.despues = null;
 Vista.prefill = '';
 
-const RUTAS_SIN_TIENDA = ['bienvenida', 'restaurar', 'guia', 'tienda', 'pago'];
-const PROFUNDIDAD = { inicio: 0, cobros: 0, resumen: 0, ajustes: 0, cliente: 1, nuevo: 1, tienda: 1, mensajes: 1, resumenes: 1, restaurar: 1, guia: 1, editar: 2, mostrar: 2, cuenta: 2, corregir: 2, pago: 1 };
+const RUTAS_SIN_TIENDA = ['bienvenida', 'restaurar', 'guia', 'tienda', 'pago', 'fecha', 'revisar'];
+const PROFUNDIDAD = { inicio: 0, cobros: 0, resumen: 0, ajustes: 0, cliente: 1, nuevo: 1, tienda: 1, mensajes: 1, resumenes: 1, restaurar: 1, guia: 1, editar: 2, mostrar: 2, cuenta: 2, corregir: 2, pago: 1, fecha: 1, revisar: 1 };
 const PASOS_BIENVENIDA = ['', 'letra', 'como', 'camino', 'tienda', 'nombre'];
 function profundidad(hash) {
   const [n, p = ''] = hash.split('-');
@@ -138,11 +138,23 @@ window.addEventListener('beforeinstallprompt', ev => {
   if ((r === 'inicio' || r === 'ajustes') && !hojaAbierta()) mostrarRuta({ animar: false });
 });
 
+/* 3.4 · Volvió de WhatsApp y el celular había cerrado Fiao: se abre la misma cuenta, si fue hace menos de 10 minutos. */
+function volverDondeEstaba() {
+  let s = null;
+  try { s = JSON.parse(localStorage.getItem('fiao-salida') || 'null'); localStorage.removeItem('fiao-salida'); } catch (e) { return; }
+  const h = location.hash.slice(1);
+  if (!s || !Datos.tienda || (h && h !== 'inicio') || !(Date.now() - s.t < 10 * 60 * 1000)) return;
+  const [r, id] = String(s.ruta || '').split('-');
+  if (!(/^(cliente-[A-Za-z0-9]+(-todo)?|cobros)$/.test(s.ruta) && (r === 'cobros' || cliente(id)))) return;
+  history.replaceState(null, '', '#inicio');
+  history.pushState(null, '', '#' + s.ruta);
+}
 async function arrancar() {
   await cargarDatos();
   if (history.state && history.state.hoja) history.replaceState(null, '', location.href);
   aplicarPreferencias();
   Vista.oculto = !!(Datos.tienda && Datos.tienda.ocultarAlAbrir);
+  volverDondeEstaba();
   _rutaAnterior = location.hash.slice(1);
   mostrarRuta();
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {

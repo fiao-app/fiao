@@ -724,3 +724,16 @@ html[data-tema="tinta"] .aviso-hoy .i, html[data-tema="tinta"] .ic-fondo, html[d
 html[data-tema="tinta"] .aviso-hoy.atr .i, html[data-tema="tinta"] .ic-fondo.alerta, html[data-tema="tinta"] .como-menu li.moneda .c { background: #111111; color: #FFFFFF; }
 html[data-tema="tinta"] .aviso-hoy .i svg, html[data-tema="tinta"] .ic-fondo svg, html[data-tema="tinta"] .como-menu li .c svg { stroke-width: 2.6; }
 html[data-tema="tinta"] .aviso-hoy .i svg { width: 22px; height: 22px; }
+
+/* ───── 3.4 · Textos largos: nada se sale de su caja ─────
+   Los nombres y notas tienen límite al escribirlos, pero lo guardado antes (o lo que llega de una copia)
+   puede ser más largo: las palabras se parten dentro de su caja y la banda de «Mostrar» queda en 2 líneas. */
+.mostrar-barra > span { min-width: 0; }
+.mostrar-barra .gire { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
+.mostrar .para, .btn, .btn-sec, dialog.hoja h2, dialog.hoja p, .aviso .texto, .aviso-pago h2, .ayuda, .info p, .nombre-dato, .check { overflow-wrap: anywhere; }
+.quedan { font-size: 0.9375rem; line-height: 1.25rem; color: var(--gris); }
+/* Con letra Más grande, «Más grande» va en dos líneas y con borde: el botón crece para que la palabra quede adentro. */
+html[data-letra="mas"] .segmento button { padding-block: 0.375rem; }
+/* 3.4 · Bandas que llegan del vecino («Necesito otro día», «Algo no me cuadra»): en azul, no en verde de plata. */
+.aviso-pago.aviso-vecino { background: var(--azul-fondo); }
+.aviso-pago.aviso-vecino .ap-cab > svg { color: var(--azul-osc); }

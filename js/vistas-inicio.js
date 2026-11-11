@@ -107,7 +107,7 @@ function pantallaPregunta(paso) {
     html: `<div class="pantalla blanca">${soloVolver(tiendaP ? 'bienvenida-camino' : 'bienvenida-tienda')}<main class="contenido holgado" style="padding-top:.5rem"><form id="f-preg" novalidate style="display:flex;flex-direction:column;gap:1rem">
       <span class="ayuda" style="font-weight:600">Paso ${tiendaP ? 1 : 2} de 2</span>
       <h1 tabindex="-1" style="font-size:1.75rem;line-height:2.25rem"><label for="p-valor">${tiendaP ? '¿Cómo se llama su tienda?' : '¿Y usted cómo se llama?'}</label></h1>
-      <input class="entrada enorme" id="p-valor" value="${esc(valor)}" placeholder="${tiendaP ? 'Ej.: Donde Álvaro' : 'Ej.: Álvaro'}" autocomplete="${tiendaP ? 'organization' : 'given-name'}" aria-describedby="p-ayuda p-error" enterkeyhint="next">
+      <input class="entrada enorme" id="p-valor" value="${esc(valor)}" maxlength="${tiendaP ? LIMITES.tienda : LIMITES.persona}" placeholder="${tiendaP ? 'Ej.: Donde Álvaro' : 'Ej.: Álvaro'}" autocomplete="${tiendaP ? 'organization' : 'given-name'}" aria-describedby="p-ayuda p-error" enterkeyhint="next">
       <p class="ayuda" id="p-ayuda">${tiendaP ? 'Así la verán sus vecinos.' : 'Así firma sus mensajes.'}</p>
       <p class="error" id="p-error" role="alert" hidden></p>
     </form></main><div class="pie" role="region" aria-label="Acciones"><button type="submit" form="f-preg" class="btn">${tiendaP ? 'Seguir' : 'Abrir mi libreta'}</button></div></div>`,
@@ -182,17 +182,17 @@ V.tienda = () => {
     titulo: 'Su tienda',
     html: `<div class="pantalla">${barra({ titulo: 'Su tienda', volver: 'ajustes', ayuda: false })}
     <main class="contenido"><form style="display:flex;flex-direction:column;gap:inherit" id="form-tienda" novalidate>
-      <div class="campo"><label for="t-nombre">Nombre de la tienda</label><input class="entrada" id="t-nombre" required value="${esc(t.nombre || '')}" autocomplete="organization"></div>
-      <div class="campo"><label for="t-yo">Su nombre</label><input class="entrada" id="t-yo" required value="${esc((t.atienden || [])[0] || '')}" autocomplete="given-name"></div>
+      <div class="campo"><label for="t-nombre">Nombre de la tienda</label><input class="entrada" id="t-nombre" required value="${esc(t.nombre || '')}" maxlength="${LIMITES.tienda}" autocomplete="organization"></div>
+      <div class="campo"><label for="t-yo">Su nombre</label><input class="entrada" id="t-yo" required value="${esc((t.atienden || [])[0] || '')}" maxlength="${LIMITES.persona}" autocomplete="given-name"></div>
       <fieldset><legend class="leyenda">¿Alguien más atiende? ${opc}</legend>
         <div class="chips" id="otros">${chipsOtros()}<button type="button" class="chip" aria-pressed="false" data-accion="agregar">${ic('mas', 18, 2.6)}Agregar</button></div>
-        <div class="con-prefijo" id="nuevo-otro" hidden style="margin-top:.5rem"><label for="t-otro" class="vh">Nombre de quien atiende</label><input class="entrada" id="t-otro" placeholder="Ej.: Doña Rosa"><button type="button" class="btn-mini" data-accion="sumar">Agregar</button></div>
+        <div class="con-prefijo" id="nuevo-otro" hidden style="margin-top:.5rem"><label for="t-otro" class="vh">Nombre de quien atiende</label><input class="entrada" id="t-otro" maxlength="${LIMITES.persona}" placeholder="Ej.: Doña Rosa"><button type="button" class="btn-mini" data-accion="sumar">Agregar</button></div>
         <p class="ayuda" style="margin-top:.5rem">Cada anotación guarda quién atendió.</p>
       </fieldset>
       <h2 class="titulo-seccion" style="margin-top:.5rem">Cómo le pagan</h2>
-      <div class="campo"><label for="t-llave">Llave Bre-B ${opc}</label><input class="entrada" id="t-llave" value="${esc(t.llave || '')}" placeholder="Como sale en su banco" autocomplete="off"></div>
-      <div class="campo"><label for="t-nequi">Nequi o Daviplata ${opc}</label><input class="entrada" id="t-nequi" type="tel" inputmode="tel" value="${esc(celLegible(t.nequi || ''))}" placeholder="10 dígitos"></div>
-      <div class="campo"><label for="t-wa">WhatsApp de la tienda ${opc}</label><input class="entrada" id="t-wa" type="tel" inputmode="tel" value="${esc(celLegible(t.whatsapp || ''))}" placeholder="10 dígitos" aria-describedby="t-wa-a"><span class="ayuda" id="t-wa-a">Para que el vecino le avise «ya pagué».</span></div>
+      <div class="campo"><label for="t-llave">Llave Bre-B ${opc}</label><input class="entrada" id="t-llave" value="${esc(t.llave || '')}" maxlength="${LIMITES.llave}" placeholder="Como sale en su banco" autocomplete="off"></div>
+      <div class="campo"><label for="t-nequi">Nequi o Daviplata ${opc}</label><input class="entrada" id="t-nequi" type="tel" inputmode="tel" maxlength="${LIMITES.cel}" value="${esc(celLegible(t.nequi || ''))}" placeholder="10 dígitos"></div>
+      <div class="campo"><label for="t-wa">WhatsApp de la tienda ${opc}</label><input class="entrada" id="t-wa" type="tel" inputmode="tel" maxlength="${LIMITES.cel}" value="${esc(celLegible(t.whatsapp || ''))}" placeholder="10 dígitos" aria-describedby="t-wa-a"><span class="ayuda" id="t-wa-a">Para que el vecino le avise «ya pagué».</span></div>
       <p id="t-error" class="error" role="alert" hidden></p>
     </form></main>
     <div class="pie" role="region" aria-label="Acciones"><button type="submit" form="form-tienda" class="btn">Guardar cambios</button></div></div>`,
@@ -294,6 +294,9 @@ V.inicio = () => {
         /* Si pega un aviso de pago (el enlace del vecino, o el mensaje entero), abre esa cuenta con el aviso. */
         const aviso = b.value.match(/#pago-([A-Za-z0-9]+)-(\d{0,9}(?:\.[a-z]+)?)/);
         if (aviso) { b.value = ''; ir(`pago-${aviso[1]}-${aviso[2]}`); return; }
+        /* 3.4 · Igual con «Necesito otro día» y «Algo no me cuadra». */
+        const otro = b.value.match(/#(fecha|revisar)-([A-Za-z0-9]+)-(\d{8}|[a-z]{1,8})/);
+        if (otro) { b.value = ''; ir(`${otro[1]}-${otro[2]}-${otro[3]}`); return; }
         const q = normalizar(b.value), dig = b.value.replace(/\D/g, '');
         const porNumero = dig.length > 0 && !/\p{L}/u.test(q);
         const qd = porNumero && dig.startsWith('57') && (dig.length > 10 || /^\s*\+/.test(b.value)) ? dig.slice(2) : dig;
@@ -395,6 +398,10 @@ V.anotar = () => {
 };
 function montarInicio(r) {
   Vista.despues = null;
+  /* 3.4 · Si el nombre de la tienda ocuparía más de 2 líneas junto a los botones, pasa debajo de ellos (como en la ficha). */
+  const cab = r.querySelector('.cab-marca'), h1 = cab && cab.querySelector('h1');
+  const ubicar = () => { if (!h1 || !h1.isConnected || cab.classList.contains('titulo-abajo')) return; const lh = parseFloat(getComputedStyle(h1).lineHeight); if (lh && h1.offsetHeight > lh * 2.5) cab.classList.add('titulo-abajo'); };
+  ubicar(); if (document.fonts && document.fonts.status !== 'loaded') document.fonts.ready.then(ubicar);
   /* Si las tarjetas de hoy no caben, la última se desvanece en vez de partir un número. */
   const ah = r.querySelector('.avisos-hoy');
   if (ah) requestAnimationFrame(() => ah.classList.toggle('desborda', ah.scrollWidth > ah.clientWidth + 2));
@@ -426,9 +433,9 @@ function formCliente(c) {
     titulo: nuevo ? 'Cliente nuevo' : 'Editar cliente',
     html: `<div class="pantalla">${barra({ titulo: nuevo ? 'Cliente nuevo' : 'Editar cliente', volver, ayuda: false })}
     <main class="contenido"><form style="display:flex;flex-direction:column;gap:inherit" id="form-cliente" novalidate>
-      <div class="campo"><label for="c-nombre">Nombre o apodo</label><input class="entrada" id="c-nombre" required value="${esc(c.nombre)}" placeholder="Ej.: Rosiris, la de la esquina" autocomplete="off"></div>
+      <div class="campo"><label for="c-nombre">Nombre o apodo</label><input class="entrada" id="c-nombre" required value="${esc(c.nombre)}" maxlength="${LIMITES.nombre}" placeholder="Ej.: Rosiris, la de la esquina" autocomplete="off"></div>
       <div class="campo"><label for="c-cel">Celular con WhatsApp ${opc}</label>
-        <div class="con-prefijo"><span class="prefijo" aria-hidden="true">+57</span><input class="entrada" id="c-cel" type="tel" inputmode="tel" value="${esc(celLegible(c.cel))}" placeholder="10 dígitos" autocomplete="off">${contactosApi ? `<button type="button" class="btn-cuadro" data-accion="contactos" aria-label="Elegir de mis contactos">${ic('contactos', 26)}</button>` : ''}</div></div>
+        <div class="con-prefijo"><span class="prefijo" aria-hidden="true">+57</span><input class="entrada" id="c-cel" type="tel" inputmode="tel" maxlength="${LIMITES.cel}" value="${esc(celLegible(c.cel))}" placeholder="10 dígitos" autocomplete="off">${contactosApi ? `<button type="button" class="btn-cuadro" data-accion="contactos" aria-label="Elegir de mis contactos">${ic('contactos', 26)}</button>` : ''}</div></div>
       ${nuevo ? `<div class="campo"><label for="c-saldo">¿Ya le debe algo del cuaderno? ${opc}</label><input class="entrada" id="c-saldo" inputmode="numeric" placeholder="$0" autocomplete="off"></div>` : ''}
       ${grupoOpciones('pago', '¿Cuándo suele pagar?', PREF_PAGO, c.pago)}
       ${conFecha ? `<div class="proximo-pago"><p class="ayuda" aria-live="polite">${ic('calendario', 20)}<span id="c-proxima"></span></p>
@@ -442,8 +449,8 @@ function formCliente(c) {
         ${grupoOpciones('recibos', 'Recibos', { whatsapp: 'Por WhatsApp', semanal: 'Uno por semana', mostrar: 'Solo en la tienda' }, c.recibos)}
         ${grupoOpciones('recordar', 'Recordarle el pago', { atraso: 'Si se atrasa', dia: 'El día de pago', nunca: 'Nunca' }, c.recordar)}
         ${nuevo ? '' : grupoOpciones('permiso', '¿Aceptó mensajes por WhatsApp?', { si: 'Sí', pedido: 'Le pregunté', no: 'No', ninguno: 'No le he preguntado' }, c.permiso?.estado || 'ninguno')}
-        <div class="campo"><label for="c-detalle">Algo para reconocerlo ${opc}</label><input class="entrada" id="c-detalle" value="${esc(c.detalle || '')}" placeholder="Ej.: vende sopa"></div>
-        <div class="campo"><label for="c-lista">Lo que siempre lleva ${opc}</label><input class="entrada" id="c-lista" value="${esc(c.lista?.productos || '')}" placeholder="Ej.: pan, leche y huevos"></div>
+        <div class="campo"><label for="c-detalle">Algo para reconocerlo ${opc}</label><input class="entrada" id="c-detalle" value="${esc(c.detalle || '')}" maxlength="${LIMITES.detalle}" placeholder="Ej.: vende sopa"></div>
+        <div class="campo"><label for="c-lista">Lo que siempre lleva ${opc}</label><input class="entrada" id="c-lista" value="${esc(c.lista?.productos || '')}" maxlength="${LIMITES.lista}" placeholder="Ej.: pan, leche y huevos"></div>
       </div></details>
       <p id="c-error" class="error" role="alert" hidden></p>
     </form></main>
@@ -475,7 +482,7 @@ function formCliente(c) {
           const [ct] = await navigator.contacts.select(['name', 'tel'], { multiple: false });
           if (!ct) return;
           if (ct.tel?.[0]) cel.value = celLegible(ct.tel[0].replace(/^\+?57/, ''));
-          const n = r.querySelector('#c-nombre'); if (!n.value && ct.name?.[0]) n.value = ct.name[0];
+          const n = r.querySelector('#c-nombre'); if (!n.value && ct.name?.[0]) n.value = ct.name[0].slice(0, LIMITES.nombre);
         } catch (e) { avisar('No se pudo abrir la lista de contactos.', { icono: 'atencion' }); }
       });
       r.querySelector('#form-cliente').addEventListener('submit', async ev => {

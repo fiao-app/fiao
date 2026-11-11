@@ -91,35 +91,80 @@ const VOZ_REGLAS = [
   [/^Esto es lo que le deben entre todos\.$/, 'r-total'], [/^Primero salen los atrasados/, 'r-lista'], [/^Con este botón anota un fiado/, 'r-anotar'], [/^Aquí ve a quién recordar/, 'r-cobros']
 ];
 
+/* 3.4 · Frases que más suenan: quedan listas apenas el celular deja sonar, para que salgan sin espera. */
+const VOZ_PRIMERO = ['anotado', 'pago', 'al-dia', 'deshecho', 'cliente-nuevo', 'cambios', 'correccion', 'recibo-wa', 'e-monto', 'e-nombre'];
+
 const Voz = {
-  ctx: null, sonando: null, buffers: {}, faltan: new Set(),
+  ctx: null, sonando: null, buffers: {}, bytes: {}, cargando: {}, inicio: {}, faltan: new Set(),
+  turno: 0, // 3.4 · cada frase pedida tiene su turno: si llega otra o Fiao se esconde, la anterior ya no suena
   /** ¿La voz está encendida en Ajustes? (encendida si nunca se ha tocado) */
   encendida() { return !(Datos.tienda && Datos.tienda.voz === false); },
-  /** El celular solo deja sonar después de un toque: el primer toque prepara el audio. */
+  /** El celular solo deja sonar después de un toque: el primer toque prepara el audio.
+      3.4 · En iPhone, al volver de otra app el audio queda «interrumpido» (no «suspendido»): también se reanuda. */
   preparar() {
-    if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume().catch(() => {}); return; }
+    if (this.ctx && this.ctx.state === 'closed') this.ctx = null;
+    if (this.ctx) { if (this.ctx.state !== 'running') this.ctx.resume().catch(() => {}); return; }
     const C = window.AudioContext || window.webkitAudioContext; if (!C) return;
-    try { this.ctx = new C(); } catch (e) { this.ctx = null; }
+    try { this.ctx = new C(); } catch (e) { this.ctx = null; return; }
+    this.precargar();
   },
-  async cargar(clave) {
-    if (this.buffers[clave]) return this.buffers[clave];
-    const r = await fetch(`audio/${clave}.mp3`); if (!r.ok) throw new Error('sin audio');
-    const datos = await r.arrayBuffer();
-    return (this.buffers[clave] = await new Promise((ok, mal) => this.ctx.decodeAudioData(datos, ok, mal)));
+  /** 3.4 · En ratos libres trae a memoria las frases cortas (cerca de 1 MB) y deja listas las más usadas. */
+  precargar() {
+    if (this._precargando) return; this._precargando = true;
+    const libre = f => (window.requestIdleCallback ? requestIdleCallback(f, { timeout: 4000 }) : setTimeout(f, 1200));
+    const cortas = Object.keys(VOZ).filter(k => !/^(ayuda|porque)-/.test(k) && !this.faltan.has(k));
+    const orden = [...VOZ_PRIMERO, ...cortas.filter(k => !VOZ_PRIMERO.includes(k))];
+    let i = 0;
+    const siguiente = () => {
+      if (i >= orden.length) return;
+      const k = orden[i++];
+      (VOZ_PRIMERO.includes(k) ? this.cargar(k) : this.traer(k)).catch(() => {}).finally(() => libre(siguiente));
+    };
+    libre(siguiente);
   },
-  callar() { try { this.sonando && this.sonando.stop(); } catch (e) { /* ya paró */ } this.sonando = null; },
-  /** Dice una frase. forzar: suena aunque la voz esté apagada (botón «Escuchar»). */
+  /** Los bytes del archivo (sin preparar todavía). */
+  traer(clave) {
+    if (this.bytes[clave]) return Promise.resolve(this.bytes[clave]);
+    return fetch(`audio/${clave}.mp3`).then(r => { if (!r.ok) throw new Error('sin audio'); return r.arrayBuffer(); }).then(b => (this.bytes[clave] = b));
+  },
+  /** La frase lista para sonar. Se prepara una sola vez, aunque la pidan dos veces seguidas. */
+  cargar(clave) {
+    if (this.buffers[clave]) return Promise.resolve(this.buffers[clave]);
+    if (this.cargando[clave]) return this.cargando[clave];
+    if (!this.ctx) return Promise.reject(new Error('sin audio'));
+    const p = this.traer(clave).then(b => new Promise((ok, mal) => this.ctx.decodeAudioData(b.slice(0), ok, mal))).then(buf => {
+      this.buffers[clave] = buf; delete this.bytes[clave];
+      /* 3.4 · Cada archivo empieza con 25 a 115 ms de silencio: se salta al reproducir. */
+      try { const d = buf.getChannelData(0), n = d.length; let j = 0; while (j < n && Math.abs(d[j]) < 0.004) j++; this.inicio[clave] = Math.max(0, j / buf.sampleRate - 0.012); } catch (e) { this.inicio[clave] = 0; }
+      return buf;
+    });
+    this.cargando[clave] = p; p.finally(() => { delete this.cargando[clave]; }).catch(() => {});
+    return p;
+  },
+  /** Prepara una frase larga antes de que la pidan (la Ayuda y los «¿Por qué?», al abrirse). */
+  alistar(clave) { if (clave && VOZ[clave] && this.ctx && !this.faltan.has(clave)) this.cargar(clave).catch(() => {}); },
+  parar() { try { this.sonando && this.sonando.stop(); } catch (e) { /* ya paró */ } this.sonando = null; },
+  /** Calla lo que suena y descarta lo que iba a sonar. */
+  callar() { this.turno++; this.parar(); },
+  /** Dice una frase. forzar: suena aunque la voz esté apagada (botón «Escuchar»).
+      3.4 · Una frase que no alcanzó a sonar a tiempo se descarta: nunca suena tarde. */
   async decir(clave, { forzar = false } = {}) {
     if (!clave || !VOZ[clave] || this.faltan.has(clave) || (!forzar && !this.encendida())) return false;
     this.preparar(); if (!this.ctx) return false;
+    const mio = ++this.turno, t0 = performance.now(), plazo = forzar ? 6000 : 1000;
+    const vigente = () => mio === this.turno && !document.hidden && performance.now() - t0 <= plazo;
     try {
-      if (this.ctx.state === 'suspended') await this.ctx.resume();
+      if (this.ctx.state !== 'running') {
+        await Promise.race([this.ctx.resume().catch(() => {}), new Promise(ok => setTimeout(ok, 300))]);
+        if (this.ctx.state !== 'running') return false; // el celular no dejó sonar ahora: se salta, no se encola
+      }
       const buf = await this.cargar(clave);
-      this.callar();
-      const s = this.ctx.createBufferSource(); s.buffer = buf; s.connect(this.ctx.destination); s.start();
+      if (!vigente()) return false;
+      this.parar();
+      const s = this.ctx.createBufferSource(); s.buffer = buf; s.connect(this.ctx.destination); s.start(0, this.inicio[clave] || 0);
       this.sonando = s; s.onended = () => { if (this.sonando === s) this.sonando = null; };
       return true;
-    } catch (e) { this.faltan.add(clave); return false; }
+    } catch (e) { if (mio === this.turno) this.faltan.add(clave); return false; }
   },
   claveDe(texto) { const t = String(texto || '').replace(/\s+/g, ' ').trim(); const r = VOZ_REGLAS.find(([re]) => re.test(t)); return r ? r[1] : null; },
   decirTexto(texto) { return this.decir(this.claveDe(texto)); }

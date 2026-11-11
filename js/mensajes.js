@@ -18,8 +18,8 @@ const PLANTILLAS = {
   cercano: {
     fiado: 'Hola, {nombre}. Le anotamos {monto} hoy, {fecha}{que}. Su cuenta va en {saldo}. Vea el detalle aquí: {enlace}',
     pago: 'Hola, {nombre}. Recibimos su {abono} de {monto} hoy, {fecha}, {medio}. {queda} ¡Gracias! Vea el detalle aquí: {enlace}',
-    recordatorioAtraso: 'Hola, {nombre}. Le escribimos de {tienda}. Quedamos en cuadrar la cuenta el {fechaAcordada} y van {saldo}. Si necesita otro día, nos avisa sin problema.{pagar}',
-    recordatorioDia: 'Hola, {nombre}. Le escribimos de {tienda} para recordarle, como nos pidió, que hoy es el día acordado para cuadrar la cuenta: {saldo}. Si necesita otro día, nos avisa sin problema.{pagar}',
+    recordatorioAtraso: 'Hola, {nombre}. Le escribimos de {tienda}. Quedamos en cuadrar la cuenta el {fechaAcordada} y van {saldo}. Si necesita otro día, nos avisa sin problema.{pagar} Vea su cuenta y avísenos cuando pague: {enlace}',
+    recordatorioDia: 'Hola, {nombre}. Le escribimos de {tienda} para recordarle, como nos pidió, que hoy es el día acordado para cuadrar la cuenta: {saldo}. Si necesita otro día, nos avisa sin problema.{pagar} Vea su cuenta y avísenos cuando pague: {enlace}',
     permiso: 'Hola, {nombre}. Le escribe {quien}, de {laTienda}. Para llevar claras sus cuentas, ¿le puedo enviar por aquí el recibo de lo que fía? Responda SÍ si está de acuerdo. Su número solo lo uso para esto, y si un día no quiere, me dice y dejo de enviarle.',
     correccion: 'Hola, {nombre}. Corregimos su cuenta: en lo del {fechaMov} {cambio}. Ahora va en {saldo}. Disculpe la molestia. Vea el detalle aquí: {enlace}',
     resumen: 'Hola, {nombre}. Este es el resumen de su cuenta en {tienda}: {semana}. Va en {saldo}. Vea el detalle aquí: {enlace}'
@@ -27,8 +27,8 @@ const PLANTILLAS = {
   formal: {
     fiado: '{saludo}, {nombre}. Le informamos que hoy, {fecha}, se registró a su cuenta un valor de {monto}{que}. Su saldo es de {saldo}. Puede consultar el detalle aquí: {enlace}',
     pago: '{saludo}, {nombre}. Confirmamos su {abono} de {monto} recibido hoy, {fecha}, {medio}. {queda} Muchas gracias. Detalle: {enlace}',
-    recordatorioAtraso: '{saludo}, {nombre}. Le escribimos de {tienda}. Le recordamos que el pago acordado para el {fechaAcordada} está pendiente, por un valor de {saldo}. Si requiere otra fecha, con gusto la acordamos.{pagar}',
-    recordatorioDia: '{saludo}, {nombre}. Le escribimos de {tienda}, como nos solicitó, para recordarle que hoy es la fecha acordada para el pago de {saldo}. Si requiere otra fecha, con gusto la acordamos.{pagar}',
+    recordatorioAtraso: '{saludo}, {nombre}. Le escribimos de {tienda}. Le recordamos que el pago acordado para el {fechaAcordada} está pendiente, por un valor de {saldo}. Si requiere otra fecha, con gusto la acordamos.{pagar} Puede ver su cuenta y avisarnos su pago aquí: {enlace}',
+    recordatorioDia: '{saludo}, {nombre}. Le escribimos de {tienda}, como nos solicitó, para recordarle que hoy es la fecha acordada para el pago de {saldo}. Si requiere otra fecha, con gusto la acordamos.{pagar} Puede ver su cuenta y avisarnos su pago aquí: {enlace}',
     permiso: '{saludo}, {nombre}. Le escribe {quien}, de {laTienda}. ¿Nos autoriza a enviarle por este medio los recibos de sus compras a crédito? Si está de acuerdo, por favor responda SÍ. Su número solo se usará para este fin y puede retirar la autorización cuando lo desee.',
     correccion: '{saludo}, {nombre}. Le informamos una corrección en su cuenta: en el registro del {fechaMov} {cambio}. Su saldo actual es de {saldo}. Ofrecemos disculpas. Detalle: {enlace}',
     resumen: '{saludo}, {nombre}. Le compartimos el resumen de su cuenta en {tienda}: {semana}. Saldo actual: {saldo}. Detalle: {enlace}'
@@ -36,8 +36,8 @@ const PLANTILLAS = {
   breve: {
     fiado: '{tienda}: anotado {monto}{que}. Su cuenta: {saldo}. Detalle: {enlace}',
     pago: '{tienda}: recibido {monto} {medio}. {queda} Detalle: {enlace}',
-    recordatorioAtraso: '{tienda}: la cuenta quedó para el {fechaAcordada} y van {saldo}. ¿Cuándo nos cuadra?{pagar}',
-    recordatorioDia: '{tienda}: hoy es el día acordado. Van {saldo}.{pagar}',
+    recordatorioAtraso: '{tienda}: la cuenta quedó para el {fechaAcordada} y van {saldo}. ¿Cuándo nos cuadra?{pagar} Su cuenta: {enlace}',
+    recordatorioDia: '{tienda}: hoy es el día acordado. Van {saldo}.{pagar} Su cuenta: {enlace}',
     permiso: 'Hola, {nombre}. Soy {quien}, de {tienda}. ¿Le puedo enviar por aquí los recibos de lo que fía? Responda SÍ. Solo uso su número para esto.',
     correccion: '{tienda}: corregimos lo del {fechaMov}. {Cambio}. Su cuenta: {saldo}. Detalle: {enlace}',
     resumen: '{tienda}: resumen de su cuenta: {semana}. Va en {saldo}. Detalle: {enlace}'
@@ -82,7 +82,14 @@ function mensajePago(c, m) {
 }
 function mensajeRecordatorio(c, e) {
   const clave = e.tipo === 'atrasado' ? 'recordatorioAtraso' : 'recordatorioDia';
-  return _llenar(plantilla(clave), { ..._base(c), saldo: pesos(e.saldo), fechaAcordada: e.fecha ? fechaLarga(e.fecha) : '' });
+  return _llenar(plantilla(clave), { ..._base(c), saldo: pesos(e.saldo), fechaAcordada: e.fecha ? fechaLarga(e.fecha) : '', enlace: enlaceCuenta(c) });
+}
+/** 3.4 · Respuesta cuando el tendero acepta el día que pidió el vecino. */
+function mensajeFechaAceptada(c, iso) {
+  const b = _base(c), f = fechaLarga(diaDe(iso)), enlace = enlaceCuenta(c), tono = tienda().tono || 'cercano';
+  if (tono === 'formal') return `${b.saludo}, ${b.nombre}. Confirmamos la nueva fecha de pago: el ${f}. Puede ver su cuenta aquí: ${enlace}`;
+  if (tono === 'breve') return `${b.tienda}: listo, quedó para el ${f}. Su cuenta: ${enlace}`;
+  return `Hola, ${b.nombre}. Listo, quedó para el ${f}. Gracias por avisar. Vea su cuenta aquí: ${enlace}`;
 }
 function mensajePermiso(c) { return _llenar(plantilla('permiso'), _base(c)); }
 function mensajeCorreccion(c, m, anulada) {
