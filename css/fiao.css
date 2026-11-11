@@ -762,3 +762,45 @@ html[data-letra="mas"] .segmento button { padding-block: 0.375rem; }
 /* 3.5.3 · Botones en fila (historial): si no caben juntos, el que sobra pasa abajo en vez de quedar recortado. */
 .fila-botones { flex-wrap: wrap; }
 .fila-botones > * { min-width: min-content; }
+/* 3.7 · Contraste en la cabecera cobalto (apariencia Color): las etiquetas blancas («Paga hoy», «Atiende») iban sobre
+   un blanco translúcido que aclaraba el fondo (4,3:1). Ahora el fondo oscurece el cobalto: blanco encima 7,7:1. */
+html:not([data-tema="tinta"]) .cab-marca .estado.atrasado, html:not([data-tema="tinta"]) .cab-marca .estado.hoy,
+html:not([data-tema="tinta"]) .cab-marca .estado.ok, html:not([data-tema="tinta"]) .chip-atiende { background: rgba(20, 27, 52, 0.24); }
+/* 3.7 · «Marque el monto» es una instrucción: se lee completa aunque el botón todavía no funcione (antes, 2,6:1). */
+#h-anotar[disabled] { opacity: 1; background: var(--azul-fondo); color: var(--azul-osc); }
+/* 3.7 · Inicio más liviano: el aviso de ejemplo cabe en un renglón y las tarjetas de hoy se ven completas, sin carrusel. */
+.banda.demo.compacta { flex-wrap: nowrap; padding-block: 0.25rem; }
+.banda.demo.compacta > span { flex: 1 1 auto; min-width: 0; }
+html[data-letra="mas"] .banda.demo.compacta { flex-wrap: wrap; padding-block: 0.5rem; }
+.avisos-hoy { display: grid; grid-template-columns: repeat(auto-fit, minmax(6.25rem, 1fr)); gap: 0.5rem; margin: 0; padding: 0; overflow: visible; }
+.avisos-hoy.desborda { -webkit-mask-image: none; mask-image: none; }
+.aviso-hoy { min-width: 0; max-width: none; padding: 0.75rem; }
+.aviso-hoy .i { width: 2rem; height: 2rem; margin-bottom: 0.125rem; }
+.aviso-hoy .t { overflow-wrap: anywhere; }
+.aviso-hoy b { white-space: nowrap; }
+/* 3.7 · «Más grande»: cada cliente en dos renglones (inicial y nombre arriba; estado y monto abajo, a todo el ancho). */
+html[data-letra="mas"] .fila:has(> .avatar) { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; column-gap: 0.75rem; row-gap: 0.125rem; align-items: center; }
+html[data-letra="mas"] .fila:has(> .avatar) > .avatar { grid-row: 1; grid-column: 1; width: 2.25rem; height: 2.25rem; font-size: 0.875rem; }
+html[data-letra="mas"] .fila:has(> .avatar) > .medio { display: contents; }
+html[data-letra="mas"] .fila:has(> .avatar) .nombre { grid-column: 2 / 4; grid-row: 1; }
+html[data-letra="mas"] .fila:has(> .avatar) .medio > :not(.nombre) { grid-column: 1 / 3; justify-self: start; }
+html[data-letra="mas"] .fila:has(> .avatar) > .monto { grid-column: 3; grid-row: 2; }
+/* 3.7 · «Más grande»: los botones de la ficha en dos filas de tres, sin tocarse ni partir palabras. */
+html[data-letra="mas"] .atajos:has(> :nth-child(4)) { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem 0.25rem; }
+html[data-letra="mas"] .atajos:has(> :nth-child(4)) > .atajo { font-size: 1rem; hyphens: manual; overflow-wrap: normal; }
+/* 3.7 · Las opciones no se mueven al marcarlas: sin marcar, el espacio del chulo se reparte a los lados. */
+.chip[aria-pressed="true"], .chip[aria-checked="true"] { padding-inline: 0.875rem; }
+.chip:not([aria-pressed="true"]):not([aria-checked="true"]) { padding-inline: 1.625rem; }
+/* 3.7 · iPhone: el campo de fecha se salía del margen (Safari le da un ancho propio). Solo en iPhone y iPad. */
+@supports (-webkit-touch-callout: none) {
+  input.entrada[type="date"] { -webkit-appearance: none; appearance: none; display: block; min-width: 0; max-width: 100%; line-height: calc(3.5rem - 4px); text-align: left; }
+  input.entrada[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
+}
+/* 3.7 · Mis mensajes: el cuadro crece con el texto y los datos se agregan con un toque. */
+textarea.msj-crece { resize: none; overflow: hidden; }
+.msj-datos { display: flex; flex-wrap: wrap; gap: 0.375rem; margin-top: 0.25rem; }
+.msj-dato { min-height: 2.75rem; padding: 0 0.875rem; border: none; border-radius: 999px; background: var(--azul-fondo); color: var(--azul-osc); font-size: 1rem; font-weight: 600; display: inline-flex; align-items: center; }
+.msj-dato::before { content: '+'; margin-right: 0.25rem; font-weight: 700; }
+.msj-dato:active { transform: scale(0.97); }
+html[data-tema="tinta"] .msj-dato { background: #FFFFFF; color: #1D3BA8; box-shadow: inset 0 0 0 2px #1D3BA8; }
+html[data-letra="mas"] .aviso-hoy:nth-child(3):last-child { grid-column: 1 / -1; }

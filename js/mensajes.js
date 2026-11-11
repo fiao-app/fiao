@@ -44,6 +44,22 @@ const PLANTILLAS = {
   }
 };
 
+/* 3.7 · En «Mis mensajes» lo que va entre llaves se muestra en palabras («{día acordado}») y se guarda con su clave. */
+const VARIABLES_MSJ = {
+  nombre: 'nombre', monto: 'monto', saldo: 'lo que debe', fecha: 'fecha', enlace: 'enlace', que: 'qué llevó',
+  tienda: 'tienda', laTienda: 'la tienda', quien: 'quien atiende', saludo: 'saludo', fechaAcordada: 'día acordado',
+  pagar: 'cómo pagar', abono: 'abono o pago', medio: 'por dónde pagó', queda: 'lo que queda', fechaMov: 'fecha corregida',
+  cambio: 'el cambio', Cambio: 'El cambio', semana: 'lo de la semana'
+};
+const _DE_PALABRA = Object.fromEntries(Object.entries(VARIABLES_MSJ).map(([k, v]) => [v, k]));
+function msjEnPalabras(texto) { return texto.replace(/\{(\w+)\}/g, (m, k) => VARIABLES_MSJ[k] ? `{${VARIABLES_MSJ[k]}}` : m); }
+function msjEnClaves(texto) { return texto.replace(/\{([^{}\n]{1,30})\}/g, (m, v) => { const k = _DE_PALABRA[v.trim()] || _DE_PALABRA[v.trim().toLowerCase()]; return k ? `{${k}}` : m; }); }
+/** Variables que usa un tipo de mensaje en cualquiera de los tres tonos, en orden de aparición. */
+function variablesDe(tipo) {
+  const vistas = [];
+  for (const tono of Object.keys(PLANTILLAS)) for (const [, k] of (PLANTILLAS[tono][tipo] || '').matchAll(/\{(\w+)\}/g)) if (VARIABLES_MSJ[k] && !vistas.includes(k) && k !== 'Cambio') vistas.push(k);
+  return vistas;
+}
 function _saludo(d = new Date()) { const h = d.getHours(); return h < 12 ? 'Buenos días' : h < 19 ? 'Buenas tardes' : 'Buenas noches'; }
 function _comoPagar() {
   const t = tienda(); const p = [];

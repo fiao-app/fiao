@@ -2,7 +2,7 @@
    Principio: nada se borra. Corregir o anular deja rastro visible para los dos. */
 'use strict';
 
-const PREF_PAGO = { tarde: 'En la tarde', manana: 'Mañana', viernes: 'Viernes', quincena: 'Quincena', otro: 'Otro día' };
+const PREF_PAGO = { tarde: 'Hoy en la tarde', manana: 'Mañana', viernes: 'Viernes', quincena: 'Quincena', otro: 'Otro día' };
 const PREF_RECIBOS = { whatsapp: 'por WhatsApp', mostrar: 'se los muestro aquí', semanal: 'resumen semanal por WhatsApp' };
 const PREF_RECORDAR = { dia: 'el día de pago', atraso: 'solo si se atrasa', nunca: 'nunca' };
 const MEDIOS = { efectivo: 'en efectivo', nequi: 'por Nequi', breb: 'por Bre-B', otro: '' };

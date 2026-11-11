@@ -54,13 +54,13 @@ function pintarVecino() {
       ${filas ? `<section class="recibo" aria-labelledby="t-mov"><h2 class="titulo-seccion" id="t-mov">Historial</h2>${filas}${ant}</section>` : ''}
       ${debe ? `<section class="tarjeta" aria-labelledby="t-pagar"><h2 class="titulo-seccion" id="t-pagar">¿Cómo pagar?</h2>
         ${k.b ? copiable('Llave Bre-B', k.b, 'llave') : ''}${k.q ? copiable('Nequi', celLegible(k.q), 'nequi') : ''}
-        <span>O en efectivo, en la tienda.</span>
+        <span>${k.b || k.q ? 'O en efectivo, en la tienda.' : 'En efectivo, en la tienda.'}</span>
         ${k.b || k.q ? `<p class="ayuda" style="display:flex;gap:.5rem">${ic('escudo', 20)}<span>Antes de pagar, confirme que estos datos son los que le dio su tienda. Fiao no los verifica ni recibe pagos.</span></p>` : ''}</section>
       <button type="button" class="btn" data-accion="ya-pague" aria-expanded="false" aria-controls="aviso-pago">${ic('chat', 22, 2.2)}Ya pagué: avisarle a la tienda</button>
       <section class="tarjeta" id="aviso-pago" hidden aria-label="Avisar el pago">
         <div class="campo"><label for="v-monto">¿Cuánto pagó?</label><input class="entrada grande" id="v-monto" inputmode="numeric" value="${pesos(k.s)}" autocomplete="off"></div>
-        <fieldset><legend class="leyenda">¿Por dónde?</legend><div class="chips" role="radiogroup" aria-label="Por dónde pagó" data-grupo="medio">
-          ${chip('Bre-B', true, 'data-valor="breb"', 'radio')}${chip('Nequi', false, 'data-valor="nequi"', 'radio')}${chip('Otro', false, 'data-valor="otro"', 'radio')}</div></fieldset>
+        ${k.b || k.q ? `<fieldset><legend class="leyenda">¿Por dónde?</legend><div class="chips" role="radiogroup" aria-label="Por dónde pagó" data-grupo="medio">
+          ${k.b ? chip('Bre-B', true, 'data-valor="breb"', 'radio') : ''}${k.q ? chip('Nequi', !k.b, 'data-valor="nequi"', 'radio') : ''}${chip('Otro', false, 'data-valor="otro"', 'radio')}</div></fieldset>` : ''}
         <a class="btn" id="v-enviar" href="#" target="_blank" rel="noopener" data-wa>${ic('enviar', 22, 2.4)}Enviar aviso por WhatsApp</a>
         <p class="ayuda">${k.w ? 'Le llega a la tienda por WhatsApp.' : 'Elija el chat de la tienda en WhatsApp.'} La tienda confirma el pago y le manda su comprobante.</p>
       </section>${k.i ? cajaOtroDia() : ''}` : `<div class="info ok">${ic('ok', 22)}<p>¡Gracias! Su cuenta está al día.</p></div>`}
@@ -119,7 +119,7 @@ function montarVecino(app, k) {
   if (ya) {
     const caja = app.querySelector('#aviso-pago'), inp = app.querySelector('#v-monto'), env = app.querySelector('#v-enviar');
     const actualizar = () => {
-      const v = leerPesos(inp.value), medio = leer('medio');
+      const v = leerPesos(inp.value), medio = (k.b || k.q) ? leer('medio') : 'otro'; /* 3.7 · solo los medios que la tienda dejó */
       const por = medio === 'breb' ? 'por Bre-B' : medio === 'nequi' ? 'por Nequi' : '';
       /* Con el enlace, la tienda abre la cuenta en Fiao de un toque (en los enlaces nuevos, que traen quién es). */
       const confirmar = k.i ? `\nConfirmar en Fiao: ${base}#pago-${encodeURIComponent(k.i)}-${v}.${medio}` : '';

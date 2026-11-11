@@ -85,6 +85,20 @@ Correcciones de la evaluación final (heurística, crítica de diseño, usabilid
 - Si el tendero llena algo, queda guardado y Fiao ya no se lo pregunta al mandar el primer recibo. Si lo deja vacío, todo sigue como antes: se lo pregunta en ese momento, en la hoja «¿Cómo le pueden pagar?».
 - Lo escrito se conserva al ir atrás, y un Nequi incompleto no deja seguir sin avisar.
 
+## Revisión de director de arte (3.7)
+
+Una revisión independiente de las pantallas encontró detalles que se notan de cerca; todos se corrigieron:
+
+- **Contraste.** La etiqueta de estado («Paga hoy») y «Atiende» sobre la cabecera cobalto ahora van sobre un fondo más oscuro (blanco encima 7,7:1; antes 4,3:1). «Marque el monto» ya no se ve apagado: es una instrucción y se lee completa.
+- **Sin anillo negro al abrir hojas.** El foco va al título de la hoja (los lectores de pantalla lo anuncian) en vez de caer en la hoja o en la X.
+- **Textos.** Ajustes dice la versión correcta; todos los celulares piden «10 números»; la página del vecino ya no dice «O en efectivo» cuando no hay otro medio, y «Ya pagué» solo ofrece Bre-B o Nequi si la tienda los dejó. «¿Cuándo suele pagar?» dice «Hoy en la tarde» para que no se confunda con «Mañana» (el día siguiente).
+- **Ícono de «Mostrar».** Un celular que gira hacia el vecino; antes eran flechas que se leían como «recargar».
+- **Inicio más liviano.** El aviso de la tienda de ejemplo cabe en un renglón, las tarjetas de hoy se ven completas en una fila (sin carrusel) y el consejo de deslizar para borrar pasó debajo de la lista: el primer cliente aparece sin bajar.
+- **Letra «Más grande».** Cada cliente va en dos renglones (inicial y nombre arriba; estado y monto abajo) y los botones de la ficha en dos filas de tres, sin tocarse ni partir palabras.
+- **Opciones que no saltan.** Al marcar una opción ya no cambia de ancho, así que la fila no se reacomoda bajo el dedo.
+- **Mis mensajes.** Los datos se muestran en palabras («{día acordado}», «{cómo pagar}») y se agregan con un toque; el cuadro crece con el texto. Se siguen guardando con las mismas claves, así que los mensajes ya escritos funcionan igual.
+- **iPhone.** El campo de fecha («¿Qué día acordaron?») ya no se sale del margen derecho.
+
 ## Decisiones que sostienen la confianza
 
 - **Los datos viven en el celular.** La libreta se guarda en el navegador (IndexedDB). No hay servidor, cuentas, contraseñas, cookies ni herramientas de medición.

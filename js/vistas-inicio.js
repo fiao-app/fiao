@@ -224,8 +224,8 @@ V.tienda = () => {
       </fieldset>
       <h2 class="titulo-seccion" style="margin-top:.5rem">Cómo le pagan</h2>
       <div class="campo"><label for="t-llave">Llave Bre-B ${opc}</label><input class="entrada" id="t-llave" value="${esc(t.llave || '')}" maxlength="${LIMITES.llave}" placeholder="Como sale en su banco" autocomplete="off"></div>
-      <div class="campo"><label for="t-nequi">Nequi o Daviplata ${opc}</label><input class="entrada" id="t-nequi" type="tel" inputmode="tel" maxlength="${LIMITES.cel}" value="${esc(celLegible(t.nequi || ''))}" placeholder="10 dígitos"></div>
-      <div class="campo"><label for="t-wa">WhatsApp de la tienda ${opc}</label><input class="entrada" id="t-wa" type="tel" inputmode="tel" maxlength="${LIMITES.cel}" value="${esc(celLegible(t.whatsapp || ''))}" placeholder="10 dígitos" aria-describedby="t-wa-a"><span class="ayuda" id="t-wa-a">Para que el vecino le avise «ya pagué».</span></div>
+      <div class="campo"><label for="t-nequi">Nequi o Daviplata ${opc}</label><input class="entrada" id="t-nequi" type="tel" inputmode="tel" maxlength="${LIMITES.cel}" value="${esc(celLegible(t.nequi || ''))}" placeholder="10 números"></div>
+      <div class="campo"><label for="t-wa">WhatsApp de la tienda ${opc}</label><input class="entrada" id="t-wa" type="tel" inputmode="tel" maxlength="${LIMITES.cel}" value="${esc(celLegible(t.whatsapp || ''))}" placeholder="10 números" aria-describedby="t-wa-a"><span class="ayuda" id="t-wa-a">Para que el vecino le avise «ya pagué».</span></div>
       <p id="t-error" class="error" role="alert" hidden></p>
     </form></main>
     <div class="pie" role="region" aria-label="Acciones"><button type="submit" form="form-tienda" class="btn">Guardar cambios</button></div></div>`,
@@ -267,7 +267,7 @@ V.inicio = () => {
   const botones = hayClientes ? btnRedondo('ojoNo', 'Ocultar montos', { accion: 'ocultar', presionado: Vista.oculto }) : '';
   const cab = cabMarca({ titulo: esc(t.nombre || 'Mi tienda'), extra: chipAtiende(), botones, cuerpo });
   const inst = puedeInstalar();
-  const bandas = `${t.demo ? `<div class="banda demo">${ic('ojo', 20)}<span>Está viendo una tienda de ejemplo.</span><button type="button" class="btn-mini sec" data-accion="salir-demo">Usar la mía</button></div>` : ''}
+  const bandas = `${t.demo ? `<div class="banda demo compacta">${ic('ojo', 20)}<span>Tienda de ejemplo.</span><button type="button" class="btn-mini sec" data-accion="salir-demo">Usar la mía</button></div>` : ''}
     ${inst && !t.demo && !t.noInstalar ? `<div class="banda">${ic('celular', 20)}<span>${inst === 'ios' ? 'Instale Fiao para que Safari no borre su libreta.' : 'Instale Fiao: abre sin internet.'}</span><button type="button" class="btn-mini" data-accion="instalar">${inst === 'ios' ? 'Cómo' : 'Instalar'}</button></div>` : ''}`;
   const pie = `<div class="abajo"><button type="button" class="fab" data-accion="anotar" data-guia="anotar">${ic('mas', 24, 2.8)}Anotar fiado</button>${nav('libreta')}</div>`;
   if (!hayClientes) return {
@@ -293,7 +293,7 @@ V.inicio = () => {
   const tarjetaHoy = (clase, href, icono, texto, valor) => `<a class="aviso-hoy ${clase}" href="#${href}"><span class="i" aria-hidden="true">${ic(icono, 20, 2.4)}</span><span class="t">${texto}</span><b>${valor}</b></a>`;
   const avisosHoy = `<section class="avisos-hoy" aria-label="Hoy">
     ${atr.length ? tarjetaHoy('atr', 'cobros', 'atencion', `${atr.length} ${atr.length === 1 ? 'atrasado' : 'atrasados'}`, monto(suma(atr))) : ''}
-    ${deHoy.length ? tarjetaHoy('hoy', 'cobros', 'reloj', `Hoy ${deHoy.length === 1 ? 'paga' : 'pagan'} ${deHoy.length}`, monto(suma(deHoy))) : ''}
+    ${deHoy.length ? tarjetaHoy('hoy', 'cobros', 'reloj', `Hoy ${deHoy.length === 1 ? 'paga' : 'pagan'}&nbsp;${deHoy.length}`, monto(suma(deHoy))) : ''}
     ${!atr.length && !deHoy.length ? tarjetaHoy('ok', 'cobros', 'ok', 'Cobros de hoy', 'Ninguno') : ''}
     ${lista.length > 1 ? tarjetaHoy('ok', 'resumen', 'estrella', 'Al día', `${alDia} de ${lista.length}`) : ''}</section>`;
   return {
@@ -304,12 +304,12 @@ V.inicio = () => {
       ${avisosHoy}
       ${pasosHtml()}
       <div class="buscador"><label for="buscar" class="vh">Buscar cliente por nombre o celular</label>${ic('buscar', 24)}<input class="entrada" id="buscar" type="search" placeholder="Buscar por nombre o celular" autocomplete="off"></div>
-      ${lista.length ? consejo('deslizar', 'Deslice un cliente a la izquierda para borrarlo.') : ''}
       <div class="encabezado-lista"><h2 class="titulo-seccion" id="t-clientes">Clientes</h2><span id="cuantos">${lista.length}</span></div>
       <ul class="lista lista-borrable" id="lista-clientes" aria-labelledby="t-clientes">${lista.map(({ c, e }) => filaCliente(c, e, `cliente-${c.id}`)
         .replace('<a class="fila"', '<a class="fila" draggable="false"')
         .replace(/<\/li>$/, `<button type="button" class="fila-borrar" data-borrar="${esc(c.id)}" aria-label="Borrar a ${esc(c.nombre)}">${ic('basura', 24, 2.2)}<span>Borrar</span></button></li>`)).join('')}</ul>
       <p class="vacio" id="sin-resultados" hidden></p>
+      ${lista.length ? consejo('deslizar', 'Deslice un cliente a la izquierda para borrarlo.') : ''}
       <div class="fila-enlaces"><a class="btn-link" href="#nuevo">${ic('mas', 20, 2.4)}Agregar cliente</a><button type="button" class="btn-link" data-accion="importar">${ic('contactos', 20, 2.2)}Traer de mis contactos</button></div>
     </main>${pie}</div>`,
     montar(r) {
@@ -469,7 +469,7 @@ function formCliente(c) {
     <main class="contenido"><form style="display:flex;flex-direction:column;gap:inherit" id="form-cliente" novalidate>
       <div class="campo"><label for="c-nombre">Nombre o apodo</label><input class="entrada" id="c-nombre" required value="${esc(c.nombre)}" maxlength="${LIMITES.nombre}" placeholder="Ej.: Rosiris, la de la esquina" autocomplete="off"></div>
       <div class="campo"><label for="c-cel">Celular con WhatsApp ${opc}</label>
-        <div class="con-prefijo"><span class="prefijo" aria-hidden="true">+57</span><input class="entrada" id="c-cel" type="tel" inputmode="tel" maxlength="${LIMITES.cel}" value="${esc(celLegible(c.cel))}" placeholder="10 dígitos" autocomplete="off">${contactosApi ? `<button type="button" class="btn-cuadro" data-accion="contactos" aria-label="Elegir de mis contactos">${ic('contactos', 26)}</button>` : ''}</div></div>
+        <div class="con-prefijo"><span class="prefijo" aria-hidden="true">+57</span><input class="entrada" id="c-cel" type="tel" inputmode="tel" maxlength="${LIMITES.cel}" value="${esc(celLegible(c.cel))}" placeholder="10 números" autocomplete="off">${contactosApi ? `<button type="button" class="btn-cuadro" data-accion="contactos" aria-label="Elegir de mis contactos">${ic('contactos', 26)}</button>` : ''}</div></div>
       ${nuevo ? `<div class="campo"><label for="c-saldo">¿Ya le debe algo del cuaderno? ${opc}</label><input class="entrada" id="c-saldo" inputmode="numeric" placeholder="$0" autocomplete="off"></div>` : ''}
       ${grupoOpciones('pago', '¿Cuándo suele pagar?', PREF_PAGO, c.pago)}
       ${conFecha ? `<div class="proximo-pago"><p class="ayuda" aria-live="polite">${ic('calendario', 20)}<span id="c-proxima"></span></p>

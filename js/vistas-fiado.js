@@ -405,7 +405,7 @@ V.mostrar = id => {
   const n = nombreCorto(c.nombre), s = saldoDe(c.id), pago = m.tipo === 'pago';
   return {
     titulo: `Para ${n}`,
-    html: `<div class="pantalla blanca"><header class="mostrar-barra"><span style="display:inline-flex;align-items:center;gap:.5rem">${ic('girar', 22, 2.2)}<span class="gire">Gire el celular hacia ${esc(n)}</span></span><a class="btn-icono" href="#cliente-${c.id}" data-volver aria-label="Cerrar">${ic('cerrar', 26, 2.4)}</a></header><div class="toldo" aria-hidden="true"></div>
+    html: `<div class="pantalla blanca"><header class="mostrar-barra"><span style="display:inline-flex;align-items:center;gap:.5rem">${ic('mostrar', 22, 2.2)}<span class="gire">Gire el celular hacia ${esc(n)}</span></span><a class="btn-icono" href="#cliente-${c.id}" data-volver aria-label="Cerrar">${ic('cerrar', 26, 2.4)}</a></header><div class="toldo" aria-hidden="true"></div>
     <main class="mostrar">
       <h1 class="para" tabindex="-1">${esc(n)}, ${pago ? 'recibimos su pago:' : 'esto quedó anotado:'}</h1>
       <div style="display:flex;flex-direction:column;gap:.25rem"><span class="cifra-xl">${pesos(m.monto)}</span>${!pago && m.que ? `<span class="que">${esc(mayuscula(m.que))}</span>` : ''}${pago && MEDIOS[m.medio] ? `<span class="que">${esc(mayuscula(MEDIOS[m.medio]))}</span>` : ''}
@@ -436,7 +436,7 @@ V.cuenta = id => {
   const historial = agruparPorDia(ult).map(g => `<h3 class="dia-historial">${g.dia}</h3><ul class="lista movs-vecino">${g.items.map(fila).join('')}</ul>`).join('');
   return {
     titulo: `Cuenta de ${n}`,
-    html: `<div class="pantalla blanca"><header class="mostrar-barra"><span style="display:inline-flex;align-items:center;gap:.5rem">${ic('girar', 22, 2.2)}<span class="gire">Gire el celular hacia ${esc(n)}</span></span><a class="btn-icono" href="#cliente-${c.id}" data-volver aria-label="Cerrar">${ic('cerrar', 26, 2.4)}</a></header><div class="toldo" aria-hidden="true"></div>
+    html: `<div class="pantalla blanca"><header class="mostrar-barra"><span style="display:inline-flex;align-items:center;gap:.5rem">${ic('mostrar', 22, 2.2)}<span class="gire">Gire el celular hacia ${esc(n)}</span></span><a class="btn-icono" href="#cliente-${c.id}" data-volver aria-label="Cerrar">${ic('cerrar', 26, 2.4)}</a></header><div class="toldo" aria-hidden="true"></div>
     <main class="mostrar">
       <h1 class="para" tabindex="-1">${esc(n)}, así va su cuenta:</h1>
       <div style="display:flex;flex-direction:column;gap:.25rem">${s > 0 ? `<span style="font-size:1.375rem">Debe</span><span class="cifra-xl">${pesos(s)}</span>
@@ -463,7 +463,7 @@ function filaMov(m) {
   const anul = m.anulado ? `<span>Anulado: ${esc(m.anulado.motivo)}.</span>` : '';
   return `<li><button type="button" class="mov${pago ? ' pago' : ''}${m.anulado ? ' anulada' : ''}" aria-expanded="false" aria-controls="d-${m.id}"><span class="que"><span>${esc(nombreMov(m))}</span>${(m.correcciones || []).length ? `<span class="ic-caja" title="Corregido">${ic('lapiz', 16, 2.2)}<span class="vh">, corregido</span></span>` : ''}</span><span class="v">${signo} ${pesos(m.monto)}</span>${ic('abajo', 18, 2.4)}</button>
     <div class="mov-detalle" id="d-${m.id}" hidden><span>${det.join(' · ')}</span>${corr}${anul}${m.visto ? `<span>${ic('ok', 16, 2.6)} El vecino lo vio.</span>` : ''}${m.enviado ? `<span>${ic('enviar', 16, 2.2)} Recibo enviado.</span>` : ''}
-      ${m.anulado ? '' : `<div class="fila-botones"><a class="btn-mini sec" href="#corregir-${m.id}">${ic('lapiz', 18, 2.2)}Corregir</a><a class="btn-mini sec" href="#mostrar-${m.id}">${ic('girar', 18, 2.2)}Mostrar</a>${m.tipo !== 'saldo' ? `<button type="button" class="btn-mini sec" data-recibo-imagen="${m.id}">${ic('enviar', 18, 2.2)}Imagen</button>` : ''}</div>`}</div></li>`;
+      ${m.anulado ? '' : `<div class="fila-botones"><a class="btn-mini sec" href="#corregir-${m.id}">${ic('lapiz', 18, 2.2)}Corregir</a><a class="btn-mini sec" href="#mostrar-${m.id}">${ic('mostrar', 18, 2.2)}Mostrar</a>${m.tipo !== 'saldo' ? `<button type="button" class="btn-mini sec" data-recibo-imagen="${m.id}">${ic('enviar', 18, 2.2)}Imagen</button>` : ''}</div>`}</div></li>`;
 }
 /* ───── Borrar un cliente: con la basurita de su ficha o deslizándolo en la Libreta ─────
    Siempre se pregunta. Si debe, se pregunta otra vez mostrando cuánto. Luego, unos segundos para «Deshacer». */
@@ -660,7 +660,7 @@ V.cliente = (id, extra) => {
         ${atajo('principal', 'anotar', 'mas', 'Anotar')}
         ${e.saldo > 0 ? atajo('pago', 'pago', 'dinero', 'Pagó') : ''}
         ${recordar ? (yaRecordado ? atajo('', 'recordar', 'ok', 'Recordado', ' disabled') : atajo('', 'recordar', 'chat', 'Recordar')) : ''}
-        ${movs.length ? `<a class="atajo" href="#cuenta-${c.id}"><span class="c" aria-hidden="true">${ic('girar', 26, 2.4)}</span>Mostrar</a>` : ''}
+        ${movs.length ? `<a class="atajo" href="#cuenta-${c.id}"><span class="c" aria-hidden="true">${ic('mostrar', 26, 2.4)}</span>Mostrar</a>` : ''}
         ${permisoOk(c) && e.saldo > 0 ? atajo('', 'cuenta', 'enviar', 'Enviar cuenta') : ''}
       </div>
       ${permisoOk(c) && e.saldo > 0 ? `<p class="ayuda" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:0 .25rem;margin-top:-.5rem">${porQue('enlace', '¿Qué ve el vecino en su cuenta?')}</p>` : ''}

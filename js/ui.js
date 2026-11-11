@@ -32,6 +32,7 @@ const ICONOS = {
   enlace: '<path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/>',
   copiar: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>',
   girar: '<path d="M4 12a8 8 0 0 1 14-5.3L20 9"/><path d="M20 4v5h-5"/><path d="M20 12a8 8 0 0 1-14 5.3L4 15"/><path d="M4 20v-5h5"/>',
+  mostrar: '<rect x="8.5" y="8" width="8" height="14" rx="1.6"/><path d="M11.5 19h2"/><path d="M4 11.5A8.5 8.5 0 0 1 17.6 5"/><path d="M18.2 1.6v3.9h-3.9"/>', /* 3.7 · «Mostrar»: un celular que gira hacia el vecino (antes usaba las flechas de «girar», que se leían como «recargar») */
   cerrar: '<path d="M18 6L6 18M6 6l12 12"/>',
   borrar: '<path d="M21 5H9l-6 7 6 7h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1z"/><path d="M17 9l-5 6M12 9l5 6"/>',
   basura: '<path d="M4 6h16"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/><path d="M6 6l1 13.1a2 2 0 0 0 2 1.9h6a2 2 0 0 0 2-1.9L18 6"/><path d="M10 10.5v6M14 10.5v6"/>',
@@ -199,6 +200,7 @@ function abrirHoja(html, alMontar = () => {}, { nombre = '' } = {}) {
   d.dataset.nombre = nombre;
   pintarHoja(html, alMontar, d);
   if (typeof d.showModal === 'function') d.showModal(); else d.setAttribute('open', '');
+  enfocarTituloHoja(d);
   if (typeof Mov !== 'undefined') Mov.arrastrable(d);
   if (!(history.state && history.state.hoja)) history.pushState({ hoja: 1 }, '');
   d.addEventListener('close', () => {
@@ -221,7 +223,14 @@ function pintarHoja(html, alMontar = () => {}, d = document.getElementById('hoja
   cuerpo.querySelectorAll('[data-cerrar]').forEach(b => b.addEventListener('click', ev => { ev.preventDefault(); cerrarHoja(); }));
   if (!reducido()) cuerpo.classList.remove('entra'), void cuerpo.offsetWidth, cuerpo.classList.add('entra');
   alMontar(d);
+  /* Si la hoja ya estaba abierta y el foco quedó en la hoja misma (pasos que se pintan después de abrir), va al título. */
+  if (d.open && (document.activeElement === d || !d.contains(document.activeElement))) enfocarTituloHoja(d);
   return d;
+}
+/* 3.7 · Al abrir, el foco va al título (sin anillo): antes caía en la hoja o en la X y se veía un borde negro. */
+function enfocarTituloHoja(d) {
+  const tit = d.querySelector('.cuerpo h2');
+  if (tit) { if (!tit.hasAttribute('tabindex')) tit.setAttribute('tabindex', '-1'); tit.focus({ preventScroll: true }); }
 }
 function cerrarHoja() { const d = hojaAbierta(); if (d) d.close ? d.close() : d.removeAttribute('open'); }
 function cabHoja(titulo) { return `<div class="hoja-cab"><h2>${titulo}</h2><button type="button" class="cerrar-hoja" data-cerrar aria-label="Cerrar">${ic('cerrar', 24, 2.4)}</button></div>`; }
@@ -311,7 +320,7 @@ document.addEventListener('input', ev => {
 }, true);
 
 /* ───── 3.4 · Las cifras grandes se achican solas, y solo cuando no caben (montos altos o letra Más grande) ───── */
-const CIFRAS_GRANDES = '.cifra, .cifra-xl, .cifra-l, .monto-grande';
+const CIFRAS_GRANDES = '.cifra, .cifra-xl, .cifra-l, .monto-grande, .aviso-hoy b';
 function encajarCifra(el) {
   if (el.dataset.encaja) { el.style.fontSize = el.dataset.fs0 || ''; el.style.lineHeight = el.dataset.lh0 || ''; delete el.dataset.encaja; }
   const p = el.parentElement; if (!p || !el.offsetWidth) return;

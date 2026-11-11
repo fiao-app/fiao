@@ -251,7 +251,7 @@ V.ajustes = () => {
         <p class="ayuda">Cada vecino acepta los mensajes (Ley 1581 de 2012). Los recordatorios siguen el horario de la Ley 2300 de 2023.</p>
         <p class="ayuda">Fiao es una versión de prueba, sin fines comerciales. No es asesoría legal ni contable. Usted responde por los datos de sus clientes.</p></div></details>
       <button type="button" class="btn-sec peligro" data-accion="borrar">Borrar la libreta de este celular</button>
-      <p class="nota">Fiao · versión 3.2</p>
+      <p class="nota">Fiao · versión 3.7</p>
     </main><div class="abajo">${nav('ajustes')}</div></div>`,
     montar(r) {
       activarGrupos(r, async (g, v) => {
@@ -282,15 +282,32 @@ V.mensajes = () => {
   return {
     titulo: 'Mis mensajes',
     html: `<div class="pantalla">${barra({ titulo: 'Mis mensajes', volver: 'ajustes', ayuda: false })}<main class="contenido"><form style="display:flex;flex-direction:column;gap:inherit" id="form-msj" novalidate>
-      <div class="info">${ic('lapiz', 22)}<p>Escríbalos como usted habla. Lo que va entre llaves se llena solo: <b>{nombre}</b>, <b>{monto}</b>, <b>{saldo}</b>, <b>{fecha}</b>. Deje <b>{enlace}</b>: ahí el vecino ve su cuenta.</p></div>
-      ${Object.entries(TIPOS_MENSAJE).map(([k, n]) => `<div class="campo"><label for="m-${k}">${n}</label><textarea class="entrada" id="m-${k}" data-clave="${k}" rows="4" maxlength="${LIMITES.mensaje}">${esc((t.mensajes || {})[k] || base[k])}</textarea><button type="button" class="btn-link izq" data-original="${k}" style="font-size:1rem;min-height:2.75rem">Volver al original</button></div>`).join('')}
+      <div class="info">${ic('lapiz', 22)}<p>Escríbalos como usted habla. Lo que va entre llaves se llena solo, por ejemplo <b>{nombre}</b> o <b>{lo que debe}</b>. Deje <b>{enlace}</b>: ahí el vecino ve su cuenta. Para agregar un dato, toque su botón debajo del mensaje.</p></div>
+      ${Object.entries(TIPOS_MENSAJE).map(([k, n]) => `<div class="campo"><label for="m-${k}">${n}</label><textarea class="entrada msj-crece" id="m-${k}" data-clave="${k}" rows="4" maxlength="${LIMITES.mensaje}">${esc(msjEnPalabras((t.mensajes || {})[k] || base[k]))}</textarea>
+        <div class="msj-datos" role="group" aria-label="Agregar un dato a «${n}»">${variablesDe(k).map(v => `<button type="button" class="msj-dato" data-poner="${k}" data-var="${v}">${esc(VARIABLES_MSJ[v])}</button>`).join('')}</div>
+        <button type="button" class="btn-link izq" data-original="${k}" style="font-size:1rem;min-height:2.75rem">Volver al original</button></div>`).join('')}
     </form></main><div class="pie" role="region" aria-label="Acciones"><button type="submit" form="form-msj" class="btn">Guardar mis mensajes</button></div></div>`,
     montar(r) {
-      r.firstElementChild.addEventListener('click', ev => { const b = ev.target.closest('[data-original]'); if (b) { r.querySelector(`#m-${b.dataset.original}`).value = base[b.dataset.original]; avisar('Volvió al mensaje original.', { icono: 'girar' }); } });
+      /* 3.7 · Cada cuadro crece con su texto: nada queda escondido. */
+      const crecer = a => { a.style.height = 'auto'; a.style.height = `${a.scrollHeight + 4}px`; };
+      const cajas = [...r.querySelectorAll('.msj-crece')];
+      cajas.forEach(a => a.addEventListener('input', () => crecer(a)));
+      requestAnimationFrame(() => cajas.forEach(crecer)); if (document.fonts) document.fonts.ready.then(() => cajas.forEach(crecer));
+      r.firstElementChild.addEventListener('click', ev => {
+        const b = ev.target.closest('[data-original]');
+        if (b) { const a = r.querySelector(`#m-${b.dataset.original}`); a.value = msjEnPalabras(base[b.dataset.original]); crecer(a); avisar('Volvió al mensaje original.', { icono: 'girar' }); return; }
+        const d = ev.target.closest('[data-poner]'); if (!d) return;
+        const a = r.querySelector(`#m-${d.dataset.poner}`), txt = `{${VARIABLES_MSJ[d.dataset.var]}}`;
+        const i = a.selectionStart ?? a.value.length, f = a.selectionEnd ?? i;
+        const antes = a.value.slice(0, i), pre = antes && !/\s$/.test(antes) ? ' ' : '';
+        if (a.value.length + pre.length + txt.length > LIMITES.mensaje) { vibrar(20); return; }
+        a.value = antes + pre + txt + a.value.slice(f); const pos = i + pre.length + txt.length;
+        a.focus(); a.setSelectionRange(pos, pos); crecer(a); vibrar(6);
+      });
       r.querySelector('#form-msj').addEventListener('submit', async ev => {
         ev.preventDefault();
         const propios = {};
-        r.querySelectorAll('[data-clave]').forEach(a => { const v = a.value.trim(); if (v && v !== base[a.dataset.clave]) propios[a.dataset.clave] = v; });
+        r.querySelectorAll('[data-clave]').forEach(a => { const v = msjEnClaves(a.value.trim()); if (v && v !== base[a.dataset.clave]) propios[a.dataset.clave] = v; });
         t.mensajes = propios; await guardarTienda(t); ir('ajustes'); avisar('Mensajes guardados.');
       });
     }
