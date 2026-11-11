@@ -2,7 +2,7 @@
    No guarda datos de la libreta (esos viven en IndexedDB) ni toca internet por su cuenta. */
 'use strict';
 
-const VERSION = 'fiao-v3.5.0';
+const VERSION = 'fiao-v3.5.1';
 /* La voz vive en su propio cajón: no se vuelve a bajar con cada versión de la app.
    Si cambia una grabación, se sube este número. */
 const VOZ_CACHE = 'fiao-voz-4';
@@ -15,6 +15,7 @@ const ARCHIVOS = [
   './c/', './c/index.html',
   // Voz de Fiao: solo las frases de todos los días; las demás se guardan la primera vez que suenan.
   './audio/anotado.mp3', './audio/pago.mp3', './audio/al-dia.mp3', './audio/deshecho.mp3', './audio/no-deshacer.mp3', './audio/cliente-nuevo.mp3', './audio/cambios.mp3', './audio/cupo.mp3', './audio/e-nombre.mp3', './audio/e-celular.mp3', './audio/e-monto.mp3', './audio/e-mas.mp3', './audio/no-guardo.mp3', './audio/monto-alto.mp3', './audio/nombre-repetido.mp3', './audio/cliente-borrado.mp3', './audio/borrar-debe.mp3', './audio/aviso-pago.mp3',
+  './audio/fecha-pedida.mp3', './audio/revisar.mp3', './audio/fecha-nueva.mp3', './audio/wa-no-abrio.mp3', './audio/copiado.mp3', './audio/importados.mp3', './audio/recibo-imagen.mp3', './audio/cuadre.mp3',
   './icons/icono.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png'
 ];
 

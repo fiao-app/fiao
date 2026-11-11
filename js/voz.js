@@ -68,9 +68,8 @@ const VOZ = {
   'r-anotar': 'Con este botón anota un fiado en segundos.',
   'r-cobros': 'Aquí ve a quién recordar y cuándo lo permite la ley.'
 };
-/* 3.4 y 3.5 · Frases nuevas (del vecino, WhatsApp, contactos, recibo como imagen y cuadre).
-   Entran a VOZ cuando estén grabadas; mientras tanto, Fiao sigue en silencio en esos momentos. */
-const VOZ_POR_GRABAR = {
+/* 3.4 y 3.5 · Frases nuevas: del vecino, WhatsApp, contactos, recibo como imagen y cuadre (grabadas en 3.5.1). */
+const VOZ_NUEVAS = {
   'fecha-pedida': 'Su cliente pide otro día. Usted decide si lo acepta.',
   'revisar': 'Su cliente pide revisar la cuenta. Mire el historial.',
   'fecha-nueva': 'Listo, quedó la nueva fecha.',
@@ -80,6 +79,7 @@ const VOZ_POR_GRABAR = {
   'recibo-imagen': 'Elija el chat y envíe el recibo.',
   'cuadre': 'Este es el cuadre de hoy.',
 };
+Object.assign(VOZ, VOZ_NUEVAS);
 /* Ayuda y «¿Por qué?» se graban con el mismo texto que se lee en pantalla. */
 for (const [k, [, lineas]] of Object.entries(AYUDA)) VOZ[`ayuda-${k}`] = lineas.join(' ');
 for (const [k, [t, x]] of Object.entries(POR_QUE)) VOZ[`porque-${k}`] = `${t} ${x}`;
