@@ -304,14 +304,14 @@ V.inicio = () => {
       ${avisosHoy}
       ${pasosHtml()}
       <div class="buscador"><label for="buscar" class="vh">Buscar cliente por nombre o celular</label>${ic('buscar', 24)}<input class="entrada" id="buscar" type="search" placeholder="Buscar por nombre o celular" autocomplete="off"></div>
-      <div class="encabezado-lista"><h2 class="titulo-seccion" id="t-clientes">Clientes</h2><span id="cuantos">${lista.length}</span></div>
+      <div class="encabezado-lista"><h2 class="titulo-seccion" id="t-clientes">Clientes</h2><span id="cuantos">${lista.length}</span>${lista.length > 1 ? `<button type="button" class="btn-link sel-entrar" data-accion="seleccionar">${ic('ok', 18, 2.6)}Seleccionar</button>` : ''}</div>
       <ul class="lista lista-borrable" id="lista-clientes" aria-labelledby="t-clientes">${lista.map(({ c, e }) => filaCliente(c, e, `cliente-${c.id}`)
         .replace('<a class="fila"', '<a class="fila" draggable="false"')
         .replace(/<\/li>$/, `<button type="button" class="fila-borrar" data-borrar="${esc(c.id)}" aria-label="Borrar a ${esc(c.nombre)}">${ic('basura', 24, 2.2)}<span>Borrar</span></button></li>`)).join('')}</ul>
       <p class="vacio" id="sin-resultados" hidden></p>
       ${lista.length ? consejo('deslizar', 'Deslice un cliente a la izquierda para borrarlo.') : ''}
       <div class="fila-enlaces"><a class="btn-link" href="#nuevo">${ic('mas', 20, 2.4)}Agregar cliente</a><button type="button" class="btn-link" data-accion="importar">${ic('contactos', 20, 2.2)}Traer de mis contactos</button></div>
-    </main>${pie}</div>`,
+    </main>${pie.replace('<nav class="nav"', `${panelSeleccion(lista)}<nav class="nav"`)}</div>`,
     montar(r) {
       montarInicio(r);
       const cifra = r.querySelector('#cifra-calle');
@@ -346,6 +346,8 @@ V.inicio = () => {
         sin.innerHTML = n ? '' : porNumero ? `Nadie tiene un celular con «${esc(b.value.trim())}».` : `Nadie se llama «${esc(b.value)}». <a href="#nuevo" data-prefill>Agregarlo</a>`;
       });
       sin.addEventListener('click', ev => { if (ev.target.closest('[data-prefill]')) Vista.prefill = b.value.trim(); });
+      filas.forEach((li, i) => { li.dataset.id = lista[i].c.id; });
+      montarSeleccion(r, ul, lista);
       /* Deslizar para borrar: la basurita que aparece abre la confirmación. */
       Deslizar.abierta = null;
       ul.addEventListener('click', ev => {
@@ -384,6 +386,7 @@ document.addEventListener('pointerdown', ev => {
     Deslizar.cerrar();
   }
   Deslizar.toque = null;
+  if (li && li.parentElement.classList.contains('seleccionando')) return;
   if (!li || (ev.target.closest('.fila-borrar') && li !== Deslizar.abierta) || (ev.pointerType === 'mouse' && ev.button !== 0)) return;
   Deslizar.toque = { li, id: ev.pointerId, x: ev.clientX, y: ev.clientY, base: li === Deslizar.abierta ? -Deslizar.ancho(li) : 0, dx: 0, activo: false };
 }, true);
@@ -424,6 +427,121 @@ window.addEventListener('click', ev => {
   if (li) { ev.preventDefault(); ev.stopPropagation(); Deslizar.cerrar(li); }
 }, true);
 window.addEventListener('scroll', () => { if (Deslizar.abierta && !Deslizar.toque) Deslizar.cerrar(); }, { passive: true });
+
+/* ───── 3.8 · Borrar varios clientes de una vez ─────
+   Se entra con «Seleccionar» o dejando el dedo sobre un cliente. Mientras tanto no se desliza ni se anota;
+   abajo aparece un panel con atajos y «Borrar». Siempre pide confirmar, avisa quién debe y se puede deshacer. */
+const DIAS_SIN_MOVER = 90;
+function _ultimaActividad(c) { const u = ultimoMov(c); const f = u ? u.fecha : c.creado; return f ? new Date(f) : null; }
+function _grupoSeleccion(clave, lista) {
+  if (clave === 'aldia') return lista.filter(({ e }) => !(e.saldo > 0)).map(({ c }) => c.id);
+  const limite = Date.now() - DIAS_SIN_MOVER * 864e5;
+  return lista.filter(({ c }) => { const f = _ultimaActividad(c); return f && f.getTime() < limite; }).map(({ c }) => c.id);
+}
+function panelSeleccion(lista) {
+  if (lista.length < 2) return '';
+  const atajo = (clave, texto) => { const n = _grupoSeleccion(clave, lista).length; return `<button type="button" class="chip" aria-pressed="false" data-atajo="${clave}"${n ? '' : ' disabled'}><span class="ok">${ic('ok', 18, 2.6)}</span>${texto} <span class="n">(${n})</span></button>`; };
+  return `<section class="sel-panel" id="sel-panel" aria-label="Seleccionar clientes" hidden>
+    <div class="sel-fila"><span id="sel-cuantos" role="status" aria-live="polite">Toque los clientes que quiere borrar.</span><button type="button" class="btn-link" data-accion="sel-cancelar">Cancelar</button></div>
+    <div class="chips sel-atajos" role="group" aria-label="Marcar de un toque">${atajo('aldia', 'No deben nada')}${atajo('viejos', 'Sin movimientos hace 3 meses')}</div>
+    <button type="button" class="btn sel-borrar" data-accion="sel-borrar" disabled>${ic('basura', 22, 2.2)}<span>Marque los clientes</span></button>
+  </section>`;
+}
+function montarSeleccion(r, ul, lista) {
+  const panel = r.querySelector('#sel-panel'); if (!panel) return;
+  const entrar = r.querySelector('[data-accion="seleccionar"]'), fab = r.querySelector('.fab'), navAbajo = r.querySelector('.abajo .nav');
+  const cuantos = panel.querySelector('#sel-cuantos'), bBorrar = panel.querySelector('[data-accion="sel-borrar"]');
+  const sel = new Set(); let modo = false, presion = null;
+  const liDe = id => ul.querySelector(`li[data-id="${CSS.escape(id)}"]`);
+  const pintar = () => {
+    const n = sel.size;
+    cuantos.textContent = n ? `${n} ${n === 1 ? 'seleccionado' : 'seleccionados'}` : 'Toque los clientes que quiere borrar.';
+    bBorrar.disabled = !n;
+    bBorrar.querySelector('span').textContent = n ? `Borrar ${n === 1 ? '1 cliente' : `${n} clientes`}` : 'Marque los clientes';
+    panel.querySelectorAll('[data-atajo]').forEach(b => { const ids = _grupoSeleccion(b.dataset.atajo, lista); b.setAttribute('aria-pressed', String(ids.length > 0 && ids.every(id => sel.has(id)))); });
+  };
+  const marcar = (id, si) => {
+    const li = liDe(id); if (!li) return;
+    if (si) sel.add(id); else sel.delete(id);
+    li.classList.toggle('marcado', si); li.querySelector('.fila').setAttribute('aria-checked', String(si));
+  };
+  const abrir = idInicial => {
+    if (modo) return; modo = true;
+    if (typeof Deslizar !== 'undefined') Deslizar.cerrar();
+    ul.classList.add('seleccionando'); r.querySelector('.pantalla').classList.add('modo-sel');
+    ul.querySelectorAll(':scope > li').forEach(li => { const a = li.querySelector('.fila'); a.setAttribute('role', 'checkbox'); a.setAttribute('aria-checked', 'false'); a.insertAdjacentHTML('afterbegin', `<span class="marca" aria-hidden="true">${ic('ok', 18, 3)}</span>`); });
+    panel.hidden = false; if (fab) fab.hidden = true; if (navAbajo) navAbajo.hidden = true; if (entrar) entrar.hidden = true;
+    if (idInicial) marcar(idInicial, true);
+    pintar(); anunciar('Modo para seleccionar clientes. Toque los que quiere borrar.');
+  };
+  const salir = () => {
+    if (!modo) return; modo = false; sel.clear();
+    ul.classList.remove('seleccionando'); r.querySelector('.pantalla').classList.remove('modo-sel');
+    ul.querySelectorAll(':scope > li').forEach(li => { li.classList.remove('marcado'); const a = li.querySelector('.fila'); a.removeAttribute('role'); a.removeAttribute('aria-checked'); li.querySelector('.marca')?.remove(); });
+    panel.hidden = true; if (fab) fab.hidden = false; if (navAbajo) navAbajo.hidden = false; if (entrar) { entrar.hidden = false; entrar.focus({ preventScroll: true }); }
+  };
+  entrar?.addEventListener('click', () => abrir());
+  panel.addEventListener('click', ev => {
+    if (ev.target.closest('[data-accion="sel-cancelar"]')) return salir();
+    const at = ev.target.closest('[data-atajo]');
+    if (at) { const ids = _grupoSeleccion(at.dataset.atajo, lista); const todos = ids.every(id => sel.has(id)); ids.forEach(id => marcar(id, !todos)); pintar(); vibrar(6); return; }
+    if (ev.target.closest('[data-accion="sel-borrar"]') && sel.size) confirmarBorrarVarios([...sel], salir);
+  });
+  ul.addEventListener('click', ev => {
+    if (!modo) return;
+    const a = ev.target.closest('.fila'); if (!a) return;
+    ev.preventDefault(); const id = a.closest('li').dataset.id;
+    marcar(id, !sel.has(id)); pintar(); vibrar(6);
+  });
+  ul.addEventListener('keydown', ev => { if (modo && ev.key === ' ' && ev.target.closest('.fila')) { ev.preventDefault(); ev.target.closest('.fila').click(); } });
+  /* Dejar el dedo sobre un cliente (medio segundo) también entra, con ese cliente ya marcado. */
+  const soltar = () => { if (presion) { clearTimeout(presion.t); presion = null; } };
+  ul.addEventListener('pointerdown', ev => {
+    if (modo || (ev.pointerType === 'mouse' && ev.button !== 0)) return;
+    const li = ev.target.closest('#lista-clientes > li'); if (!li || ev.target.closest('.fila-borrar') || li.classList.contains('abierta')) return;
+    presion = { x: ev.clientX, y: ev.clientY, t: setTimeout(() => {
+      presion = null;
+      if (Deslizar.toque && Deslizar.toque.activo) return;
+      Deslizar.toque = null; Deslizar.suprimir = true;
+      const quitar = () => setTimeout(() => { Deslizar.suprimir = false; }, 400);
+      document.addEventListener('pointerup', quitar, { once: true, capture: true });
+      abrir(li.dataset.id); vibrar(18);
+    }, 550) };
+  });
+  ul.addEventListener('pointermove', ev => { if (presion && Math.hypot(ev.clientX - presion.x, ev.clientY - presion.y) > 10) soltar(); }, { passive: true });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(t => ul.addEventListener(t, soltar));
+  window.addEventListener('scroll', soltar, { passive: true });
+  /* En Android, dejar el dedo sobre un enlace abre un menú; aquí no hace falta. */
+  ul.addEventListener('contextmenu', ev => { if (ev.target.closest('.fila')) ev.preventDefault(); });
+}
+function confirmarBorrarVarios(ids, alTerminar) {
+  const cs = ids.map(id => cliente(id)).filter(Boolean); if (!cs.length) return;
+  const n = cs.length, deudores = cs.filter(c => saldoDe(c.id) > 0), debe = deudores.reduce((s, c) => s + saldoDe(c.id), 0);
+  const anot = cs.reduce((s, c) => s + movsDe(c.id).length, 0);
+  const nombres = l => { const v = l.map(c => esc(nombreCorto(c.nombre))); return v.length <= 4 ? v.join(', ').replace(/, ([^,]*)$/, ' y $1') : `${v.slice(0, 3).join(', ')} y ${v.length - 3} más`; };
+  let borrando = false;
+  const d = abrirHoja(`<h2>¿Borrar ${n === 1 ? `a ${esc(cs[0].nombre)}` : `${n} clientes`}?</h2>
+    ${n > 1 ? `<p class="sel-nombres">${nombres(cs)}.</p>` : ''}
+    <p style="font-size:1.125rem;line-height:1.55">Se ${n === 1 ? 'borra' : 'borran'} de su libreta con su historial${anot ? ` (${anot} ${anot === 1 ? 'anotación' : 'anotaciones'})` : ''}. Los enlaces que ya tienen no cambian.</p>
+    ${deudores.length ? `<div class="info atencion">${ic('atencion', 22)}<p><b>${deudores.length === 1 ? `${esc(nombreCorto(deudores[0].nombre))} todavía le debe ${pesos(debe)}.` : `${deudores.length} todavía le deben ${pesos(debe)} en total (${nombres(deudores)}).`}</b> Si los borra, pierde el registro de esa plata. Si ya le pagaron, mejor anote el pago primero.</p></div>` : ''}
+    <button type="button" class="btn-sec peligro" data-accion="si-borrar-varios">${ic('basura', 22, 2.2)}${deudores.length ? 'Borrar aunque deben' : `Sí, borrar ${n === 1 ? '' : n}`.trim()}</button>
+    <button type="button" class="btn-link" data-cerrar>Cancelar</button>`, async dd => {
+    dd.querySelector('[data-accion="si-borrar-varios"]').addEventListener('click', async () => {
+      if (borrando) return; borrando = true;
+      const hechos = [];
+      for (const c of cs) { const b = await borrarCliente(c.id); if (b) hechos.push(b); }
+      cerrarHoja(); alTerminar(); mostrarRuta({ animar: false });
+      if (!hechos.length) { avisar('No se pudo borrar. Intente otra vez.', { icono: 'atencion' }); return; }
+      const falta = n - hechos.length;
+      avisar(`${hechos.length === 1 ? `Borró a ${nombreCorto(hechos[0].c.nombre)}` : `Borró ${hechos.length} clientes`} de su libreta.${falta ? ` ${falta} no se pudo borrar.` : ''}`, { acciones: [{ texto: 'Deshacer', fuerte: true, fn: async () => {
+        for (const b of hechos) if (!Datos.clientes.has(b.c.id)) await restaurarCliente(b);
+        mostrarRuta({ animar: false }); avisar(hechos.length === 1 ? 'Listo, se deshizo.' : `Listo, volvieron los ${hechos.length}.`);
+      } }] });
+    });
+  }, { nombre: 'borrar-varios' });
+  if (deudores.length && typeof Voz !== 'undefined') Voz.decir(deudores.length === 1 ? 'borrar-debe' : 'borrar-deben');
+  return d;
+}
 
 /** Atajo del ícono instalado ("Anotar fiado"): abre la libreta con la hoja de anotar. */
 V.anotar = () => {

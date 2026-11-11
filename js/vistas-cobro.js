@@ -251,7 +251,7 @@ V.ajustes = () => {
         <p class="ayuda">Cada vecino acepta los mensajes (Ley 1581 de 2012). Los recordatorios siguen el horario de la Ley 2300 de 2023.</p>
         <p class="ayuda">Fiao es una versión de prueba, sin fines comerciales. No es asesoría legal ni contable. Usted responde por los datos de sus clientes.</p></div></details>
       <button type="button" class="btn-sec peligro" data-accion="borrar">Borrar la libreta de este celular</button>
-      <p class="nota">Fiao · versión 3.7.1</p>
+      <p class="nota">Fiao · versión 3.8</p>
     </main><div class="abajo">${nav('ajustes')}</div></div>`,
     montar(r) {
       activarGrupos(r, async (g, v) => {

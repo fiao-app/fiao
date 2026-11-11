@@ -100,6 +100,16 @@ Una revisión independiente de las pantallas encontró detalles que se notan de 
 - **iPhone.** El campo de fecha («¿Qué día acordaron?») ya no se sale del margen derecho.
 - **3.7.1 · Cliente nuevo sin compromiso.** Al crear un cliente desde «Anotar fiado», se guarda junto con su primer fiado. Si el tendero cierra con la X o toca «Cambiar» antes de anotar, el cliente no queda en la libreta; y si anota y luego toca «Deshacer», se quitan el fiado y el cliente recién creado.
 
+## Borrar varios clientes (3.8)
+
+Para limpiar la libreta sin ir uno por uno:
+
+- **Entrar:** «Seleccionar», junto al título «Clientes», o dejar el dedo medio segundo sobre un cliente (entra con ese ya marcado).
+- **Marcar:** cada fila muestra una casilla; tocar marca o desmarca. Mientras tanto se ocultan «Anotar fiado» y el menú, y no se puede deslizar para no mezclar acciones.
+- **Atajos:** «No deben nada» y «Sin movimientos hace 3 meses» marcan (o desmarcan) a todos los de ese grupo de un toque.
+- **Borrar:** siempre pide confirmar, muestra a quiénes y avisa si alguno todavía debe y cuánto suman entre todos («Borrar aunque deben»).
+- **Deshacer:** un solo toque devuelve a todos con su historial.
+
 ## Decisiones que sostienen la confianza
 
 - **Los datos viven en el celular.** La libreta se guarda en el navegador (IndexedDB). No hay servidor, cuentas, contraseñas, cookies ni herramientas de medición.
