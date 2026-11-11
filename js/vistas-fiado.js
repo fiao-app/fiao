@@ -91,8 +91,9 @@ function pasoNuevo(est, nombre) {
         return;
       }
       const nc = { id: uid(), nombre: n, cel: celD, cupo: null, pago: leer('pago') || 'quincena', recibos: 'whatsapp', recordar: 'atraso', detalle: '', lista: null, permiso: { estado: 'ninguno', fecha: null }, proximaFecha: null, creado: new Date().toISOString() };
-      await guardarCliente(nc);
-      est.c = nc; pasoMonto(est);
+      /* 3.7.1 · El cliente nuevo se guarda junto con su primer fiado: si el tendero cierra o cambia de cliente
+         antes de anotar, no queda un cliente vacío en la libreta. */
+      est.c = nc; est.nuevo = nc.id; pasoMonto(est);
     });
   });
   emitir('anotar-nuevo');
@@ -184,18 +185,19 @@ function pasoCupo(est, tot) {
 }
 
 async function guardarFiado(est, tot) {
-  const c = est.c, qv = (est.que || '').trim();
+  const c = est.c, qv = (est.que || '').trim(), clienteNuevo = est.nuevo === c.id && !Datos.clientes.has(c.id);
+  if (clienteNuevo) { await guardarCliente(c); est.nuevo = null; }
   const m = await registrarFiado({ c, monto: tot, que: est.conLista && qv === c.lista.productos ? (c.lista.nombre || 'Lo de siempre') : qv, llevo: est.llevo || '' });
   if (est.conLista) { c.lista.ultimoMonto = tot; await guardarCliente(c); }
   cerrarHoja();
   mostrarRuta({ animar: false });
   if (Mov.origen) { Mov.monedaVuela(document.querySelector(`#app ${Mov.origen}`)); Mov.origen = null; }
   emitir('anotado');
-  avisoTrasMov(m);
+  avisoTrasMov(m, { clienteNuevo });
 }
 
 /* ═════ Aviso después de anotar o pagar: recibo, mostrar o deshacer ═════ */
-function avisoTrasMov(m) {
+function avisoTrasMov(m, { clienteNuevo = false } = {}) {
   const c = cliente(m.clienteId), s = saldoDe(c.id), pago = m.tipo === 'pago', n = nombreCorto(c.nombre);
   const texto = pago ? (s > 0 ? `Pago de ${pesos(m.monto)}. Queda debiendo ${pesos(s)}.` : `${n} quedó al día.`) : `${pesos(m.monto)} a ${n}. Va en ${pesos(s)}.`;
   const acciones = [];
@@ -204,7 +206,11 @@ function avisoTrasMov(m) {
   if (c.recibos === 'whatsapp' && c.permiso?.estado !== 'no') acciones.push({ texto: 'Como imagen', fn: () => enviarRecibo(c, m, { imagen: true }) });
   acciones.push({ texto: 'Mostrar', fuerte: !acciones.length, fn: () => ir(`mostrar-${m.id}`) });
   acciones.push({ texto: 'Deshacer', fn: async () => {
-    if (await deshacerMov(m)) { mostrarRuta({ animar: false }); avisar('Listo, se deshizo.', { icono: 'girar' }); }
+    if (await deshacerMov(m)) {
+      /* 3.7.1 · Si el cliente se creó para este fiado, «Deshacer» también lo quita: la libreta queda como estaba. */
+      if (clienteNuevo && ![...Datos.movs.values()].some(x => x.clienteId === c.id)) await quitarClientes([c.id]);
+      mostrarRuta({ animar: false }); avisar('Listo, se deshizo.', { icono: 'girar' });
+    }
     else avisar('Ya no se puede deshacer. Puede corregirlo en el historial.', { icono: 'atencion' });
   } });
   avisar(texto, { acciones });

@@ -98,6 +98,7 @@ Una revisión independiente de las pantallas encontró detalles que se notan de 
 - **Opciones que no saltan.** Al marcar una opción ya no cambia de ancho, así que la fila no se reacomoda bajo el dedo.
 - **Mis mensajes.** Los datos se muestran en palabras («{día acordado}», «{cómo pagar}») y se agregan con un toque; el cuadro crece con el texto. Se siguen guardando con las mismas claves, así que los mensajes ya escritos funcionan igual.
 - **iPhone.** El campo de fecha («¿Qué día acordaron?») ya no se sale del margen derecho.
+- **3.7.1 · Cliente nuevo sin compromiso.** Al crear un cliente desde «Anotar fiado», se guarda junto con su primer fiado. Si el tendero cierra con la X o toca «Cambiar» antes de anotar, el cliente no queda en la libreta; y si anota y luego toca «Deshacer», se quitan el fiado y el cliente recién creado.
 
 ## Decisiones que sostienen la confianza
 
