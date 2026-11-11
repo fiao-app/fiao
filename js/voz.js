@@ -78,6 +78,8 @@ const VOZ_NUEVAS = {
   'importados': 'Listo, sus clientes quedaron en la libreta.',
   'recibo-imagen': 'Elija el chat y envíe el recibo.',
   'cuadre': 'Este es el cuadre de hoy.',
+  /* 3.8.1 */
+  'borrar-deben': 'Algunos de estos clientes todavía le deben. Si los borra, pierde el registro de esa plata.',
 };
 Object.assign(VOZ, VOZ_NUEVAS);
 /* Ayuda y «¿Por qué?» se graban con el mismo texto que se lee en pantalla. */

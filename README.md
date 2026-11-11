@@ -109,6 +109,7 @@ Para limpiar la libreta sin ir uno por uno:
 - **Atajos:** «No deben nada» y «Sin movimientos hace 3 meses» marcan (o desmarcan) a todos los de ese grupo de un toque.
 - **Borrar:** siempre pide confirmar, muestra a quiénes y avisa si alguno todavía debe y cuánto suman entre todos («Borrar aunque deben»).
 - **Deshacer:** un solo toque devuelve a todos con su historial.
+- **Voz (3.8.1):** si varios de los marcados deben, Fiao lo dice en voz alta («Algunos de estos clientes todavía le deben…»), con la misma voz y volumen de las demás frases.
 
 ## Decisiones que sostienen la confianza
 
