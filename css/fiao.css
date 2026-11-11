@@ -677,7 +677,6 @@ html[data-tema="tinta"] .avatar { background: #FFFFFF; color: #111111; box-shado
 /* Interruptor: apagado = aro vacío; encendido = bola blanca con su visto, sobre azul. */
 html[data-tema="tinta"] .interruptor .bola { background: #FFFFFF; box-shadow: inset 0 0 0 2px #111111; }
 html[data-tema="tinta"] .interruptor[aria-checked="true"] .bola { box-shadow: none; position: relative; }
-html[data-tema="tinta"] .interruptor[aria-checked="true"] .bola::after { content: ''; position: absolute; left: 0.46rem; top: 0.25rem; width: 0.3rem; height: 0.6rem; border: solid #1D3BA8; border-width: 0 2.5px 2.5px 0; transform: rotate(45deg); }
 /* Hojas, teclado y tablas */
 html[data-tema="tinta"] .teclado button, html[data-tema="tinta"] .frecuentes button { background: #FFFFFF; box-shadow: inset 0 0 0 2px #111111; }
 html[data-tema="tinta"] .burbuja, html[data-tema="tinta"] .tabla { background: #FFFFFF; box-shadow: inset 0 0 0 1px #111111; }
