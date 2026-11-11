@@ -19,7 +19,7 @@ async function instalar() {
 }
 
 /* ───── Primer acceso ───── */
-const Borrador = { letra: null, nombre: '', yo: '' };
+const Borrador = { letra: null, nombre: '', yo: '', llave: '', nequi: '' };
 function soloVolver(href) { return `<header class="barra sin-volver" style="box-shadow:none;background:transparent;padding-left:.5rem"><a class="btn-icono" href="#${href}" data-volver aria-label="Volver">${ic('volver', 28, 2.4)}</a></header>`; }
 function puntos(n, i) { return `<div class="puntos" aria-hidden="true">${Array.from({ length: n }, (_, k) => `<span class="${k === i ? 'activo' : ''}"></span>`).join('')}</div>`; }
 
@@ -28,6 +28,7 @@ V.bienvenida = (paso = '') => {
   if (paso === 'como') return pantallaComo('bienvenida-camino');
   if (paso === 'camino') return pantallaCamino();
   if (paso === 'tienda' || paso === 'nombre') return pantallaPregunta(paso);
+  if (paso === 'pagos') return pantallaPagos();
   return {
     titulo: 'Bienvenida',
     html: `<div class="pantalla"><main class="bienvenida">
@@ -105,12 +106,12 @@ function pantallaPregunta(paso) {
   return {
     titulo: tiendaP ? 'Su tienda' : 'Su nombre',
     html: `<div class="pantalla blanca">${soloVolver(tiendaP ? 'bienvenida-camino' : 'bienvenida-tienda')}<main class="contenido holgado" style="padding-top:.5rem"><form id="f-preg" novalidate style="display:flex;flex-direction:column;gap:1rem">
-      <span class="ayuda" style="font-weight:600">Paso ${tiendaP ? 1 : 2} de 2</span>
+      <span class="ayuda" style="font-weight:600">Paso ${tiendaP ? 1 : 2} de 3</span>
       <h1 tabindex="-1" style="font-size:1.75rem;line-height:2.25rem"><label for="p-valor">${tiendaP ? '¿Cómo se llama su tienda?' : '¿Y usted cómo se llama?'}</label></h1>
       <input class="entrada enorme" id="p-valor" value="${esc(valor)}" maxlength="${tiendaP ? LIMITES.tienda : LIMITES.persona}" placeholder="${tiendaP ? 'Ej.: Donde Álvaro' : 'Ej.: Álvaro'}" autocomplete="${tiendaP ? 'organization' : 'given-name'}" aria-describedby="p-ayuda p-error" enterkeyhint="next">
       <p class="ayuda" id="p-ayuda">${tiendaP ? 'Así la verán sus vecinos.' : 'Así firma sus mensajes.'}</p>
       <p class="error" id="p-error" role="alert" hidden></p>
-    </form></main><div class="pie" role="region" aria-label="Acciones"><button type="submit" form="f-preg" class="btn">${tiendaP ? 'Seguir' : 'Abrir mi libreta'}</button></div></div>`,
+    </form></main><div class="pie" role="region" aria-label="Acciones"><button type="submit" form="f-preg" class="btn">Seguir</button></div></div>`,
     montar(r) {
       const inp = r.querySelector('#p-valor');
       setTimeout(() => inp.focus(), 250);
@@ -121,7 +122,39 @@ function pantallaPregunta(paso) {
         if (tiendaP) { Borrador.nombre = v; ir('bienvenida-nombre'); return; }
         Borrador.yo = v;
         if (!Borrador.nombre) { ir('bienvenida-tienda'); return; }
-        await guardarTienda({ nombre: Borrador.nombre, atienden: [v], atiendeAhora: v, llave: '', nequi: '', whatsapp: '', tono: 'cercano', letra: Borrador.letra || document.documentElement.dataset.letra || 'normal', mensajes: {}, creada: new Date().toISOString(), guia: 'practica', vistos: {} });
+        ir('bienvenida-pagos');
+      });
+    }
+  };
+}
+/* 3.6 · Paso 3: cómo le pueden pagar. Es opcional: si lo llena, Fiao ya no lo pregunta al mandar el primer recibo;
+   si lo deja vacío, se lo pregunta en ese momento, como antes. */
+function pantallaPagos() {
+  return {
+    titulo: 'Cómo le pagan',
+    html: `<div class="pantalla blanca">${soloVolver('bienvenida-nombre')}<main class="contenido holgado" style="padding-top:.5rem"><form id="f-pagos" novalidate style="display:flex;flex-direction:column;gap:1rem">
+      <span class="ayuda" style="font-weight:600">Paso 3 de 3</span>
+      <h1 tabindex="-1" style="font-size:1.75rem;line-height:2.25rem">¿Cómo le pueden pagar?</h1>
+      <p class="ayuda" id="pg-ayuda">Opcional. Va en sus recibos, para que le paguen fácil. También lo puede poner después, en Ajustes.</p>
+      <p class="ayuda" style="display:flex;gap:.5rem;align-items:center">${ic('ok', 20, 2.6)}<span>En efectivo, aquí en la tienda: siempre.</span></p>
+      <div class="campo"><label for="pg-llave">Llave Bre-B <span class="opcional">(opcional)</span></label><input class="entrada" id="pg-llave" value="${esc(Borrador.llave)}" maxlength="${LIMITES.llave}" placeholder="Como sale en su banco" autocomplete="off" enterkeyhint="next"></div>
+      <div class="campo"><label for="pg-nequi">Nequi o Daviplata <span class="opcional">(opcional)</span></label><input class="entrada" id="pg-nequi" type="tel" inputmode="tel" maxlength="${LIMITES.cel}" value="${esc(celLegible(Borrador.nequi))}" placeholder="10 números" autocomplete="off" aria-describedby="pg-error" enterkeyhint="done"></div>
+      <p class="error" id="pg-error" role="alert" hidden></p>
+    </form></main><div class="pie" role="region" aria-label="Acciones"><button type="submit" form="f-pagos" class="btn" id="pg-abrir">Abrir mi libreta</button></div></div>`,
+    montar(r) {
+      const llave = r.querySelector('#pg-llave'), nequi = r.querySelector('#pg-nequi'), btn = r.querySelector('#pg-abrir'), err = r.querySelector('#pg-error');
+      const pintar = () => { btn.textContent = llave.value.trim() || nequi.value.trim() ? 'Guardar y abrir mi libreta' : 'Abrir mi libreta'; };
+      /* Lo escrito se conserva si vuelve atrás. */
+      llave.addEventListener('input', () => { Borrador.llave = llave.value.trim(); pintar(); }); nequi.addEventListener('input', () => { Borrador.nequi = nequi.value.replace(/\D/g, ''); err.hidden = true; nequi.removeAttribute('aria-invalid'); pintar(); }); pintar();
+      setTimeout(() => llave.focus(), 250);
+      r.querySelector('#f-pagos').addEventListener('submit', async ev => {
+        ev.preventDefault();
+        const l = llave.value.trim(), n = nequi.value.replace(/\D/g, '').replace(/^57(?=3\d{9}$)/, '');
+        if (n && !/^3\d{9}$/.test(n)) { err.textContent = 'Revise el número: son 10 números y empieza por 3.'; err.hidden = false; nequi.setAttribute('aria-invalid', 'true'); temblar(nequi); nequi.focus(); return; }
+        Borrador.llave = l; Borrador.nequi = n;
+        if (!Borrador.nombre || !Borrador.yo) { ir('bienvenida-tienda'); return; }
+        const puso = !!(l || n);
+        await guardarTienda({ nombre: Borrador.nombre, atienden: [Borrador.yo], atiendeAhora: Borrador.yo, llave: l, nequi: n, whatsapp: '', preguntoPagos: puso, tono: 'cercano', letra: Borrador.letra || document.documentElement.dataset.letra || 'normal', mensajes: {}, creada: new Date().toISOString(), guia: 'practica', vistos: {} });
         Guia.indice = 0; aplicarPreferencias(); ir('inicio');
       });
     }

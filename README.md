@@ -79,6 +79,12 @@ Correcciones de la evaluación final (heurística, crítica de diseño, usabilid
 - **Voz.** Ocho frases nuevas con la voz de siempre (3.5.1): otra fecha, revisar la cuenta, nueva fecha, WhatsApp que no abrió, mensaje copiado, clientes traídos, recibo como imagen y cuadre.
 - **Cuadre de hoy.** Desde Resumen: cuánto fió y cuánto cobró (en efectivo, por Nequi y por Bre-B), comparado con ayer y con el mismo día de la semana pasada; clientes nuevos, quienes quedaron al día y quién paga mañana. «Mandármelo por WhatsApp» lo envía al número de la tienda. Respeta «Ocultar montos».
 
+## Cómo le pagan, desde el primer día (3.6)
+
+- **Paso 3 de 3 al crear la libreta: «¿Cómo le pueden pagar?».** Después del nombre de la tienda y el suyo, Fiao pregunta la llave Bre-B y el Nequi o Daviplata. Es opcional y lo dice: también se puede poner después en Ajustes. En efectivo, en la tienda, siempre.
+- Si el tendero llena algo, queda guardado y Fiao ya no se lo pregunta al mandar el primer recibo. Si lo deja vacío, todo sigue como antes: se lo pregunta en ese momento, en la hoja «¿Cómo le pueden pagar?».
+- Lo escrito se conserva al ir atrás, y un Nequi incompleto no deja seguir sin avisar.
+
 ## Decisiones que sostienen la confianza
 
 - **Los datos viven en el celular.** La libreta se guarda en el navegador (IndexedDB). No hay servidor, cuentas, contraseñas, cookies ni herramientas de medición.
