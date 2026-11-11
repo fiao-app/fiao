@@ -759,3 +759,6 @@ html[data-letra="mas"] .segmento button { padding-block: 0.375rem; }
 .cuadre-medios dd { margin: 0; font-weight: 600; }
 .cuadre-linea { display: flex; gap: 0.625rem; align-items: flex-start; font-size: 1.0625rem; line-height: 1.5rem; overflow-wrap: anywhere; }
 .cuadre-linea > svg { flex-shrink: 0; margin-top: 0.125rem; color: var(--azul-osc); }
+/* 3.5.3 · Botones en fila (historial): si no caben juntos, el que sobra pasa abajo en vez de quedar recortado. */
+.fila-botones { flex-wrap: wrap; }
+.fila-botones > * { min-width: min-content; }
