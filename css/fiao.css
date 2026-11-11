@@ -737,3 +737,26 @@ html[data-letra="mas"] .segmento button { padding-block: 0.375rem; }
 /* 3.4 · Bandas que llegan del vecino («Necesito otro día», «Algo no me cuadra»): en azul, no en verde de plata. */
 .aviso-pago.aviso-vecino { background: var(--azul-fondo); }
 .aviso-pago.aviso-vecino .ap-cab > svg { color: var(--azul-osc); }
+
+/* ───── 3.5 · Traer contactos, recibo como imagen y cuadre del día ───── */
+.fila-enlaces { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 1.25rem; }
+.imp-lista { max-height: 50vh; overflow-y: auto; }
+.imp-fila { display: flex; align-items: center; gap: 0.875rem; min-height: 3.5rem; padding: 0.375rem 0.25rem; cursor: pointer; }
+.imp-fila input { width: 1.5rem; height: 1.5rem; flex-shrink: 0; accent-color: var(--azul); }
+.imp-fila .medio { display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
+.imp-fila .nombre { font-weight: 600; }
+.imp-fila .detalle { font-size: 0.9375rem; color: var(--gris); }
+.imp-fila.ya { opacity: 0.6; cursor: default; }
+.recibo-img { display: flex; justify-content: center; min-height: 6rem; align-items: center; }
+.recibo-img img { width: 100%; max-width: 20rem; height: auto; border-radius: 1rem; box-shadow: var(--sombra); }
+.cuadre-cifra { gap: 0.25rem; }
+.rotulo-cuadre { font-size: 1rem; color: var(--gris); font-weight: 600; }
+.cuadre-monto { font-family: var(--letra-titulo); font-size: 2.25rem; line-height: 2.75rem; font-weight: 800; letter-spacing: -0.02em; }
+.cuadre-comp { list-style: none; margin: 0.25rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.125rem; font-size: 1rem; line-height: 1.375rem; }
+.cuadre-comp li::before { content: '· '; color: var(--gris); }
+.cuadre-medios { margin: 0.5rem 0 0; display: flex; flex-direction: column; gap: 0.25rem; }
+.cuadre-medios > div { display: flex; justify-content: space-between; gap: 1rem; border-top: 1px solid var(--divisor); padding-top: 0.375rem; }
+.cuadre-medios dt { color: var(--gris); }
+.cuadre-medios dd { margin: 0; font-weight: 600; }
+.cuadre-linea { display: flex; gap: 0.625rem; align-items: flex-start; font-size: 1.0625rem; line-height: 1.5rem; overflow-wrap: anywhere; }
+.cuadre-linea > svg { flex-shrink: 0; margin-top: 0.125rem; color: var(--azul-osc); }

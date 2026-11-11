@@ -269,6 +269,7 @@ function planBWhatsApp(web, texto) {
       catch (e) { const p = d.querySelector('#msj-wa'); p.hidden = false; ev.currentTarget.hidden = true; const r = document.createRange(); r.selectNodeContents(p); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
     });
   }, { nombre: 'plan-b-wa' });
+  if (typeof Voz !== 'undefined') Voz.decir('wa-no-abrio');
   /* Si WhatsApp sí abrió (tarde, después de la pregunta del iPhone), al volver esta hoja ya no hace falta. */
   const vigilar = () => {
     if (!document.hidden) return;

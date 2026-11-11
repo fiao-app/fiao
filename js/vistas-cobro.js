@@ -170,6 +170,7 @@ V.resumen = mesParam => {
     titulo: 'Resumen',
     html: `<div class="pantalla">${cabMarca({ titulo: 'Resumen', sub: `${mayuscula(MESES[mm - 1])}${esActual ? ', hasta hoy' : ` de ${y}`}`, cuerpo })}<main class="contenido" style="gap:.875rem">
       ${consejo('resumen', 'Aquí ve cuánto le deben, cuánto recuperó y a quién revisar.')}
+      ${esActual ? `<a class="btn-sec" href="#cuadre">${ic('libreta', 22, 2.2)}Cuadre de hoy</a>` : ''}
       ${meses.length > 1 ? `<div class="campo"><label for="r-mes" class="vh">Mes</label><select id="r-mes" class="entrada" style="appearance:auto">${meses.map(k => { const [a, b] = k.split('-').map(Number); return `<option value="${k}"${k === mesSel ? ' selected' : ''}>${mayuscula(MESES[b - 1])} de ${a}</option>`; }).join('')}</select></div>` : ''}
       <div class="kpis"><div class="kpi verde"><span>Recuperó</span><b>${monto(res.recuperado)}</b></div><div class="kpi"><span>Fió</span><b>${monto(res.fiado)}</b></div></div>
       ${top.length === 1 ? `<section class="tarjeta" aria-labelledby="t-mas"><h2 class="titulo-seccion" id="t-mas">Quién le debe</h2><a class="dato" href="#cliente-${top[0].c.id}"><span class="par"><span class="nombre-dato">${esc(top[0].c.nombre)}</span><b>${monto(top[0].s)}</b></span></a><p class="ayuda">Cuando le deban varios, aquí verá quién debe más.</p></section>` : `<section class="tarjeta" aria-labelledby="t-mas"><h2 class="titulo-seccion" id="t-mas">Quién debe más</h2>

@@ -9,7 +9,7 @@ Vista.despues = null;
 Vista.prefill = '';
 
 const RUTAS_SIN_TIENDA = ['bienvenida', 'restaurar', 'guia', 'tienda', 'pago', 'fecha', 'revisar'];
-const PROFUNDIDAD = { inicio: 0, cobros: 0, resumen: 0, ajustes: 0, cliente: 1, nuevo: 1, tienda: 1, mensajes: 1, resumenes: 1, restaurar: 1, guia: 1, editar: 2, mostrar: 2, cuenta: 2, corregir: 2, pago: 1, fecha: 1, revisar: 1 };
+const PROFUNDIDAD = { inicio: 0, cobros: 0, resumen: 0, ajustes: 0, cliente: 1, nuevo: 1, tienda: 1, mensajes: 1, resumenes: 1, restaurar: 1, guia: 1, editar: 2, mostrar: 2, cuenta: 2, corregir: 2, pago: 1, fecha: 1, revisar: 1, cuadre: 1 };
 const PASOS_BIENVENIDA = ['', 'letra', 'como', 'camino', 'tienda', 'nombre'];
 function profundidad(hash) {
   const [n, p = ''] = hash.split('-');

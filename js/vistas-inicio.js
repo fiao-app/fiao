@@ -245,6 +245,7 @@ V.inicio = () => {
         <h2 id="vacia" style="font-size:1.5rem;line-height:1.875rem">Su libreta está lista</h2>
         <p>Anote el primer fiado del día.</p>
         <a class="btn-link" href="#nuevo">Pasar clientes del cuaderno</a>
+        <button type="button" class="btn-link" data-accion="importar">${ic('contactos', 20, 2.2)}Traer de mis contactos</button>
       </section>
       ${pasosHtml()}
     </main>${pie}</div>`,
@@ -276,7 +277,7 @@ V.inicio = () => {
         .replace('<a class="fila"', '<a class="fila" draggable="false"')
         .replace(/<\/li>$/, `<button type="button" class="fila-borrar" data-borrar="${esc(c.id)}" aria-label="Borrar a ${esc(c.nombre)}">${ic('basura', 24, 2.2)}<span>Borrar</span></button></li>`)).join('')}</ul>
       <p class="vacio" id="sin-resultados" hidden></p>
-      <a class="btn-link" href="#nuevo">${ic('mas', 20, 2.4)}Agregar cliente</a>
+      <div class="fila-enlaces"><a class="btn-link" href="#nuevo">${ic('mas', 20, 2.4)}Agregar cliente</a><button type="button" class="btn-link" data-accion="importar">${ic('contactos', 20, 2.2)}Traer de mis contactos</button></div>
     </main>${pie}</div>`,
     montar(r) {
       montarInicio(r);

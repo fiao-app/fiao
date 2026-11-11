@@ -199,7 +199,9 @@ function avisoTrasMov(m) {
   const c = cliente(m.clienteId), s = saldoDe(c.id), pago = m.tipo === 'pago', n = nombreCorto(c.nombre);
   const texto = pago ? (s > 0 ? `Pago de ${pesos(m.monto)}. Queda debiendo ${pesos(s)}.` : `${n} quedó al día.`) : `${pesos(m.monto)} a ${n}. Va en ${pesos(s)}.`;
   const acciones = [];
-  if (c.recibos === 'whatsapp' && c.permiso?.estado !== 'no') acciones.push({ texto: pago ? 'Enviar comprobante' : 'Enviar recibo', fuerte: true, fn: () => enviarRecibo(c, m) });
+  if (c.recibos === 'whatsapp' && c.permiso?.estado !== 'no') acciones.push({ texto: pago ? 'Enviar comprobante' : 'Enviar recibo', fuerte: true, fn: () => enviarRecibo(c, m) })
+  /* 3.5 · Junto a «Enviar recibo»: el mismo recibo como imagen. */
+  if (c.recibos === 'whatsapp' && c.permiso?.estado !== 'no') acciones.push({ texto: 'Como imagen', fn: () => enviarRecibo(c, m, { imagen: true }) });
   acciones.push({ texto: 'Mostrar', fuerte: !acciones.length, fn: () => ir(`mostrar-${m.id}`) });
   acciones.push({ texto: 'Deshacer', fn: async () => {
     if (await deshacerMov(m)) { mostrarRuta({ animar: false }); avisar('Listo, se deshizo.', { icono: 'girar' }); }
@@ -210,12 +212,13 @@ function avisoTrasMov(m) {
 }
 
 /* ═════ Recibo por WhatsApp: celular, permiso y datos de pago, justo cuando hacen falta ═════ */
-async function enviarRecibo(c, m) {
-  if (!c.cel) return pedirCelular(c, m);
+async function enviarRecibo(c, m, o = {}) {
+  if (!c.cel && !o.imagen) return pedirCelular(c, m);
   if (c.permiso?.estado === 'no') return ir(`mostrar-${m.id}`);
-  if (!permisoOk(c)) return abrirPermiso(c, () => enviarRecibo(c, m), m);
+  if (!permisoOk(c)) return abrirPermiso(c, () => enviarRecibo(c, m, o), m);
   const t = tienda();
-  if (!t.preguntoPagos && !t.demo) return pedirDatosPago(() => enviarRecibo(c, m));
+  if (!t.preguntoPagos && !t.demo) return pedirDatosPago(() => enviarRecibo(c, m, o));
+  if (o.imagen) return abrirReciboImagen(c, m);
   abrirWhatsApp(c.cel, m.tipo === 'pago' ? mensajePago(c, m) : mensajeFiado(c, m));
   m.enviado = new Date().toISOString(); await guardarMov(m); await registrarContacto(c.id, 'recibo', m.id);
   avisar('Abrimos WhatsApp con el recibo listo.');
@@ -460,7 +463,7 @@ function filaMov(m) {
   const anul = m.anulado ? `<span>Anulado: ${esc(m.anulado.motivo)}.</span>` : '';
   return `<li><button type="button" class="mov${pago ? ' pago' : ''}${m.anulado ? ' anulada' : ''}" aria-expanded="false" aria-controls="d-${m.id}"><span class="que"><span>${esc(nombreMov(m))}</span>${(m.correcciones || []).length ? `<span class="ic-caja" title="Corregido">${ic('lapiz', 16, 2.2)}<span class="vh">, corregido</span></span>` : ''}</span><span class="v">${signo} ${pesos(m.monto)}</span>${ic('abajo', 18, 2.4)}</button>
     <div class="mov-detalle" id="d-${m.id}" hidden><span>${det.join(' · ')}</span>${corr}${anul}${m.visto ? `<span>${ic('ok', 16, 2.6)} El vecino lo vio.</span>` : ''}${m.enviado ? `<span>${ic('enviar', 16, 2.2)} Recibo enviado.</span>` : ''}
-      ${m.anulado ? '' : `<div class="fila-botones"><a class="btn-mini sec" href="#corregir-${m.id}">${ic('lapiz', 18, 2.2)}Corregir</a><a class="btn-mini sec" href="#mostrar-${m.id}">${ic('girar', 18, 2.2)}Mostrar</a></div>`}</div></li>`;
+      ${m.anulado ? '' : `<div class="fila-botones"><a class="btn-mini sec" href="#corregir-${m.id}">${ic('lapiz', 18, 2.2)}Corregir</a><a class="btn-mini sec" href="#mostrar-${m.id}">${ic('girar', 18, 2.2)}Mostrar</a>${m.tipo !== 'saldo' ? `<button type="button" class="btn-mini sec" data-recibo-imagen="${m.id}">${ic('enviar', 18, 2.2)}Imagen</button>` : ''}</div>`}</div></li>`;
 }
 /* ───── Borrar un cliente: con la basurita de su ficha o deslizándolo en la Libreta ─────
    Siempre se pregunta. Si debe, se pregunta otra vez mostrando cuánto. Luego, unos segundos para «Deshacer». */
@@ -578,10 +581,11 @@ function mostrarAvisoFecha(r, c, iso) {
     ${pasada || igual ? '' : `<button type="button" class="btn" data-accion="ap-aceptar">${ic('ok', 24, 2.6)}Aceptar el ${fechaCorta(dia)}</button>`}
     <button type="button" class="btn-link" data-accion="ap-cerrar">${pasada || igual ? 'Entendido' : 'No por ahora'}</button>`;
   const main = r.querySelector('.contenido'); main.insertBefore(caja, main.firstElementChild);
+  if (!pasada && !igual && typeof Voz !== 'undefined') Voz.decir('fecha-pedida');
   caja.querySelector('[data-accion="ap-aceptar"]')?.addEventListener('click', async () => {
     c.proximaFecha = iso; await guardarCliente(c);
     mostrarRuta({ animar: false });
-    avisar(`Quedó para el ${fechaLarga(dia)}.`, { voz: 'cambios', acciones: c.cel ? [{ texto: 'Avisarle', fuerte: true, fn: () => abrirWhatsApp(c.cel, mensajeFechaAceptada(c, iso)) }] : [] });
+    avisar(`Quedó para el ${fechaLarga(dia)}.`, { voz: VOZ['fecha-nueva'] ? 'fecha-nueva' : 'cambios', acciones: c.cel ? [{ texto: 'Avisarle', fuerte: true, fn: () => abrirWhatsApp(c.cel, mensajeFechaAceptada(c, iso)) }] : [] });
   });
   caja.querySelector('[data-accion="ap-cerrar"]').addEventListener('click', () => { caja.remove(); r.querySelector('h1')?.focus({ preventScroll: true }); });
   requestAnimationFrame(() => caja.querySelector('h2').focus({ preventScroll: true }));
@@ -611,6 +615,7 @@ function mostrarAvisoRevisar(r, c, motivo) {
     if (h) { h.setAttribute('tabindex', '-1'); h.scrollIntoView({ block: 'start', behavior: reducido() ? 'auto' : 'smooth' }); h.focus({ preventScroll: true }); }
   });
   caja.querySelector('[data-accion="ap-pago"]')?.addEventListener('click', () => abrirPago(c));
+  if (typeof Voz !== 'undefined') Voz.decir('revisar');
   caja.querySelector('[data-accion="ap-cerrar"]').addEventListener('click', () => { cerrar(); r.querySelector('h1')?.focus({ preventScroll: true }); });
   requestAnimationFrame(() => caja.querySelector('h2').focus({ preventScroll: true }));
 }

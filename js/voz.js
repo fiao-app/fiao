@@ -68,6 +68,18 @@ const VOZ = {
   'r-anotar': 'Con este botón anota un fiado en segundos.',
   'r-cobros': 'Aquí ve a quién recordar y cuándo lo permite la ley.'
 };
+/* 3.4 y 3.5 · Frases nuevas (del vecino, WhatsApp, contactos, recibo como imagen y cuadre).
+   Entran a VOZ cuando estén grabadas; mientras tanto, Fiao sigue en silencio en esos momentos. */
+const VOZ_POR_GRABAR = {
+  'fecha-pedida': 'Su cliente pide otro día. Usted decide si lo acepta.',
+  'revisar': 'Su cliente pide revisar la cuenta. Mire el historial.',
+  'fecha-nueva': 'Listo, quedó la nueva fecha.',
+  'wa-no-abrio': 'No se abrió WhatsApp. Puede copiar el mensaje.',
+  'copiado': 'Mensaje copiado.',
+  'importados': 'Listo, sus clientes quedaron en la libreta.',
+  'recibo-imagen': 'Elija el chat y envíe el recibo.',
+  'cuadre': 'Este es el cuadre de hoy.',
+};
 /* Ayuda y «¿Por qué?» se graban con el mismo texto que se lee en pantalla. */
 for (const [k, [, lineas]] of Object.entries(AYUDA)) VOZ[`ayuda-${k}`] = lineas.join(' ');
 for (const [k, [t, x]] of Object.entries(POR_QUE)) VOZ[`porque-${k}`] = `${t} ${x}`;
@@ -81,7 +93,7 @@ const VOZ_REGLAS = [
   [/^Abrimos WhatsApp con su cuenta/, 'cuenta-wa'], [/^Abrimos WhatsApp con el resumen/, 'resumen-wa'], [/ aceptó sus recibos\.$/, 'permiso-si'],
   [/^Entendido\. Sus cuentas se las muestra aquí\.$/, 'permiso-no'], [/^Ya se le recordó hoy/, 'ya-recordado'],
   [/la ley no permite recordar\.$|^Se puede recordar desde |^El horario para recordar terminó/, 'no-recordar'],
-  [/^Copia guardada\./, 'copia'], [/^Datos de la tienda guardados\.$/, 'tienda'], [/^Su libreta quedó recuperada\.$/, 'recuperada'],
+  [/^Copia guardada\./, 'copia'], [/^Mensaje copiado\.$/, 'copiado'], [/^Datos de la tienda guardados\.$/, 'tienda'], [/^Su libreta quedó recuperada\.$/, 'recuperada'],
   [/^Mensajes guardados\.$/, 'mensajes'], [/^Volvió al mensaje original\.$/, 'original'], [/^Montos ocultos\.$/, 'ocultos'], [/^Montos visibles\.$/, 'visibles'],
   [/^Lista oculta\./, 'pasos-ocultos'], [/^Fiao quedó en su celular\.$/, 'instalada'], [/^Hay una versión nueva/, 'version'], [/^No se pudo abrir la lista de contactos/, 'sin-contactos'],
   [/^Escriba el nombre o apodo\.$/, 'e-nombre'], [/^El celular tiene 10 números/, 'e-celular'], [/^Es más de lo que debe/, 'e-mas'],

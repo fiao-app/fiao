@@ -72,6 +72,12 @@ Correcciones de la evaluación final (heurística, crítica de diseño, usabilid
 - **Recordatorios con enlace.** Los dos recordatorios traen la cuenta del vecino («Vea su cuenta y avísenos cuando pague»), y el {enlace} de Mis mensajes ahora también se llena en ellos.
 - **«Necesito otro día» y «Algo no me cuadra».** En su cuenta, el vecino puede pedir otro día de pago o avisar que algo no le cuadra. A la tienda le llega por WhatsApp con un enlace que abre la ficha con una banda: «Aceptar el viernes 13» (y avisarle) o «Ver el historial». En iPhone funciona con el mismo puente de copiar y pegar del aviso de pago.
 
+## Traer contactos, recibo como imagen y cuadre del día (3.5)
+
+- **Traer de mis contactos.** En la Libreta. En Android abre el selector de contactos del celular y deja marcar varios. En iPhone (donde Safari no deja abrir los contactos) se usa el archivo que exporta la app Contactos: Listas → mantener presionada la lista → Exportar → Guardar en Archivos, y en Fiao «Elegir el archivo». Fiao muestra la lista con casillas, salta los que ya están (por celular o nombre), corta el nombre a 24 letras entre palabras y toma solo celulares colombianos. Entran sin deuda y sin permiso de mensajes. Hay «Deshacer». Fiao solo ve los contactos elegidos y nada sale del celular.
+- **Recibo como imagen.** Junto a «Enviar recibo» sale «Como imagen», y cada línea del historial tiene «Imagen». Fiao dibuja una tarjeta de 1080 × 1350 con el toldo, el monto y lo que va debiendo, muestra la vista previa y la comparte con el menú del celular junto al mensaje con el enlace. El tendero elige el chat. Si WhatsApp deja la foto sin el texto, «Copiar el mensaje con el enlace» lo resuelve.
+- **Cuadre de hoy.** Desde Resumen: cuánto fió y cuánto cobró (en efectivo, por Nequi y por Bre-B), comparado con ayer y con el mismo día de la semana pasada; clientes nuevos, quienes quedaron al día y quién paga mañana. «Mandármelo por WhatsApp» lo envía al número de la tienda. Respeta «Ocultar montos».
+
 ## Decisiones que sostienen la confianza
 
 - **Los datos viven en el celular.** La libreta se guarda en el navegador (IndexedDB). No hay servidor, cuentas, contraseñas, cookies ni herramientas de medición.
