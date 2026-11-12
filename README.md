@@ -8,6 +8,36 @@ Fiao es una aplicación web instalable (PWA) para anotar, mostrar y cobrar el fi
 
 ---
 
+## Historial de versiones
+
+Fiao sigue el versionado semántico (MAJOR.MINOR.PATCH): las versiones 0.x fueron de exploración; la 1.0.0 es la primera estable; una versión menor agrega funciones sin romper lo anterior, y un parche solo corrige.
+
+| Versión | Fecha | Tipo | Qué cambió |
+|---|---|---|---|
+| 1.7.1 | 2026-11-11 | Parche | Frase de voz al borrar varios clientes que deben |
+| 1.7.0 | 2026-11-11 | Menor | Borrar varios clientes de una vez, con atajos y Deshacer |
+| 1.6.1 | 2026-11-11 | Parche | El cliente nuevo se guarda junto con su primer fiado |
+| 1.6.0 | 2026-11-11 | Menor | Revisión de dirección de arte: contraste, foco, textos, ícono «Mostrar», letra Más grande |
+| 1.5.0 | 2026-11-11 | Menor | Paso opcional «¿Cómo le pueden pagar?» al crear la libreta |
+| 1.4.3 | 2026-11-11 | Parche | Botones del historial sin recortes |
+| 1.4.2 | 2026-11-11 | Parche | Interruptores de Ajustes en Tinta |
+| 1.4.1 | 2026-11-11 | Parche | Ocho frases nuevas de voz |
+| 1.4.0 | 2026-11-11 | Menor | Traer contactos, recibo como imagen y cuadre del día |
+| 1.3.0 | 2026-11-10 | Menor | Límites de texto, voz a tiempo, WhatsApp directo en iPhone, ida y vuelta con el vecino |
+| 1.2.1 | 2026-11-10 | Parche | Puente de copiar y pegar el aviso de pago en iPhone |
+| 1.2.0 | 2026-11-10 | Menor | Borrar clientes, aviso de pago con enlace y búsqueda por celular |
+| 1.1.0 | 2026-11-10 | Menor | Recordar en fila |
+| 1.0.3 | 2026-11-10 | Parche | Cambiar la costumbre de pago mueve la fecha |
+| 1.0.2 | 2026-11-10 | Parche | Íconos con centrado óptico y más peso en Tinta |
+| 1.0.1 | 2026-11-10 | Parche | Cuatro frases nuevas de voz |
+| 1.0.0 | 2026-11-10 | Estable | Confiabilidad: nunca finge que guardó, índice por cliente, prevención de errores, «Mostrar» |
+| 0.5.1 | 2026-11-09 | Parche | Tinta sobre papel liso |
+| 0.5.0 | 2026-11-09 | Menor | Apariencia Tinta y movimiento que explica |
+| 0.4.0 | 2026-11-09 | Menor | Identidad del toldo, nuevas letras, menú flotante y voz de Fiao |
+| 0.3.0 | 2026-11-09 | Menor | «Así funciona» con un sistema de ilustración y redacción revisada |
+| 0.2.0 | 2026-11-09 | Menor | Anotar y Pagó en hojas, primer uso guiado y nuevo sistema visual |
+| 0.1.0 | 2026-11-08 | Inicial | Producto mínimo viable: libreta, cuenta del vecino por enlace, cobros dentro de la ley, sin internet |
+
 ## Qué hace
 
 | Para el tendero | Para el vecino |
@@ -28,21 +58,21 @@ Fiao es una aplicación web instalable (PWA) para anotar, mostrar y cobrar el fi
 - **La voz de Fiao:** después de cada acción (anotar, pagar, corregir, un error al escribir, cada paso de la guía) una voz femenina, cálida y clara dice una frase corta. Son frases grabadas dentro de la app, así que suenan igual en todos los celulares. Las de todos los días se guardan al instalar; las demás, la primera vez que suenan (así la primera visita baja 2 MB menos). Si una frase aún no se ha guardado y no hay internet, la app sigue en silencio. Nunca dicen nombres ni montos en voz alta. Se apaga en Ajustes.
 - Las razones y las leyes quedan detrás de un «¿Por qué?», no en la pantalla.
 
-## Identidad visual (3.0)
+## Identidad visual (0.4.0)
 
-- **El toldo como firma.** El ícono es una F cuyo brazo es el toldo rayado de la tienda de barrio; la moneda naranja es el fiado. En la app, las cabeceras llevan las franjas del toldo y terminan en su borde ondulado.
+- **El toldo como firma.** El ícono es una F cuyo brazo superior es el toldo rayado de la tienda de barrio, con la franja central en naranja. En la app, las cabeceras llevan las franjas del toldo y terminan en su borde ondulado.
 - **Color con reglas (60-30-10).** Papel de cuaderno y blanco de fondo, cobalto (#3346E0) para la marca y la acción principal, y la moneda (#FF8A3D) como acento. Los colores de estado nunca se usan como marca: rojo ladrillo solo para «atrasado», verde solo para «pagó» y «al día».
 - **Dos letras.** Plus Jakarta Sans para títulos y cifras, porque su 0 no se confunde con el 8; Figtree para leer.
 - **Menú flotante.** Una píldora con íconos; la sección activa muestra su nombre. Con letra Grande o Más grande se ven todos los nombres. «Anotar fiado» flota encima, en color moneda.
 - Cada cliente tiene un color propio en su avatar, calculado de su nombre.
 
-## Apariencia «Tinta» y movimiento (3.1)
+## Apariencia «Tinta» y movimiento (0.5.0)
 
 - **Tinta.** Una segunda apariencia, solo con azul de bolígrafo (#1D3BA8), negro y blanco, como la tinta sobre el cuaderno de la tienda. Es la de más contraste (texto de 9,4:1 a 18,9:1) y se lee mejor al sol. Como entre el azul y el negro solo hay 2:1, los estados no dependen del color: «atrasado» va relleno en negro, «paga hoy» con borde azul, y todo lleva su ícono. Se elige en Ajustes → Apariencia; si el celular tiene activado «más contraste», Fiao abre en Tinta hasta que el tendero elija otra cosa.
 - **Movimiento que explica.** Cada animación cuenta algo: el nombre y el monto viajan de la lista a la ficha; al anotar, una moneda vuela del botón a la cifra de arriba y la cifra cuenta hasta el valor nuevo; al pagar, el saldo baja contando y, si queda al día, el visto se dibuja; la hoja se cierra arrastrándola hacia abajo; «Mitad» lleva la barra sola hasta la mitad; el aviso con «Deshacer» muestra cuánto tiempo queda; las ilustraciones de «Así funciona» se arman por partes.
 - **Reglas del movimiento.** Solo se animan posición, tamaño y transparencia (lo más liviano para el celular); 120–200 ms al tocar y 220–320 ms entre pantallas; probado con el procesador 4 veces más lento. Ajustes → Movimiento: «Reducido» quita todas las animaciones; si el celular pide menos movimiento, Fiao arranca en Reducido.
 
-## Confiabilidad (3.2)
+## Confiabilidad (1.0.0 a 1.1.0)
 
 Correcciones de la evaluación final (heurística, crítica de diseño, usabilidad y beta testing):
 
@@ -50,19 +80,19 @@ Correcciones de la evaluación final (heurística, crítica de diseño, usabilid
 - **Rápida con libretas grandes.** Un índice por cliente guarda las anotaciones y el saldo de cada uno: con 300 clientes y 30.000 anotaciones, la Libreta se dibuja en 46 ms con el procesador 4 veces más lento (antes, 1,2 s).
 - **Previene errores comunes.** Avisa si ya hay un cliente con el mismo nombre (y deja anotarle al que ya existe) y si un monto es mucho más de lo normal, por un cero de más.
 - **Mostrar la cuenta.** Un atajo en la ficha gira la pantalla hacia el vecino con su cuenta completa: lo que debe, la fecha acordada y lo último anotado.
-- **Recordar en fila.** Cuando hay 2 o más clientes por recordar, Cobros ofrece «Recordar a los 3 de hoy»: Fiao abre WhatsApp con un cliente a la vez y el tendero envía allá. WhatsApp no permite que una app envíe por usted, así que cada chat se abre con un toque; la fila respeta la Ley 2300 (horario, permiso, una vez al día) y, si el celular cierra Fiao a mitad de camino, al volver quedan solo los que faltan.
-- **Editar la costumbre de pago mueve la fecha.** Al cambiar «¿Cuándo suele pagar?», el formulario muestra el próximo pago y la ficha lo refleja; con «Otro día» se elige la fecha exacta.
+- **Recordar en fila (1.1.0).** Cuando hay 2 o más clientes por recordar, Cobros ofrece «Recordar a los 3 de hoy»: Fiao abre WhatsApp con un cliente a la vez y el tendero envía allá. WhatsApp no permite que una app envíe por usted, así que cada chat se abre con un toque; la fila respeta la Ley 2300 (horario, permiso, una vez al día) y, si el celular cierra Fiao a mitad de camino, al volver quedan solo los que faltan.
+- **Editar la costumbre de pago mueve la fecha (1.0.3).** Al cambiar «¿Cuándo suele pagar?», el formulario muestra el próximo pago y la ficha lo refleja; con «Otro día» se elige la fecha exacta.
 - **«Al día» quiere decir sin atrasos**, como se dice en el barrio, aunque el cliente deba.
 - **Dos ventanas sincronizadas.** Si Fiao está abierta en la app instalada y en el navegador, lo que se anota en una aparece en la otra.
 - **iPhone:** si Fiao se abre en Safari sin instalar, una banda explica cómo agregarla a la pantalla de inicio, porque Safari puede borrar los datos de los sitios que no se abren en días.
 
-## Borrar clientes, aviso de pago y búsqueda por celular (3.3)
+## Borrar clientes, aviso de pago y búsqueda por celular (1.2.0)
 
 - **Borrar un cliente.** Con la basurita de su ficha o deslizándolo a la izquierda en la Libreta. Deslizar solo muestra el botón; borrar siempre pregunta, y si el cliente debe, pregunta otra vez mostrando cuánto («No borrar» es la opción principal). Después quedan unos segundos para «Deshacer», que lo devuelve con todo su historial. «Nada se borra» sigue valiendo para las anotaciones: lo que se borra es el cliente entero, por ejemplo uno creado por error. El enlace que el vecino ya tiene no cambia, porque su cuenta viaja dentro del enlace.
 - **Aviso de pago con enlace.** Cuando el vecino avisa «Ya pagué», su mensaje trae «Confirmar en Fiao»: el enlace abre la cuenta de ese cliente con el aviso arriba («Luz Marina dice que le pagó $15.000 por Nequi») y pide revisar en Nequi o en el banco que la plata llegó. «Ya llegó: anotar pago» abre Pagó con el monto y el medio puestos; Fiao nunca lo anota por su cuenta. Si ya hay un pago igual de los últimos días, lo advierte. En iPhone con Fiao en la pantalla de inicio, WhatsApp abre el enlace en Safari, y Safari no ve la libreta de la app instalada (Apple las separa a propósito y no deja que un enlace abra la app). Para eso hay un puente: en Safari, Fiao muestra el aviso con «Copiar aviso»; en la app, se pega en el buscador de la Libreta y abre esa cuenta con el aviso y el monto. Nunca ofrece empezar una libreta nueva ahí, para no partir la libreta en dos. En Android, el enlace abre directo la app instalada.
 - **Buscar por nombre o celular.** Si se escriben números, la Libreta busca en los celulares (sin importar espacios ni el +57) y muestra el número con la parte encontrada resaltada.
 
-## Textos que caben, voz a tiempo y la ida y vuelta con el vecino (3.4)
+## Textos que caben, voz a tiempo y la ida y vuelta con el vecino (1.3.0)
 
 - **Límites al escribir.** Nombre del cliente: 24 letras. Algo para reconocerlo: 40. Lo que siempre lleva y «¿Qué se llevó?»: 80. «¿Quién lo llevó?»: 30. Nombre de la tienda: 30. Su nombre y quienes atienden: 24. Llave Bre-B: 60. Mis mensajes: 500. Cuando faltan 5 o menos, el campo dice cuántas quedan. Lo guardado antes no se corta.
 - **Nada se sale de su caja.** Las palabras largas se parten dentro de su caja, la banda «Gire el celular hacia…» queda en 2 líneas, el nombre de la tienda pasa debajo de los botones si ocuparía más de 2 líneas, y los botones de Ajustes crecen con «Más grande». Las cifras grandes se achican solas, y solo cuando no caben: con letra Más grande, «Mostrar» cortaba $250.000.
@@ -72,20 +102,20 @@ Correcciones de la evaluación final (heurística, crítica de diseño, usabilid
 - **Recordatorios con enlace.** Los dos recordatorios traen la cuenta del vecino («Vea su cuenta y avísenos cuando pague»), y el {enlace} de Mis mensajes ahora también se llena en ellos.
 - **«Necesito otro día» y «Algo no me cuadra».** En su cuenta, el vecino puede pedir otro día de pago o avisar que algo no le cuadra. A la tienda le llega por WhatsApp con un enlace que abre la ficha con una banda: «Aceptar el viernes 13» (y avisarle) o «Ver el historial». En iPhone funciona con el mismo puente de copiar y pegar del aviso de pago.
 
-## Traer contactos, recibo como imagen y cuadre del día (3.5)
+## Traer contactos, recibo como imagen y cuadre del día (1.4.0)
 
 - **Traer de mis contactos.** En la Libreta. En Android abre el selector de contactos del celular y deja marcar varios. En iPhone (donde Safari no deja abrir los contactos) se usa el archivo que exporta la app Contactos: Listas → mantener presionada la lista → Exportar → Guardar en Archivos, y en Fiao «Elegir el archivo». Fiao muestra la lista con casillas, salta los que ya están (por celular o nombre), corta el nombre a 24 letras entre palabras y toma solo celulares colombianos. Entran sin deuda y sin permiso de mensajes. Hay «Deshacer». Fiao solo ve los contactos elegidos y nada sale del celular.
 - **Recibo como imagen.** Junto a «Enviar recibo» sale «Como imagen», y cada línea del historial tiene «Imagen». Fiao dibuja una tarjeta de 1080 × 1350 con el toldo, el monto y lo que va debiendo, muestra la vista previa y la comparte con el menú del celular junto al mensaje con el enlace. El tendero elige el chat. Si WhatsApp deja la foto sin el texto, «Copiar el mensaje con el enlace» lo resuelve.
-- **Voz.** Ocho frases nuevas con la voz de siempre (3.5.1): otra fecha, revisar la cuenta, nueva fecha, WhatsApp que no abrió, mensaje copiado, clientes traídos, recibo como imagen y cuadre.
+- **Voz.** Ocho frases nuevas con la voz de siempre (1.4.1): otra fecha, revisar la cuenta, nueva fecha, WhatsApp que no abrió, mensaje copiado, clientes traídos, recibo como imagen y cuadre.
 - **Cuadre de hoy.** Desde Resumen: cuánto fió y cuánto cobró (en efectivo, por Nequi y por Bre-B), comparado con ayer y con el mismo día de la semana pasada; clientes nuevos, quienes quedaron al día y quién paga mañana. «Mandármelo por WhatsApp» lo envía al número de la tienda. Respeta «Ocultar montos».
 
-## Cómo le pagan, desde el primer día (3.6)
+## Cómo le pagan, desde el primer día (1.5.0)
 
 - **Paso 3 de 3 al crear la libreta: «¿Cómo le pueden pagar?».** Después del nombre de la tienda y el suyo, Fiao pregunta la llave Bre-B y el Nequi o Daviplata. Es opcional y lo dice: también se puede poner después en Ajustes. En efectivo, en la tienda, siempre.
 - Si el tendero llena algo, queda guardado y Fiao ya no se lo pregunta al mandar el primer recibo. Si lo deja vacío, todo sigue como antes: se lo pregunta en ese momento, en la hoja «¿Cómo le pueden pagar?».
 - Lo escrito se conserva al ir atrás, y un Nequi incompleto no deja seguir sin avisar.
 
-## Revisión de director de arte (3.7)
+## Revisión de dirección de arte (1.6.0)
 
 Una revisión independiente de las pantallas encontró detalles que se notan de cerca; todos se corrigieron:
 
@@ -98,9 +128,9 @@ Una revisión independiente de las pantallas encontró detalles que se notan de 
 - **Opciones que no saltan.** Al marcar una opción ya no cambia de ancho, así que la fila no se reacomoda bajo el dedo.
 - **Mis mensajes.** Los datos se muestran en palabras («{día acordado}», «{cómo pagar}») y se agregan con un toque; el cuadro crece con el texto. Se siguen guardando con las mismas claves, así que los mensajes ya escritos funcionan igual.
 - **iPhone.** El campo de fecha («¿Qué día acordaron?») ya no se sale del margen derecho.
-- **3.7.1 · Cliente nuevo sin compromiso.** Al crear un cliente desde «Anotar fiado», se guarda junto con su primer fiado. Si el tendero cierra con la X o toca «Cambiar» antes de anotar, el cliente no queda en la libreta; y si anota y luego toca «Deshacer», se quitan el fiado y el cliente recién creado.
+- **1.6.1 · Cliente nuevo sin compromiso.** Al crear un cliente desde «Anotar fiado», se guarda junto con su primer fiado. Si el tendero cierra con la X o toca «Cambiar» antes de anotar, el cliente no queda en la libreta; y si anota y luego toca «Deshacer», se quitan el fiado y el cliente recién creado.
 
-## Borrar varios clientes (3.8)
+## Borrar varios clientes (1.7.0)
 
 Para limpiar la libreta sin ir uno por uno:
 
@@ -109,7 +139,7 @@ Para limpiar la libreta sin ir uno por uno:
 - **Atajos:** «No deben nada» y «Sin movimientos hace 3 meses» marcan (o desmarcan) a todos los de ese grupo de un toque.
 - **Borrar:** siempre pide confirmar, muestra a quiénes y avisa si alguno todavía debe y cuánto suman entre todos («Borrar aunque deben»).
 - **Deshacer:** un solo toque devuelve a todos con su historial.
-- **Voz (3.8.1):** si varios de los marcados deben, Fiao lo dice en voz alta («Algunos de estos clientes todavía le deben…»), con la misma voz y volumen de las demás frases.
+- **Voz (1.7.1):** si varios de los marcados deben, Fiao lo dice en voz alta («Algunos de estos clientes todavía le deben…»), con la misma voz y volumen de las demás frases.
 
 ## Decisiones que sostienen la confianza
 

@@ -68,7 +68,7 @@ const VOZ = {
   'r-anotar': 'Con este botón anota un fiado en segundos.',
   'r-cobros': 'Aquí ve a quién recordar y cuándo lo permite la ley.'
 };
-/* 3.4 y 3.5 · Frases nuevas: del vecino, WhatsApp, contactos, recibo como imagen y cuadre (grabadas en 3.5.1). */
+/* 1.3.0 y 1.4.0 · Frases nuevas: del vecino, WhatsApp, contactos, recibo como imagen y cuadre (grabadas en 1.4.1). */
 const VOZ_NUEVAS = {
   'fecha-pedida': 'Su cliente pide otro día. Usted decide si lo acepta.',
   'revisar': 'Su cliente pide revisar la cuenta. Mire el historial.',
@@ -78,7 +78,7 @@ const VOZ_NUEVAS = {
   'importados': 'Listo, sus clientes quedaron en la libreta.',
   'recibo-imagen': 'Elija el chat y envíe el recibo.',
   'cuadre': 'Este es el cuadre de hoy.',
-  /* 3.8.1 */
+  /* 1.7.1 */
   'borrar-deben': 'Algunos de estos clientes todavía le deben. Si los borra, pierde el registro de esa plata.',
 };
 Object.assign(VOZ, VOZ_NUEVAS);
@@ -105,16 +105,16 @@ const VOZ_REGLAS = [
   [/^Esto es lo que le deben entre todos\.$/, 'r-total'], [/^Primero salen los atrasados/, 'r-lista'], [/^Con este botón anota un fiado/, 'r-anotar'], [/^Aquí ve a quién recordar/, 'r-cobros']
 ];
 
-/* 3.4 · Frases que más suenan: quedan listas apenas el celular deja sonar, para que salgan sin espera. */
+/* 1.3.0 · Frases que más suenan: quedan listas apenas el celular deja sonar, para que salgan sin espera. */
 const VOZ_PRIMERO = ['anotado', 'pago', 'al-dia', 'deshecho', 'cliente-nuevo', 'cambios', 'correccion', 'recibo-wa', 'e-monto', 'e-nombre'];
 
 const Voz = {
   ctx: null, sonando: null, buffers: {}, bytes: {}, cargando: {}, inicio: {}, faltan: new Set(),
-  turno: 0, // 3.4 · cada frase pedida tiene su turno: si llega otra o Fiao se esconde, la anterior ya no suena
+  turno: 0, // 1.3.0 · cada frase pedida tiene su turno: si llega otra o Fiao se esconde, la anterior ya no suena
   /** ¿La voz está encendida en Ajustes? (encendida si nunca se ha tocado) */
   encendida() { return !(Datos.tienda && Datos.tienda.voz === false); },
   /** El celular solo deja sonar después de un toque: el primer toque prepara el audio.
-      3.4 · En iPhone, al volver de otra app el audio queda «interrumpido» (no «suspendido»): también se reanuda. */
+      1.3.0 · En iPhone, al volver de otra app el audio queda «interrumpido» (no «suspendido»): también se reanuda. */
   preparar() {
     if (this.ctx && this.ctx.state === 'closed') this.ctx = null;
     if (this.ctx) { if (this.ctx.state !== 'running') this.ctx.resume().catch(() => {}); return; }
@@ -122,7 +122,7 @@ const Voz = {
     try { this.ctx = new C(); } catch (e) { this.ctx = null; return; }
     this.precargar();
   },
-  /** 3.4 · En ratos libres trae a memoria las frases cortas (cerca de 1 MB) y deja listas las más usadas. */
+  /** 1.3.0 · En ratos libres trae a memoria las frases cortas (cerca de 1 MB) y deja listas las más usadas. */
   precargar() {
     if (this._precargando) return; this._precargando = true;
     const libre = f => (window.requestIdleCallback ? requestIdleCallback(f, { timeout: 4000 }) : setTimeout(f, 1200));
@@ -148,7 +148,7 @@ const Voz = {
     if (!this.ctx) return Promise.reject(new Error('sin audio'));
     const p = this.traer(clave).then(b => new Promise((ok, mal) => this.ctx.decodeAudioData(b.slice(0), ok, mal))).then(buf => {
       this.buffers[clave] = buf; delete this.bytes[clave];
-      /* 3.4 · Cada archivo empieza con 25 a 115 ms de silencio: se salta al reproducir. */
+      /* 1.3.0 · Cada archivo empieza con 25 a 115 ms de silencio: se salta al reproducir. */
       try { const d = buf.getChannelData(0), n = d.length; let j = 0; while (j < n && Math.abs(d[j]) < 0.004) j++; this.inicio[clave] = Math.max(0, j / buf.sampleRate - 0.012); } catch (e) { this.inicio[clave] = 0; }
       return buf;
     });
@@ -161,7 +161,7 @@ const Voz = {
   /** Calla lo que suena y descarta lo que iba a sonar. */
   callar() { this.turno++; this.parar(); },
   /** Dice una frase. forzar: suena aunque la voz esté apagada (botón «Escuchar»).
-      3.4 · Una frase que no alcanzó a sonar a tiempo se descarta: nunca suena tarde. */
+      1.3.0 · Una frase que no alcanzó a sonar a tiempo se descarta: nunca suena tarde. */
   async decir(clave, { forzar = false } = {}) {
     if (!clave || !VOZ[clave] || this.faltan.has(clave) || (!forzar && !this.encendida())) return false;
     this.preparar(); if (!this.ctx) return false;

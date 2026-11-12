@@ -151,7 +151,7 @@ function restaurarCliente(b) {
   return _escribirVarios([['clientes', b.c], ...b.movs.map(m => ['movimientos', m]), ...b.contactos.map(r => ['contactos', r])]);
 }
 
-/** 3.5 · Varios clientes de una vez (al traerlos de los contactos). */
+/** 1.4.0 · Varios clientes de una vez (al traerlos de los contactos). */
 function guardarClientes(lista) { lista.forEach(c => Datos.clientes.set(c.id, c)); return _escribirVarios(lista.map(c => ['clientes', c])); }
 function quitarClientes(ids) { ids.forEach(id => Datos.clientes.delete(id)); return _escribirVarios(ids.map(id => ['clientes', id, true])); }
 /** Todo en un objeto, para la copia de respaldo. */

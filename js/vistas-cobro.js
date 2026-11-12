@@ -251,7 +251,7 @@ V.ajustes = () => {
         <p class="ayuda">Cada vecino acepta los mensajes (Ley 1581 de 2012). Los recordatorios siguen el horario de la Ley 2300 de 2023.</p>
         <p class="ayuda">Fiao es una versión de prueba, sin fines comerciales. No es asesoría legal ni contable. Usted responde por los datos de sus clientes.</p></div></details>
       <button type="button" class="btn-sec peligro" data-accion="borrar">Borrar la libreta de este celular</button>
-      <p class="nota">Fiao · versión 3.8</p>
+      <p class="nota">Fiao · versión 1.7.1</p>
     </main><div class="abajo">${nav('ajustes')}</div></div>`,
     montar(r) {
       activarGrupos(r, async (g, v) => {
@@ -288,7 +288,7 @@ V.mensajes = () => {
         <button type="button" class="btn-link izq" data-original="${k}" style="font-size:1rem;min-height:2.75rem">Volver al original</button></div>`).join('')}
     </form></main><div class="pie" role="region" aria-label="Acciones"><button type="submit" form="form-msj" class="btn">Guardar mis mensajes</button></div></div>`,
     montar(r) {
-      /* 3.7 · Cada cuadro crece con su texto: nada queda escondido. */
+      /* 1.6.0 · Cada cuadro crece con su texto: nada queda escondido. */
       const crecer = a => { a.style.height = 'auto'; a.style.height = `${a.scrollHeight + 4}px`; };
       const cajas = [...r.querySelectorAll('.msj-crece')];
       cajas.forEach(a => a.addEventListener('input', () => crecer(a)));

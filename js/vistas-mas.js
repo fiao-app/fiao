@@ -1,4 +1,4 @@
-/* Fiao 3.5 · traer clientes de los contactos, recibo como imagen y cuadre del día. */
+/* Fiao 1.4.0 · traer clientes de los contactos, recibo como imagen y cuadre del día. */
 'use strict';
 
 /* ═════════════ Traer clientes de los contactos ═════════════

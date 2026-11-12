@@ -20,7 +20,7 @@ function teclear(actual, t) {
   vibrar(8);
   if (t === 'borrar') return Math.floor(actual / 10);
   const s = String(actual || '') + t;
-  return s.replace(/^0+/, '').length <= 7 ? (parseInt(s, 10) || 0) : actual; // 3.4 · tope $9.999.999
+  return s.replace(/^0+/, '').length <= 7 ? (parseInt(s, 10) || 0) : actual; // 1.3.0 · tope $9.999.999
 }
 
 /* ═════ Hoja "Anotar fiado" ═════ */
@@ -91,7 +91,7 @@ function pasoNuevo(est, nombre) {
         return;
       }
       const nc = { id: uid(), nombre: n, cel: celD, cupo: null, pago: leer('pago') || 'quincena', recibos: 'whatsapp', recordar: 'atraso', detalle: '', lista: null, permiso: { estado: 'ninguno', fecha: null }, proximaFecha: null, creado: new Date().toISOString() };
-      /* 3.7.1 · El cliente nuevo se guarda junto con su primer fiado: si el tendero cierra o cambia de cliente
+      /* 1.6.1 · El cliente nuevo se guarda junto con su primer fiado: si el tendero cierra o cambia de cliente
          antes de anotar, no queda un cliente vacío en la libreta. */
       est.c = nc; est.nuevo = nc.id; pasoMonto(est);
     });
@@ -202,12 +202,12 @@ function avisoTrasMov(m, { clienteNuevo = false } = {}) {
   const texto = pago ? (s > 0 ? `Pago de ${pesos(m.monto)}. Queda debiendo ${pesos(s)}.` : `${n} quedó al día.`) : `${pesos(m.monto)} a ${n}. Va en ${pesos(s)}.`;
   const acciones = [];
   if (c.recibos === 'whatsapp' && c.permiso?.estado !== 'no') acciones.push({ texto: pago ? 'Enviar comprobante' : 'Enviar recibo', fuerte: true, fn: () => enviarRecibo(c, m) })
-  /* 3.5 · Junto a «Enviar recibo»: el mismo recibo como imagen. */
+  /* 1.4.0 · Junto a «Enviar recibo»: el mismo recibo como imagen. */
   if (c.recibos === 'whatsapp' && c.permiso?.estado !== 'no') acciones.push({ texto: 'Como imagen', fn: () => enviarRecibo(c, m, { imagen: true }) });
   acciones.push({ texto: 'Mostrar', fuerte: !acciones.length, fn: () => ir(`mostrar-${m.id}`) });
   acciones.push({ texto: 'Deshacer', fn: async () => {
     if (await deshacerMov(m)) {
-      /* 3.7.1 · Si el cliente se creó para este fiado, «Deshacer» también lo quita: la libreta queda como estaba. */
+      /* 1.6.1 · Si el cliente se creó para este fiado, «Deshacer» también lo quita: la libreta queda como estaba. */
       if (clienteNuevo && ![...Datos.movs.values()].some(x => x.clienteId === c.id)) await quitarClientes([c.id]);
       mostrarRuta({ animar: false }); avisar('Listo, se deshizo.', { icono: 'girar' });
     }
@@ -514,7 +514,7 @@ function pedirBorrarCliente(c, desde = 'libreta', alCerrar = () => {}) {
    #pago-<cliente>-<monto>.<medio>. Abre la cuenta con el aviso arriba; nunca anota solo. */
 /** El cliente del aviso no está aquí. En iPhone pasa siempre con Fiao instalada: WhatsApp abre el enlace en Safari,
     y Safari no ve la libreta de la app de la pantalla de inicio. Puente: copiar el aviso y pegarlo en el buscador de Fiao.
-    3.4 · La misma pantalla sirve para el aviso de pago, la fecha que pide el vecino y «algo no me cuadra». */
+    1.3.0 · La misma pantalla sirve para el aviso de pago, la fecha que pide el vecino y «algo no me cuadra». */
 function pantallaSinCliente({ titulo, icono, h2, ruta }) {
   const ios = esIOS(), enlace = `${location.href.replace(/#.*$/, '')}#${ruta}`;
   return {
@@ -568,7 +568,7 @@ V.pago = (id, x = '') => {
   return fichaConAviso(c, r => mostrarAvisoPago(r, c, montoAviso, medio));
 };
 
-/* ═════ 3.4 · El vecino pide otro día (#fecha-<cliente>-AAAAMMDD) ═════ */
+/* ═════ 1.3.0 · El vecino pide otro día (#fecha-<cliente>-AAAAMMDD) ═════ */
 V.fecha = (id, x = '') => {
   const m = String(x).match(/^(\d{4})(\d{2})(\d{2})$/), iso = m ? `${m[1]}-${m[2]}-${m[3]}` : '';
   const c = Datos.tienda ? cliente(id) : null;
@@ -597,7 +597,7 @@ function mostrarAvisoFecha(r, c, iso) {
   requestAnimationFrame(() => caja.querySelector('h2').focus({ preventScroll: true }));
 }
 
-/* ═════ 3.4 · El vecino dice que algo no le cuadra (#revisar-<cliente>-<motivo>) ═════ */
+/* ═════ 1.3.0 · El vecino dice que algo no le cuadra (#revisar-<cliente>-<motivo>) ═════ */
 const MOTIVO_REVISAR = { monto: 'dice que un monto no le cuadra', llevo: 'dice que aparece algo que no llevó', pago: 'dice que falta un pago que hizo', otro: 'dice que algo no le cuadra' };
 V.revisar = (id, x = '') => {
   const motivo = MOTIVO_REVISAR[x] ? x : 'otro';

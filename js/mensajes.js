@@ -44,7 +44,7 @@ const PLANTILLAS = {
   }
 };
 
-/* 3.7 · En «Mis mensajes» lo que va entre llaves se muestra en palabras («{día acordado}») y se guarda con su clave. */
+/* 1.6.0 · En «Mis mensajes» lo que va entre llaves se muestra en palabras («{día acordado}») y se guarda con su clave. */
 const VARIABLES_MSJ = {
   nombre: 'nombre', monto: 'monto', saldo: 'lo que debe', fecha: 'fecha', enlace: 'enlace', que: 'qué llevó',
   tienda: 'tienda', laTienda: 'la tienda', quien: 'quien atiende', saludo: 'saludo', fechaAcordada: 'día acordado',
@@ -100,7 +100,7 @@ function mensajeRecordatorio(c, e) {
   const clave = e.tipo === 'atrasado' ? 'recordatorioAtraso' : 'recordatorioDia';
   return _llenar(plantilla(clave), { ..._base(c), saldo: pesos(e.saldo), fechaAcordada: e.fecha ? fechaLarga(e.fecha) : '', enlace: enlaceCuenta(c) });
 }
-/** 3.4 · Respuesta cuando el tendero acepta el día que pidió el vecino. */
+/** 1.3.0 · Respuesta cuando el tendero acepta el día que pidió el vecino. */
 function mensajeFechaAceptada(c, iso) {
   const b = _base(c), f = fechaLarga(diaDe(iso)), enlace = enlaceCuenta(c), tono = tienda().tono || 'cercano';
   if (tono === 'formal') return `${b.saludo}, ${b.nombre}. Confirmamos la nueva fecha de pago: el ${f}. Puede ver su cuenta aquí: ${enlace}`;

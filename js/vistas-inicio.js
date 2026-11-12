@@ -127,7 +127,7 @@ function pantallaPregunta(paso) {
     }
   };
 }
-/* 3.6 · Paso 3: cómo le pueden pagar. Es opcional: si lo llena, Fiao ya no lo pregunta al mandar el primer recibo;
+/* 1.5.0 · Paso 3: cómo le pueden pagar. Es opcional: si lo llena, Fiao ya no lo pregunta al mandar el primer recibo;
    si lo deja vacío, se lo pregunta en ese momento, como antes. */
 function pantallaPagos() {
   return {
@@ -328,7 +328,7 @@ V.inicio = () => {
         /* Si pega un aviso de pago (el enlace del vecino, o el mensaje entero), abre esa cuenta con el aviso. */
         const aviso = b.value.match(/#pago-([A-Za-z0-9]+)-(\d{0,9}(?:\.[a-z]+)?)/);
         if (aviso) { b.value = ''; ir(`pago-${aviso[1]}-${aviso[2]}`); return; }
-        /* 3.4 · Igual con «Necesito otro día» y «Algo no me cuadra». */
+        /* 1.3.0 · Igual con «Necesito otro día» y «Algo no me cuadra». */
         const otro = b.value.match(/#(fecha|revisar)-([A-Za-z0-9]+)-(\d{8}|[a-z]{1,8})/);
         if (otro) { b.value = ''; ir(`${otro[1]}-${otro[2]}-${otro[3]}`); return; }
         const q = normalizar(b.value), dig = b.value.replace(/\D/g, '');
@@ -428,7 +428,7 @@ window.addEventListener('click', ev => {
 }, true);
 window.addEventListener('scroll', () => { if (Deslizar.abierta && !Deslizar.toque) Deslizar.cerrar(); }, { passive: true });
 
-/* ───── 3.8 · Borrar varios clientes de una vez ─────
+/* ───── 1.7.0 · Borrar varios clientes de una vez ─────
    Se entra con «Seleccionar» o dejando el dedo sobre un cliente. Mientras tanto no se desliza ni se anota;
    abajo aparece un panel con atajos y «Borrar». Siempre pide confirmar, avisa quién debe y se puede deshacer. */
 const DIAS_SIN_MOVER = 90;
@@ -550,7 +550,7 @@ V.anotar = () => {
 };
 function montarInicio(r) {
   Vista.despues = null;
-  /* 3.4 · Si el nombre de la tienda ocuparía más de 2 líneas junto a los botones, pasa debajo de ellos (como en la ficha). */
+  /* 1.3.0 · Si el nombre de la tienda ocuparía más de 2 líneas junto a los botones, pasa debajo de ellos (como en la ficha). */
   const cab = r.querySelector('.cab-marca'), h1 = cab && cab.querySelector('h1');
   const ubicar = () => { if (!h1 || !h1.isConnected || cab.classList.contains('titulo-abajo')) return; const lh = parseFloat(getComputedStyle(h1).lineHeight); if (lh && h1.offsetHeight > lh * 2.5) cab.classList.add('titulo-abajo'); };
   ubicar(); if (document.fonts && document.fonts.status !== 'loaded') document.fonts.ready.then(ubicar);

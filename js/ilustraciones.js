@@ -6,7 +6,7 @@
      con los mismos íconos de la app a 20 px;
    · textos con ancho fijo (textLength): nunca se salen de su caja, sea cual sea la fuente;
    · conectores, si los hay, son el mismo trazo reflejado: miden igual a los dos lados;
-   · 3.0: el escenario tiene un degradado suave, el objeto proyecta una sombra de contacto
+   · 0.4.0: el escenario tiene un degradado suave, el objeto proyecta una sombra de contacto
      y los momentos de logro llevan un destello color moneda. */
 'use strict';
 

@@ -71,7 +71,7 @@ function pintarVecino() {
   </div>`;
   montarVecino(app, k);
 }
-/* 3.4 · «Necesito otro día»: el vecino elige un día y se lo pide a la tienda por WhatsApp. */
+/* 1.3.0 · «Necesito otro día»: el vecino elige un día y se lo pide a la tienda por WhatsApp. */
 function diasParaPedir() { const h = new Date(); return [1, 3, 7].map(n => sumarDias(h, n)); }
 function cajaOtroDia() {
   const [d1, d3, d7] = diasParaPedir();
@@ -84,7 +84,7 @@ function cajaOtroDia() {
         <p class="ayuda">La tienda decide y le confirma por WhatsApp.</p>
       </section>`;
 }
-/* 3.4 · «Algo no me cuadra»: el vecino le avisa a la tienda, con un enlace que le abre su cuenta en Fiao. */
+/* 1.3.0 · «Algo no me cuadra»: el vecino le avisa a la tienda, con un enlace que le abre su cuenta en Fiao. */
 const NO_CUADRA = { monto: ['Un monto', 'un monto no me cuadra'], llevo: ['Algo que no llevé', 'aparece algo que no llevé'], pago: ['Falta un pago', 'falta un pago que hice'], otro: ['Otra cosa', 'algo no me cuadra'] };
 function cajaNoCuadra() {
   return `<button type="button" class="btn-link" data-accion="no-cuadra" aria-expanded="false" aria-controls="caja-no-cuadra">${ic('chat', 20, 2.2)}Algo no me cuadra</button>
@@ -106,7 +106,7 @@ function montarVecino(app, k) {
     catch (e) { const r = document.createRange(); r.selectNodeContents(document.getElementById(b.dataset.copiar)); const s = getSelection(); s.removeAllRanges(); s.addRange(r); avisar('Quedó marcado. Manténgalo presionado para copiar.', { icono: null }); }
   });
   const base = location.href.replace(/#.*$/, '').replace(/c\/(index\.html)?$/, '');
-  /* 3.4 · En iPhone, WhatsApp se abre por su propia dirección: sin una pestaña de más al volver. */
+  /* 1.3.0 · En iPhone, WhatsApp se abre por su propia dirección: sin una pestaña de más al volver. */
   const enviar = (a, texto) => { a._texto = texto; a.href = enlaceWhatsApp(k.w || '', texto); };
   app.querySelectorAll('a[data-wa]').forEach(a => a.addEventListener('click', ev => {
     if (!esIOS() || !a._texto) return;
@@ -119,7 +119,7 @@ function montarVecino(app, k) {
   if (ya) {
     const caja = app.querySelector('#aviso-pago'), inp = app.querySelector('#v-monto'), env = app.querySelector('#v-enviar');
     const actualizar = () => {
-      const v = leerPesos(inp.value), medio = (k.b || k.q) ? leer('medio') : 'otro'; /* 3.7 · solo los medios que la tienda dejó */
+      const v = leerPesos(inp.value), medio = (k.b || k.q) ? leer('medio') : 'otro'; /* 1.6.0 · solo los medios que la tienda dejó */
       const por = medio === 'breb' ? 'por Bre-B' : medio === 'nequi' ? 'por Nequi' : '';
       /* Con el enlace, la tienda abre la cuenta en Fiao de un toque (en los enlaces nuevos, que traen quién es). */
       const confirmar = k.i ? `\nConfirmar en Fiao: ${base}#pago-${encodeURIComponent(k.i)}-${v}.${medio}` : '';

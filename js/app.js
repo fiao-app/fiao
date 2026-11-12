@@ -138,7 +138,7 @@ window.addEventListener('beforeinstallprompt', ev => {
   if ((r === 'inicio' || r === 'ajustes') && !hojaAbierta()) mostrarRuta({ animar: false });
 });
 
-/* 3.4 · Volvió de WhatsApp y el celular había cerrado Fiao: se abre la misma cuenta, si fue hace menos de 10 minutos. */
+/* 1.3.0 · Volvió de WhatsApp y el celular había cerrado Fiao: se abre la misma cuenta, si fue hace menos de 10 minutos. */
 function volverDondeEstaba() {
   let s = null;
   try { s = JSON.parse(localStorage.getItem('fiao-salida') || 'null'); localStorage.removeItem('fiao-salida'); } catch (e) { return; }

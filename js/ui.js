@@ -227,7 +227,7 @@ function pintarHoja(html, alMontar = () => {}, d = document.getElementById('hoja
   if (d.open && (document.activeElement === d || !d.contains(document.activeElement))) enfocarTituloHoja(d);
   return d;
 }
-/* 3.7 · Al abrir, el foco va al título (sin anillo): antes caía en la hoja o en la X y se veía un borde negro. */
+/* 1.6.0 · Al abrir, el foco va al título (sin anillo): antes caía en la hoja o en la X y se veía un borde negro. */
 function enfocarTituloHoja(d) {
   const tit = d.querySelector('.cuerpo h2');
   if (tit) { if (!tit.hasAttribute('tabindex')) tit.setAttribute('tabindex', '-1'); tit.focus({ preventScroll: true }); }
@@ -246,7 +246,7 @@ function confirmar({ titulo, texto, si, no = 'Cancelar', peligro = false }) {
 }
 
 /** Abre WhatsApp con el mensaje escrito. El tendero toca Enviar allá.
-    3.4 · En iPhone se abre por la dirección propia de WhatsApp: wa.me abría un navegador encima de Fiao
+    1.3.0 · En iPhone se abre por la dirección propia de WhatsApp: wa.me abría un navegador encima de Fiao
     que quedaba en blanco al volver. En Android y en el computador sigue igual. */
 function abrirWhatsApp(cel, texto, { recordar = true } = {}) {
   if (recordar) recordarSalida();
@@ -288,7 +288,7 @@ function planBWhatsApp(web, texto) {
   };
   document.addEventListener('visibilitychange', vigilar);
 }
-/* 3.4 · Si el celular cierra Fiao mientras usted está en WhatsApp, al volver Fiao abre la misma cuenta (hasta 10 minutos). */
+/* 1.3.0 · Si el celular cierra Fiao mientras usted está en WhatsApp, al volver Fiao abre la misma cuenta (hasta 10 minutos). */
 function recordarSalida() { try { localStorage.setItem('fiao-salida', JSON.stringify({ ruta: location.hash.slice(1), t: Date.now() })); } catch (e) { /* sin almacenamiento */ } }
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { try { localStorage.removeItem('fiao-salida'); } catch (e) { /* nada */ } } });
 /** Campo de pesos que se formatea solo mientras se escribe. */
@@ -296,7 +296,7 @@ function activarCampoPesos(input, alCambiar = () => {}) {
   input._ultimo = leerPesos(input.value);
   input.addEventListener('input', () => {
     let v = leerPesos(input.value);
-    /* 3.4 · Tope por anotación ($9.999.999): una cifra de más no entra, como en el teclado. */
+    /* 1.3.0 · Tope por anotación ($9.999.999): una cifra de más no entra, como en el teclado. */
     if (v > TOPE_MONTO && v !== input._ultimo) { v = input._ultimo; vibrar(15); }
     input._ultimo = v;
     input.value = v ? pesos(v) : '';
@@ -304,7 +304,7 @@ function activarCampoPesos(input, alCambiar = () => {}) {
   });
 }
 
-/* ───── 3.4 · Cerca del límite de letras, el campo dice cuántas quedan ───── */
+/* ───── 1.3.0 · Cerca del límite de letras, el campo dice cuántas quedan ───── */
 document.addEventListener('input', ev => {
   const i = ev.target;
   if (!(i instanceof HTMLInputElement || i instanceof HTMLTextAreaElement) || i.type === 'tel' || !(i.maxLength > 0)) return;
@@ -319,7 +319,7 @@ document.addEventListener('input', ev => {
   s.textContent = quedan <= 0 ? `Llegó al límite de ${i.maxLength} letras.` : quedan === 1 ? 'Queda 1 letra.' : `Quedan ${quedan} letras.`;
 }, true);
 
-/* ───── 3.4 · Las cifras grandes se achican solas, y solo cuando no caben (montos altos o letra Más grande) ───── */
+/* ───── 1.3.0 · Las cifras grandes se achican solas, y solo cuando no caben (montos altos o letra Más grande) ───── */
 const CIFRAS_GRANDES = '.cifra, .cifra-xl, .cifra-l, .monto-grande, .aviso-hoy b';
 function encajarCifra(el) {
   if (el.dataset.encaja) { el.style.fontSize = el.dataset.fs0 || ''; el.style.lineHeight = el.dataset.lh0 || ''; delete el.dataset.encaja; }
@@ -412,7 +412,7 @@ const AYUDA = {
 function botonEscuchar(texto, clave = '') { return 'speechSynthesis' in window || (typeof Voz !== 'undefined' && clave) ? `<button type="button" class="btn-sec" data-escuchar="${esc(texto)}" data-voz="${esc(clave)}">${ic('altavoz', 22, 2.2)}Escuchar</button>` : ''; }
 /** «Escuchar»: la frase grabada con la voz de Fiao; si no hay grabación, la voz del celular. */
 function montarEscuchar(d) {
-  /* 3.4 · El audio de esta hoja se prepara al abrirla, para que «Escuchar» suene apenas se toca. */
+  /* 1.3.0 · El audio de esta hoja se prepara al abrirla, para que «Escuchar» suene apenas se toca. */
   if (typeof Voz !== 'undefined') Voz.alistar(d.querySelector('[data-escuchar]')?.dataset.voz);
   d.querySelector('[data-escuchar]')?.addEventListener('click', async ev => {
     const b = ev.currentTarget;
