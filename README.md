@@ -14,6 +14,7 @@ Fiao sigue el versionado semántico (MAJOR.MINOR.PATCH): las versiones 0.x fuero
 
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.7.2 | 2026-11-12 | Parche | La zona flotante de abajo ya no deja tocar lo que queda escondido detrás |
 | 1.7.1 | 2026-11-11 | Parche | Frase de voz al borrar varios clientes que deben |
 | 1.7.0 | 2026-11-11 | Menor | Borrar varios clientes de una vez, con atajos y Deshacer |
 | 1.6.1 | 2026-11-11 | Parche | El cliente nuevo se guarda junto con su primer fiado |
@@ -140,6 +141,13 @@ Para limpiar la libreta sin ir uno por uno:
 - **Borrar:** siempre pide confirmar, muestra a quiénes y avisa si alguno todavía debe y cuánto suman entre todos («Borrar aunque deben»).
 - **Deshacer:** un solo toque devuelve a todos con su historial.
 - **Voz (1.7.1):** si varios de los marcados deben, Fiao lo dice en voz alta («Algunos de estos clientes todavía le deben…»), con la misma voz y volumen de las demás frases.
+
+## La zona flotante, a prueba de toques escondidos (1.7.2)
+
+- Abajo, «Anotar fiado» y el menú flotan sobre un fondo de papel que tapa lo que pasa por detrás. Antes, ese fondo dejaba pasar los toques: tocarlo podía abrir un cliente que no se veía. Ahora el fondo recibe el toque y no pasa nada; para llegar a ese cliente basta con bajar la lista.
+- Por lo mismo, la auditoría de accesibilidad (axe, WCAG 2.2 AA) ya no cuenta esas filas escondidas como botones tapados a medias: 168 revisiones (7 pantallas, 3 tamaños de letra, 2 apariencias y 4 tamaños de celular) sin avisos.
+- Con el teclado, lo enfocado nunca queda detrás de la zona flotante: la página deja 11rem de margen abajo al desplazarse.
+- No cambia nada de lo que se ve.
 
 ## Decisiones que sostienen la confianza
 

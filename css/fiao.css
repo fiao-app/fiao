@@ -827,3 +827,8 @@ html[data-letra="mas"] .aviso-hoy:nth-child(3):last-child { grid-column: 1 / -1;
 html[data-tema="tinta"] .lista-borrable > li.marcado .fila { background: #FDECEA; }
 html[data-tema="tinta"] .sel-panel .sel-borrar:not([disabled]) { background: var(--alerta); color: #FFFFFF; box-shadow: none; }
 html[data-tema="tinta"] .sel-panel .sel-borrar[disabled] { background: #FFFFFF; color: var(--alerta-texto); box-shadow: inset 0 0 0 2px var(--alerta); }
+
+/* 1.7.2 · La zona flotante de abajo (Anotar fiado y el menú) ya no deja pasar los toques a lo que queda escondido
+   detrás de ella: antes, tocar su fondo de papel podía abrir un cliente que no se veía. Así, las filas que pasan por
+   detrás quedan tapadas también para la auditoría de accesibilidad (WCAG 2.5.8) y no cuentan como objetivos a medias. */
+.abajo { pointer-events: auto; }
