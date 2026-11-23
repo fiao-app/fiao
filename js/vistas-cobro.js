@@ -17,13 +17,15 @@ function avisoCalendario(hoy = new Date()) {
   const dia = x.d.getDay() === 0 ? `el ${fechaCorta(x.d)}` : `el ${fechaCorta(x.d)}, que es festivo`;
   return `<div class="info">${ic('calendario', 22)}<p>${x.n} ${x.n === 1 ? 'cuenta vence' : 'cuentas vencen'} ${dia}. Ese día no se puede recordar. Si alguien se atrasa, podrá recordarle ${elDia(proximoDiaLegal(x.d))}. ${porQue('horario')}</p></div>`;
 }
+/** 2.0.0 · Lo que se puede hacer con cada cliente va debajo de su fila. Fuera del horario de la ley no se muestra
+    un botón apagado que parezca tocable: la banda de arriba dice desde cuándo se puede. */
 function accionCobro(c, e, ahora) {
-  if (!c.cel) return `<span class="ayuda" style="flex-shrink:0">Sin celular</span>`;
-  if (!permisoOk(c)) return `<button type="button" class="btn-mini sec" data-permiso="${c.id}">Pedir permiso</button>`;
+  if (!c.cel) return `<span class="estado">${ic('celular', 18, 2.2)}Sin celular: se le cobra en la tienda</span>`;
+  if (!permisoOk(c)) return `<button type="button" class="btn-mini suave" data-permiso="${c.id}">${ic('chat', 18, 2.2)}Pedirle permiso para escribirle</button>`;
   const r = recordadoHoy(c.id, ahora);
-  if (r) return `<span class="estado ok" style="flex-shrink:0">${ic('ok', 18, 2.6)}Recordado</span>`;
-  if (!necesitaRecordatorio(c, e)) return '';
-  return `<button type="button" class="btn-mini${e.tipo === 'atrasado' ? '' : ' sec'}" data-recordar="${c.id}"${puedeRecordarAhora(ahora) ? '' : ' disabled aria-describedby="motivo-ley"'}>${ic('chat', 18, 2.2)}Recordar</button>`;
+  if (r) return `<span class="estado ok">${ic('ok', 18, 2.6)}Recordado hoy, a las ${hora(new Date(r.fecha || r))}</span>`;
+  if (!necesitaRecordatorio(c, e) || !puedeRecordarAhora(ahora)) return '';
+  return `<button type="button" class="btn-mini suave" data-recordar="${c.id}">${ic('chat', 18, 2.2)}Recordarle a ${esc(nombreCorto(c.nombre))}</button>`;
 }
 function razonHoy(c) {
   if (c.recordar === 'dia') return 'pidió que le recordaran';
@@ -56,7 +58,7 @@ function abrirLote() {
     const filas = fila.map(x => `<li><div class="fila${x === sig ? ' lote-actual' : ''}"${x === sig ? ' aria-current="step"' : ''}>${avatarHtml(x.c)}<span class="medio"><span class="nombre">${esc(x.c.nombre)}</span><span class="detalle">${monto(x.e.saldo)} · ${fecha(x.e)}</span></span>${marca(x)}</div></li>`).join('');
     const nc = sig ? esc(nombreCorto(sig.c.nombre)) : '';
     const cuerpo = sig ? `
-      ${bloqueo ? `<div class="info atencion" role="alert">${ic('reloj', 22)}<p>${bloqueo} ${porQue('horario')}</p></div>` : ''}
+      ${bloqueo ? `<div class="info ley" role="alert">${ic('calendario', 22)}<p>${bloqueo} ${porQue('horario')}</p></div>` : ''}
       <button type="button" class="btn" data-accion="lote-abrir"${bloqueo ? ' disabled' : ''}>${ic('chat', 24, 2.4)}Recordar a ${nc}</button>
       <details class="mas"><summary>${ic('chat', 22)}Ver el mensaje para ${nc}</summary><div class="interior"><div class="burbuja" style="font-size:1rem;line-height:1.4">${esc(mensajeRecordatorio(sig.c, sig.e))}</div></div></details>
       <button type="button" class="btn-link" data-accion="lote-saltar">Saltar a ${nc}</button>`
@@ -94,21 +96,26 @@ V.cobros = () => {
   const pend = resumenesPendientes();
   const enFila = puedeRecordarAhora(ahora) ? filaRecordar(ahora).length : 0;
   const primero = [...atrasados, ...deHoy].find(x => necesitaRecordatorio(x.c, x.e) && permisoOk(x.c) && !recordadoHoy(x.c.id, ahora));
-  const fila = ({ c, e }, detalle) => `<li><div class="fila" style="padding-right:.75rem"><a href="#cliente-${c.id}" class="medio" style="text-decoration:none;color:inherit;min-height:3rem;justify-content:center"><span class="nombre">${esc(c.nombre)}</span>${detalle}</a>${accionCobro(c, e, ahora)}</div></li>`;
-  const sub = puedeRecordarAhora(ahora) ? `Puede recordar hasta las ${horarioLegal(ahora).hasta - 12}:00 p. m.` : '';
+  /* 2.0.0 · Cada cobro como en la Libreta: inicial, nombre, estado y monto a la derecha; la acción, debajo. */
+  const fila = ({ c, e }, detalle) => { const acc = accionCobro(c, e, ahora); return `<li><a class="fila" href="#cliente-${c.id}">${avatarHtml(c)}<span class="medio"><span class="nombre">${nombreHtml(c)}</span>${detalle}</span><span class="monto">${monto(e.saldo)}</span></a>${acc ? `<div class="cobro-accion">${acc}</div>` : ''}</li>`; };
   const porCobrar = [...atrasados, ...deHoy];
   const cuerpo = porCobrar.length ? `<section class="cifra-cab" aria-labelledby="t-porcobrar"><span class="rotulo" id="t-porcobrar">Por cobrar hoy</span><span class="cifra">${monto(porCobrar.reduce((t, x) => t + x.e.saldo, 0))}</span>
-    <span class="extra"><span>${porCobrar.length} ${porCobrar.length === 1 ? 'persona' : 'personas'}</span>${atrasados.length ? `<span><b>${atrasados.length}</b> ${atrasados.length === 1 ? 'atrasada' : 'atrasadas'}</span>` : ''}</span></section>` : '';
+    <span class="extra"><span><b>${porCobrar.length}</b> ${porCobrar.length === 1 ? 'cliente' : 'clientes'}</span>${atrasados.length ? `<span>${ic('atencion', 17, 2.4)}<b>${atrasados.length}</b> ${atrasados.length === 1 ? 'atrasado' : 'atrasados'}</span>` : ''}</span></section>` : '';
+  /* La ley, en tono neutro: no es un error. Si hoy no se puede, dice desde cuándo. */
+  const prox = proximoDiaLegal(ahora, !!horarioLegal(ahora) && ahora.getHours() < horarioLegal(ahora).desde), hp = horarioLegal(prox);
+  const ley = puedeRecordarAhora(ahora)
+    ? `<div class="info ley">${ic('calendario', 22)}<p>Puede recordar hasta las <b>${horarioLegal(ahora).hasta - 12}:00 p. m.</b> ${porQue('horario')}</p></div>`
+    : `<div class="info ley" id="motivo-ley">${ic('calendario', 22)}<p>${motivoNoRecordar(ahora)} Puede recordar ${isoDia(prox) === isoDia(ahora) ? 'hoy' : elDia(prox)} desde las <b>${hp.desde}:00 a. m.</b> ${porQue('horario')}</p></div>`;
   return {
     titulo: 'Cobros',
-    html: `<div class="pantalla">${cabMarca({ titulo: 'Cobros', sub, cuerpo })}<main class="contenido" style="gap:.875rem">
+    html: `<div class="pantalla">${cabMarca({ titulo: 'Cobros', cuerpo })}<main class="contenido" style="gap:.875rem">
       ${consejo('cobros', 'Aquí salen quienes deben pagar. Fiao respeta el horario de la ley.')}
-      ${puedeRecordarAhora(ahora) ? '' : `<div class="info atencion" id="motivo-ley">${ic('reloj', 22)}<p>${motivoNoRecordar(ahora)} ${porQue('horario')}</p></div>`}
+      ${porCobrar.length || !puedeRecordarAhora(ahora) ? ley : ''}
       ${enFila >= 2 ? `<button type="button" class="btn" data-accion="lote">${ic('chat', 24, 2.4)}Recordar a los ${enFila} de hoy</button>` : ''}
       ${atrasados.length ? `<section aria-labelledby="t-atr" style="display:flex;flex-direction:column;gap:.375rem"><h2 class="titulo-seccion" id="t-atr">Se atrasaron</h2>
-        <ul class="lista atencion">${atrasados.map(x => fila(x, `<span class="estado atrasado">${monto(x.e.saldo)} · ${x.e.dias} ${x.e.dias === 1 ? 'día' : 'días'}</span>`)).join('')}</ul></section>` : ''}
+        <ul class="lista lista-cobros">${atrasados.map(x => fila(x, estadoHtml(x.c, x.e))).join('')}</ul></section>` : ''}
       ${deHoy.length ? `<section aria-labelledby="t-hoy" style="display:flex;flex-direction:column;gap:.375rem"><h2 class="titulo-seccion" id="t-hoy">Pagan hoy</h2>
-        <ul class="lista">${deHoy.map(x => fila(x, `<span class="estado">${monto(x.e.saldo)} · ${razonHoy(x.c)}</span>`)).join('')}</ul></section>` : ''}
+        <ul class="lista lista-cobros">${deHoy.map(x => fila(x, `<span class="detalle">${mayuscula(razonHoy(x.c))}</span>`)).join('')}</ul></section>` : ''}
       ${!atrasados.length && !deHoy.length ? `<div class="tarjeta" style="align-items:center;text-align:center;padding:1.5rem 1rem">${selloOk(40)}<p style="font-size:1.25rem"><b>Hoy no hay cobros.</b></p><p class="ayuda">Aquí salen los atrasados y los que pagan hoy.</p></div>` : ''}
       ${avisoCalendario(ahora)}
       ${pend.length ? `<a class="fila tarjeta" style="flex-direction:row" href="#resumenes"><span class="medio"><span class="nombre">Resúmenes por enviar</span><span class="detalle">${pend.length} ${pend.length === 1 ? 'cliente' : 'clientes'}</span></span>${ic('sigue', 22, 2.2)}</a>` : ''}
@@ -171,7 +178,12 @@ V.resumen = mesParam => {
     html: `<div class="pantalla">${cabMarca({ titulo: 'Resumen', sub: `${mayuscula(MESES[mm - 1])}${esActual ? ', hasta hoy' : ` de ${y}`}`, cuerpo })}<main class="contenido" style="gap:.875rem">
       ${consejo('resumen', 'Aquí ve cuánto le deben, cuánto recuperó y a quién revisar.')}
       ${esActual ? `<a class="btn-sec" href="#cuadre">${ic('libreta', 22, 2.2)}Cuadre de hoy</a>` : ''}
-      ${meses.length > 1 ? `<div class="campo"><label for="r-mes" class="vh">Mes</label><select id="r-mes" class="entrada" style="appearance:auto">${meses.map(k => { const [a, b] = k.split('-').map(Number); return `<option value="${k}"${k === mesSel ? ' selected' : ''}>${mayuscula(MESES[b - 1])} de ${a}</option>`; }).join('')}</select></div>` : ''}
+      ${meses.length > 1 ? (() => {
+        /* 2.0.0 · El mes con flechas, en el estilo de la app (antes, el selector del navegador). Los meses van del más nuevo al más viejo. */
+        const k = meses.indexOf(mesSel), nuevo = meses[k - 1], viejo = meses[k + 1];
+        const flecha = (destino, icono, texto) => destino ? `<a class="btn-icono" href="#resumen-${destino.replace('-', '')}" aria-label="${texto}">${ic(icono, 26, 2.4)}</a>` : `<span class="btn-icono" aria-disabled="true" aria-hidden="true">${ic(icono, 26, 2.4)}</span>`;
+        return `<nav class="mes-nav" aria-label="Mes">${flecha(viejo, 'volver', 'Mes anterior')}<b aria-live="polite">${mayuscula(MESES[mm - 1])} de ${y}</b>${flecha(nuevo, 'sigue', 'Mes siguiente')}</nav>`;
+      })() : ''}
       <div class="kpis"><div class="kpi verde"><span>Recuperó</span><b>${monto(res.recuperado)}</b></div><div class="kpi"><span>Fió</span><b>${monto(res.fiado)}</b></div></div>
       ${top.length === 1 ? `<section class="tarjeta" aria-labelledby="t-mas"><h2 class="titulo-seccion" id="t-mas">Quién le debe</h2><a class="dato" href="#cliente-${top[0].c.id}"><span class="par"><span class="nombre-dato">${esc(top[0].c.nombre)}</span><b>${monto(top[0].s)}</b></span></a><p class="ayuda">Cuando le deban varios, aquí verá quién debe más.</p></section>` : `<section class="tarjeta" aria-labelledby="t-mas"><h2 class="titulo-seccion" id="t-mas">Quién debe más</h2>
         ${top.length ? top.map(x => `<a class="dato" href="#cliente-${x.c.id}"><span class="par"><span class="nombre-dato">${esc(x.c.nombre)}</span><b>${monto(x.s)}</b></span><span class="barra-dato" aria-hidden="true"><span style="width:${Math.max(4, x.s / max * 100)}%"></span></span></a>`).join('') : '<p class="ayuda">Nadie le debe. ¡Libreta al día!</p>'}</section>`}
@@ -180,7 +192,6 @@ V.resumen = mesParam => {
           : '<p class="ayuda">Todo en orden: nadie atrasado ni cerca del cupo.</p>'}</section>
     </main><div class="abajo">${nav('resumen')}</div></div>`,
     montar(r) {
-      r.querySelector('#r-mes')?.addEventListener('change', ev => ir(`resumen-${ev.target.value.replace('-', '')}`));
       contar(r.querySelector('#k-calle'), 0, total);
     }
   };
@@ -251,7 +262,7 @@ V.ajustes = () => {
         <p class="ayuda">Cada vecino acepta los mensajes (Ley 1581 de 2012). Los recordatorios siguen el horario de la Ley 2300 de 2023.</p>
         <p class="ayuda">Fiao es una versión de prueba, sin fines comerciales. No es asesoría legal ni contable. Usted responde por los datos de sus clientes.</p></div></details>
       <button type="button" class="btn-sec peligro" data-accion="borrar">Borrar la libreta de este celular</button>
-      <p class="nota">Fiao · versión 1.7.2</p>
+      <p class="nota">Fiao · versión 2.0.0</p>
     </main><div class="abajo">${nav('ajustes')}</div></div>`,
     montar(r) {
       activarGrupos(r, async (g, v) => {

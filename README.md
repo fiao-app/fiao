@@ -14,6 +14,7 @@ Fiao sigue el versionado semántico (MAJOR.MINOR.PATCH): las versiones 0.x fuero
 
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.0.0 | 2026-11-23 | Mayor | Rediseño de la interfaz: «Fiar» en el centro, colores con un solo trabajo y los 24 hallazgos de la crítica resueltos |
 | 1.7.2 | 2026-11-12 | Parche | La zona flotante de abajo ya no deja tocar lo que queda escondido detrás |
 | 1.7.1 | 2026-11-11 | Parche | Frase de voz al borrar varios clientes que deben |
 | 1.7.0 | 2026-11-11 | Menor | Borrar varios clientes de una vez, con atajos y Deshacer |
@@ -148,6 +149,28 @@ Para limpiar la libreta sin ir uno por uno:
 - Por lo mismo, la auditoría de accesibilidad (axe, WCAG 2.2 AA) ya no cuenta esas filas escondidas como botones tapados a medias: 168 revisiones (7 pantallas, 3 tamaños de letra, 2 apariencias y 4 tamaños de celular) sin avisos.
 - Con el teclado, lo enfocado nunca queda detrás de la zona flotante: la página deja 11rem de margen abajo al desplazarse.
 - No cambia nada de lo que se ve.
+
+## Rediseño de la interfaz (2.0.0)
+
+Después de la entrega para la Muestra de Proyectos, una crítica de la interfaz (heurísticas de Nielsen, leyes de UX y WCAG 2.2) encontró 24 problemas: 1 crítico, 7 altos, 11 medios y 5 bajos. La 2.0.0 los resuelve sin quitar ninguna función ni sumar pasos. Lo que hace Fiao, para quién es y sus reglas (tres toques para fiar, «Deshacer», nada se borra, Ley 2300, Ley 1581, Tinta, tres tamaños de letra) siguen igual.
+
+- **Un color, un trabajo.** Naranja es fiar en todas partes: el botón del centro de la barra, el atajo de la ficha y el botón final de la hoja (antes, los dos últimos eran azules). Verde es pagó; rojo, atrasado; cobalto, la marca y la navegación.
+- **Un solo verbo: «Fiar».** Antes la misma acción se llamaba «Anotar fiado», «Anotar» y «¿A quién le fía?».
+- **Barra de abajo con cinco lugares fijos y con nombre:** Libreta, Cobros, Fiar, Resumen y Ajustes. «Fiar» va en el centro, al alcance del pulgar, y funciona desde cualquier sección. Cobros usa una moneda (la campana se leía como «notificaciones»). La barra es sólida y no tapa a medias lo de atrás.
+- **Libreta más liviana.** Las cifras del día van en el toldo; la búsqueda, en la lupa de arriba; «Agregar cliente» y «Traer de mis contactos», en el «+» de «Clientes». Se ven 4 clientes completos sin bajar (antes, 2). Las tres tarjetas de hoy tienen la misma forma y ahora filtran la lista: Atrasados, Pagan hoy y Al día.
+- **Estados con una sola forma.** Píldora roja solo para «atrasado»; los demás, texto con su ícono. El apodo va en gris junto al nombre («Rosiris, la de la esquina»), las iniciales saltan los tratamientos («Don Édgar» → «É») y los colores de las iniciales salen de la paleta.
+- **Ficha del cliente.** Fiar, Pagó, Recordar y Mostrar van en una tarjeta blanca montada sobre el toldo. Enviar la cuenta, escribirle, ponerle cupo y borrar pasan a los tres puntos de arriba: la basura ya no está a un dedo del lápiz.
+- **Movimientos que se leen sin abrirlos.** Cada línea tiene su ícono (+ fiado, ✓ pago, libreta para lo del cuaderno, ✕ anulado), la hora y quién lo llevó. Así fiado y pago se distinguen también en Tinta, sin depender del color. Al tocar una línea se abre su detalle en una hoja corta con Corregir, Mostrárselo y Enviar como imagen.
+- **Hoja «Fiar».** La cifra va sobre el toldo y dice en vivo cuánto quedaría debiendo. Hay montos rápidos que suman (+1.000, +2.000, +5.000, +10.000) y el detalle se abre con «¿Qué se llevó?». El cliente va en una píldora que se toca para cambiarlo. El buscador encuentra por nombre o por celular, igual que en la Libreta.
+- **Hoja «Pagó».** Los cuatro medios tienen el mismo tamaño y su ícono, y la hoja dice «Queda al día» antes de confirmar.
+- **Cobros.** El aviso de la ley va en tono neutro (no es un error) y, si hoy no se puede, dice desde cuándo. Fuera de horario no aparece un botón apagado que parezca tocable. Cada cobro se ve como en la Libreta, con el monto a la derecha y la acción debajo.
+- **Resumen.** El mes se cambia con flechas, en el estilo de la app.
+- **Mostrar.** Arriba va el nombre de la tienda y la fecha, para que el vecino sepa de dónde viene la cuenta. Lo último que se anotó lleva ícono y hora, igual que en la página del vecino.
+- **Consejos de la primera vez.** Flotan sobre la pantalla en vez de empujar el contenido hacia abajo.
+- **Dos tamaños de cifra.** Protagonista (una por pantalla) y secundaria (en tarjetas). «Mostrar» usa una más grande porque se lee desde el otro lado del mostrador.
+- **Regla del toldo.** Lo llevan las cuatro secciones, la ficha y lo que se le muestra al vecino. Los formularios y las pantallas de un solo paso llevan cabecera lisa.
+- **Voz.** Tres frases cambiaron de texto («Fiar» en vez de «Anotar», la lupa y los tres puntos): `g-monto`, `ayuda-inicio` y `ayuda-cliente`. Se graban de nuevo con la misma voz en archivos nuevos (`g-monto-2.mp3`, `ayuda-inicio-2.mp3` y `ayuda-cliente-2.mp3`). Mientras no estén, Fiao no dice la frase vieja: calla, y «Escuchar» usa la voz del celular.
+- **La dirección no cambia.** El QR de la Muestra de Proyectos sigue abriendo Fiao. Quien ya la tenía abierta ve el aviso «Hay una versión nueva de Fiao» con el botón «Actualizar».
 
 ## Decisiones que sostienen la confianza
 

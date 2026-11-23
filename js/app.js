@@ -115,6 +115,9 @@ document.addEventListener('click', ev => {
     Vista.oculto = !Vista.oculto;
     mostrarRuta({ animar: false });
     avisar(Vista.oculto ? 'Montos ocultos.' : 'Montos visibles.', { icono: Vista.oculto ? 'ojoNo' : 'ojo' });
+  } else if (accion === 'anotar' && b.closest('.nav')) {
+    /* 2.0.0 · «Fiar», en el centro de la barra de abajo, abre la hoja desde cualquier sección. */
+    abrirAnotar();
   } else if (accion === 'ayuda') {
     abrirAyuda();
   } else if (accion === 'consejo-ok') {

@@ -218,27 +218,22 @@ html[data-movimiento="reducido"]::view-transition-old(*), html[data-movimiento="
 .pie { padding: 0.75rem 1rem calc(1rem + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 0.5rem; background: var(--fondo); }
 .pantalla.blanca .pie { background: var(--blanco); }
 
-/* ───── Menú flotante ─────
-   Píldora con íconos; la sección activa muestra su nombre. Con letra Grande o Más grande,
-   todos los nombres se ven. El velo de abajo deja leer lo que pasa por detrás. */
-.abajo { position: sticky; bottom: 0; z-index: 5; padding: 1.5rem 1rem calc(0.875rem + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; align-items: center; gap: 0.75rem; pointer-events: none; background: linear-gradient(to bottom, rgba(247, 244, 238, 0), var(--fondo) 2.25rem); }
-.abajo > * { pointer-events: auto; }
-.nav { display: flex; gap: 0.25rem; padding: 0.375rem; border-radius: 999px; background: rgba(255, 255, 255, 0.97); box-shadow: var(--sombra-flota); }
-.nav a { position: relative; min-width: 3.25rem; height: 3.25rem; padding: 0 0.875rem; border-radius: 999px; display: flex; align-items: center; justify-content: center; gap: 0.5rem; color: var(--gris); text-decoration: none; font-size: 1.0625rem; font-weight: 600; white-space: nowrap; transition: background var(--rapido); }
-.nav a:hover { background: var(--azul-fondo-2); }
-.nav a:active { transform: scale(0.96); }
-.nav a[aria-current="page"] { background: var(--azul-fondo); color: var(--azul-osc); padding: 0 1.125rem 0 0.875rem; }
-.nav a:not([aria-current="page"]) .rot { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-.nav .ico { position: relative; display: inline-flex; line-height: 0; }
-.nav a[aria-current="page"] .ico:has(.globo) { margin-right: 0.375rem; }
-.nav .globo { position: absolute; top: -0.5rem; right: -0.625rem; min-width: 1.25rem; height: 1.25rem; padding: 0 0.25rem; border-radius: 0.625rem; background: var(--alerta); color: var(--blanco); font-family: var(--letra-titulo); font-size: 0.75rem; line-height: 1.25rem; text-align: center; font-weight: 700; box-shadow: 0 0 0 2px var(--blanco); }
-html[data-letra="grande"] .nav, html[data-letra="mas"] .nav { width: 100%; border-radius: 1.5rem; }
-html[data-letra="grande"] .nav a, html[data-letra="mas"] .nav a { flex: 1; flex-direction: column; height: auto; min-height: 3.75rem; min-width: 0; padding: 0.375rem 0.125rem; gap: 0.125rem; border-radius: 1.125rem; font-size: 0.875rem; }
-html[data-letra="grande"] .nav a .rot, html[data-letra="mas"] .nav a .rot { position: static; width: auto; height: auto; clip: auto; overflow: visible; }
-/* El botón de la acción principal flota encima del menú, a la derecha. */
-.fab { align-self: flex-end; min-height: 3.5rem; padding: 0 1.375rem 0 1.125rem; border: none; border-radius: 999px; background: var(--moneda); color: var(--tinta); font-family: var(--letra-titulo); font-size: 1.125rem; font-weight: 800; display: inline-flex; align-items: center; gap: 0.5rem; box-shadow: 0 12px 26px -10px rgba(20, 27, 52, 0.55); transition: transform var(--rapido) var(--suave), background var(--rapido); }
-.fab:hover { background: #FF9A55; }
-.fab:active { transform: scale(0.96); }
+/* ───── 2.0.0 · Barra de abajo ─────
+   Cinco lugares fijos y siempre con nombre: Libreta, Cobros, Fiar, Resumen y Ajustes.
+   «Fiar» va en el centro, al alcance del pulgar, en color moneda: es la acción de todos los días.
+   La barra es sólida: no tapa a medias lo que pasa por detrás. */
+.abajo { position: sticky; bottom: 0; z-index: 5; display: flex; flex-direction: column; background: var(--blanco); box-shadow: 0 -1px 0 var(--linea); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.nav { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: start; padding: 0.375rem 0.125rem 0.5rem; }
+.nav a, .nav .fiar { position: relative; min-width: 0; min-height: 3.75rem; padding: 0.125rem 0; border: none; border-radius: 1rem; background: transparent; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 0.25rem; color: var(--gris); text-decoration: none; font-family: var(--letra); font-size: min(0.875rem, 3.9vw); line-height: 1.15; font-weight: 600; text-align: center; white-space: nowrap; }
+.nav .ico { position: relative; width: 3.5rem; max-width: 100%; height: 2rem; border-radius: 999px; display: flex; align-items: center; justify-content: center; line-height: 0; transition: background var(--rapido); }
+.nav a:hover .ico { background: var(--azul-fondo-2); }
+.nav a:active .ico, .nav .fiar:active .ico { transform: scale(0.94); }
+.nav a[aria-current="page"] { color: var(--azul-osc); font-weight: 700; }
+.nav a[aria-current="page"] .ico { background: var(--azul-fondo); }
+.nav .fiar { color: var(--tinta); font-weight: 700; cursor: pointer; }
+.nav .fiar .ico { width: 3.75rem; height: 3.75rem; margin-top: -1.75rem; border-radius: 50%; background: var(--moneda); color: var(--tinta); box-shadow: 0 0 0 0.3125rem var(--blanco), 0 8px 18px -6px rgba(154, 74, 18, 0.55); transition: transform var(--rapido) var(--suave), background var(--rapido); }
+.nav .fiar:hover .ico { background: #FF9A55; }
+.nav .globo { position: absolute; top: -0.25rem; left: calc(50% + 0.375rem); min-width: 1.25rem; height: 1.25rem; padding: 0 0.25rem; border-radius: 0.625rem; background: var(--alerta); color: var(--blanco); font-family: var(--letra-titulo); font-size: 0.75rem; line-height: 1.25rem; text-align: center; font-weight: 700; box-shadow: 0 0 0 2px var(--blanco); }
 
 /* ───── Botones ───── */
 .btn, .btn-sec, .btn-link, .btn-mini, .chip, .teclado button, .fila { transition: transform var(--rapido) var(--suave), background var(--rapido), box-shadow var(--rapido); }
@@ -637,21 +632,21 @@ html[data-tema="tinta"] .app { background: #FFFFFF; }
 @media (min-width: 40rem) { html[data-tema="tinta"] body { background: #E8EDFA; } html[data-tema="tinta"] .app { box-shadow: 0 0 0 2px #111111; } }
 html[data-tema="tinta"] .barra { box-shadow: 0 2px 0 #111111; }
 html[data-tema="tinta"] .pie { box-shadow: 0 -2px 0 var(--renglon); }
-html[data-tema="tinta"] .abajo { background: linear-gradient(to bottom, rgba(255, 255, 255, 0), #FFFFFF 2.25rem); }
 /* Botones */
 html[data-tema="tinta"] .btn, html[data-tema="tinta"] .btn.verde, html[data-tema="tinta"] .atajo.principal .c, html[data-tema="tinta"] .atajo.pago .c { box-shadow: none; }
 html[data-tema="tinta"] .btn:hover, html[data-tema="tinta"] .btn.verde:hover { background: #152C80; }
-html[data-tema="tinta"] .fab { background: #111111; color: #FFFFFF; box-shadow: none; }
-html[data-tema="tinta"] .fab:hover { background: #000000; }
+html[data-tema="tinta"] .nav .fiar .ico { background: #111111; color: #FFFFFF; box-shadow: 0 0 0 0.3125rem #FFFFFF; }
+html[data-tema="tinta"] .nav .fiar:hover .ico { background: #000000; }
 html[data-tema="tinta"] .btn-sec { border-color: #111111; color: #111111; }
 html[data-tema="tinta"] .btn-icono:hover, html[data-tema="tinta"] .btn-ayuda, html[data-tema="tinta"] .cerrar-hoja, html[data-tema="tinta"] .hoja-cab .btn-icono { background: #FFFFFF; box-shadow: inset 0 0 0 2px #111111; }
 html[data-tema="tinta"] .mostrar-barra .btn-icono:hover { background: #152C80; box-shadow: none; }
 html[data-tema="tinta"] .btn-redondo { background: rgba(255, 255, 255, 0.14); box-shadow: inset 0 0 0 2px #FFFFFF; }
 html[data-tema="tinta"] .chip-atiende { box-shadow: inset 0 0 0 2px #FFFFFF; }
 /* Menú */
-html[data-tema="tinta"] .nav { background: #FFFFFF; }
+html[data-tema="tinta"] .abajo { box-shadow: 0 -2px 0 #111111; }
 html[data-tema="tinta"] .nav a { color: #111111; }
-html[data-tema="tinta"] .nav a[aria-current="page"], html[data-tema="tinta"] .tab-demo.activa { background: #1D3BA8; color: #FFFFFF; }
+html[data-tema="tinta"] .nav a[aria-current="page"] { color: #1D3BA8; }
+html[data-tema="tinta"] .nav a[aria-current="page"] .ico, html[data-tema="tinta"] .tab-demo.activa .ico { background: #1D3BA8; color: #FFFFFF; }
 html[data-tema="tinta"] .tab-demo { color: #111111; }
 /* Estados: forma y relleno, no solo color */
 html[data-tema="tinta"] .estado.atrasado, html[data-tema="tinta"] .pildora.atencion { background: #111111; color: #FFFFFF; }
@@ -832,3 +827,245 @@ html[data-tema="tinta"] .sel-panel .sel-borrar[disabled] { background: #FFFFFF; 
    detrás de ella: antes, tocar su fondo de papel podía abrir un cliente que no se veía. Así, las filas que pasan por
    detrás quedan tapadas también para la auditoría de accesibilidad (WCAG 2.5.8) y no cuentan como objetivos a medias. */
 .abajo { pointer-events: auto; }
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   2.0.0 · Rediseño de la interfaz
+   Reglas que sostienen todo lo de abajo:
+   · Cada color tiene un solo trabajo. Moneda (naranja) = fiar, en todas partes: el botón del centro de la barra,
+     el atajo de la ficha y el botón final de la hoja. Verde = pagó y al día. Rojo = atrasado o peligro.
+     Cobalto = marca, navegación y acciones neutras (recordar, mostrar, filtros).
+   · Dos tamaños de cifra en las pantallas del tendero: protagonista (3 rem, una por pantalla) y secundaria
+     (1,75 rem, en tarjetas). «Mostrar» usa una más grande porque se lee desde el otro lado del mostrador.
+   · Toldo (franjas y borde ondulado) en las cuatro secciones, en la ficha del cliente y en lo que se le muestra
+     al vecino. Cabecera lisa en formularios y pantallas de un solo paso (cliente nuevo, corregir, cuadre…).
+   · El subrayado es solo para explicaciones («¿Por qué?»). Lo que hace algo es un botón.
+   · Los consejos de la primera vez flotan sobre la pantalla: no empujan nada hacia abajo.
+   ═════════════════════════════════════════════════════════════════════════════ */
+
+/* ───── Cifras ───── */
+.cifra-cab .cifra { font-size: 3rem; line-height: 3.375rem; }
+.monto-grande { font-size: 3rem; line-height: 3.5rem; }
+.mostrar .cifra-l { font-size: 3rem; line-height: 3.5rem; }
+.mostrar .cifra-xl { font-size: 4rem; line-height: 4.5rem; }
+.kpi b, .cuadre-monto { font-size: 1.75rem; line-height: 2.25rem; }
+.recibo .debe b, .saldo-vecino .debe b { font-size: 3rem; line-height: 3.375rem; }
+
+/* ───── Cabecera: las cifras del día como píldoras dentro del toldo ───── */
+.cifra-cab .extra { gap: 0.5rem; margin-top: 0.5rem; }
+.cifra-cab .extra > span { display: inline-flex; align-items: center; gap: 0.375rem; min-height: 2.25rem; padding: 0.25rem 0.875rem; border-radius: 999px; background: rgba(20, 27, 52, 0.24); color: var(--blanco); font-weight: 600; }
+.cifra-cab .extra b { font-family: var(--letra-titulo); font-weight: 700; color: var(--blanco); }
+html[data-tema="tinta"] .cifra-cab .extra > span { background: transparent; box-shadow: inset 0 0 0 2px #FFFFFF; }
+.cab-marca .botones { gap: 0.375rem; }
+
+/* ───── Libreta: tres filtros iguales ───── */
+.filtros { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; }
+.filtro { min-width: 0; padding: 0.75rem; border: none; border-radius: 1.125rem; background: var(--blanco); box-shadow: var(--sombra); color: var(--tinta); display: flex; flex-direction: column; align-items: flex-start; gap: 0.125rem; text-align: left; transition: transform var(--rapido) var(--suave), box-shadow var(--rapido), background var(--rapido); }
+.filtro:active { transform: scale(0.97); }
+.filtro .l { font-size: 1rem; line-height: 1.25rem; font-weight: 600; color: var(--gris); white-space: nowrap; }
+.filtro .v { display: flex; align-items: center; gap: 0.375rem; font-family: var(--letra-titulo); font-weight: 800; font-size: 1.75rem; line-height: 2.125rem; letter-spacing: -0.02em; }
+.filtro .v svg { flex-shrink: 0; }
+.filtro .s { font-size: 1rem; line-height: 1.25rem; color: var(--gris); white-space: nowrap; }
+.filtro.atr .v svg { color: var(--alerta); }
+.filtro.hoy .v svg { color: var(--azul-osc); }
+.filtro.ok .v svg { color: var(--verde); }
+.filtro[aria-pressed="true"] { background: var(--azul-fondo-2); box-shadow: var(--sombra), inset 0 0 0 2px var(--azul); }
+html[data-letra="mas"] .filtros { grid-template-columns: 1fr; gap: 0.375rem; }
+html[data-letra="mas"] .filtro { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "l v" "s v"; align-items: center; column-gap: 0.75rem; padding: 0.625rem 1rem; }
+html[data-letra="mas"] .filtro .l { grid-area: l; } html[data-letra="mas"] .filtro .s { grid-area: s; } html[data-letra="mas"] .filtro .v { grid-area: v; }
+html[data-tema="tinta"] .filtro { box-shadow: 0 0 0 2px #111111; }
+html[data-tema="tinta"] .filtro[aria-pressed="true"] { background: #F3F6FD; box-shadow: 0 0 0 2px #111111, inset 0 0 0 3px #1D3BA8; }
+html[data-tema="tinta"] .filtro.atr .v svg, html[data-tema="tinta"] .filtro.ok .v svg { color: #111111; }
+
+/* ───── Encabezado de la lista: botones de verdad, no enlaces ───── */
+.encabezado-lista { align-items: center; }
+.btn-mini.suave { background: var(--azul-fondo); color: var(--azul-osc); box-shadow: none; min-height: 2.75rem; padding: 0 0.875rem; font-size: 1rem; }
+.btn-mini.suave.cuadrado { width: 2.75rem; padding: 0; }
+.encabezado-lista .btn-mini.suave:first-of-type { margin-left: auto; }
+html[data-tema="tinta"] .btn-mini.suave { background: #FFFFFF; color: #1D3BA8; box-shadow: inset 0 0 0 2px #1D3BA8; }
+.buscador[hidden] { display: none; }
+
+/* ───── Estados: una sola forma. Píldora solo para «atrasado»; los demás, texto con ícono ───── */
+.estado.hoy { padding: 0; background: none; color: var(--tinta); font-weight: 600; font-size: 1rem; }
+html[data-tema="tinta"] .estado.hoy { padding: 0.125rem 0.625rem 0.125rem 0.5rem; border-radius: 999px; }
+.estado .ic-caja { color: inherit; }
+
+/* ───── Nombre y apodo: el apodo va en gris y se corta antes que el nombre ───── */
+.fila .nombre:has(.apodo) { display: flex; max-width: 100%; min-width: 0; }
+.fila .nombre .n1 { flex-shrink: 0; max-width: 100%; }
+.fila .nombre .apodo { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 400; color: var(--gris); }
+
+/* ───── Avatares: tonos de la paleta (nunca verde, rojo ni naranja, que ya tienen trabajo) ───── */
+.avatar { background: var(--av-f, #E9ECFF); color: var(--av-t, #2B3BC4); }
+
+/* ───── Ficha: una tarjeta de acciones montada sobre el toldo ───── */
+.cab-marca.con-acciones { padding-bottom: 4.75rem; }
+.acciones { position: relative; z-index: 1; margin-top: -5.75rem; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 0.25rem; padding: 1rem 0.375rem 0.875rem; border-radius: 1.5rem; background: var(--blanco); box-shadow: 0 12px 30px -12px rgba(20, 27, 52, 0.30), 0 0 0 1px rgba(20, 27, 52, 0.04); }
+.acciones .atajo { min-height: 0; padding: 0; gap: 0.5rem; font-size: 1rem; }
+.acciones .atajo .c { box-shadow: none; background: var(--azul-fondo); color: var(--azul-osc); }
+.acciones .atajo.fiar .c { background: var(--moneda); color: var(--tinta); box-shadow: 0 6px 14px -6px rgba(154, 74, 18, 0.55); }
+.acciones .atajo.pago .c { background: var(--verde); color: var(--blanco); box-shadow: 0 6px 14px -6px rgba(18, 122, 69, 0.6); }
+.acciones .atajo[disabled] .c { background: var(--divisor); color: var(--gris); }
+html[data-letra="grande"] .acciones, html[data-letra="mas"] .acciones { grid-auto-flow: row; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.25rem; padding: 0.5rem; }
+html[data-letra="grande"] .acciones .atajo, html[data-letra="mas"] .acciones .atajo { flex-direction: row; justify-content: flex-start; gap: 0.5rem; padding: 0.25rem; min-height: 3.5rem; text-align: left; border-radius: 1rem; }
+html[data-letra="grande"] .acciones .atajo .c, html[data-letra="mas"] .acciones .atajo .c { width: 2.75rem; height: 2.75rem; flex-shrink: 0; }
+html[data-tema="tinta"] .acciones { box-shadow: 0 0 0 2px #111111; }
+html[data-tema="tinta"] .acciones .atajo .c { background: #FFFFFF; color: #1D3BA8; box-shadow: inset 0 0 0 2px #1D3BA8; }
+html[data-tema="tinta"] .acciones .atajo.fiar .c { background: #111111; color: #FFFFFF; box-shadow: none; }
+html[data-tema="tinta"] .acciones .atajo.pago .c { background: #1D3BA8; color: #FFFFFF; box-shadow: none; }
+.encabezado-mov { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.25rem 0.125rem 0; }
+.encabezado-mov .titulo-seccion { font-size: 1.25rem; line-height: 1.625rem; }
+.encabezado-mov .por-que { margin-right: -0.5rem; }
+
+/* ───── Movimientos: ícono, qué fue, hora y quién lo llevó, sin abrir nada ───── */
+.mov { min-height: 4.25rem; padding: 0.625rem 1rem; gap: 0.75rem; }
+.mov:hover { background: var(--azul-fondo-2); }
+.mov .medio { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.0625rem; }
+.mov .t { font-weight: 600; font-size: 1.0625rem; line-height: 1.375rem; overflow-wrap: anywhere; }
+.mov .s { font-size: 1rem; line-height: 1.3125rem; color: var(--gris); overflow-wrap: anywhere; }
+.mov.pago .t { color: var(--tinta); }
+.mov.anulada .t, .mov.anulada .v { color: var(--gris); text-decoration: line-through; }
+.ico-mov { position: relative; width: 2.5rem; height: 2.5rem; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--moneda-fondo); color: var(--moneda-texto); }
+.mov.pago .ico-mov, .movs-vecino .pago .ico-mov { background: var(--verde-fondo); color: var(--verde); }
+.mov.saldo .ico-mov, .mov.anulada .ico-mov, .movs-vecino .anulada .ico-mov { background: var(--divisor); color: var(--gris); }
+.ico-mov .marca-corr { position: absolute; right: -0.25rem; bottom: -0.25rem; width: 1.25rem; height: 1.25rem; border-radius: 50%; background: var(--blanco); color: var(--tinta); box-shadow: 0 0 0 1px var(--linea); display: flex; align-items: center; justify-content: center; }
+html[data-tema="tinta"] .ico-mov { background: #111111; color: #FFFFFF; }
+html[data-tema="tinta"] .mov.pago .ico-mov, html[data-tema="tinta"] .movs-vecino .pago .ico-mov { background: #1D3BA8; color: #FFFFFF; }
+html[data-tema="tinta"] .mov.saldo .ico-mov, html[data-tema="tinta"] .mov.anulada .ico-mov, html[data-tema="tinta"] .movs-vecino .anulada .ico-mov { background: #FFFFFF; color: #111111; box-shadow: inset 0 0 0 2px #111111; }
+html[data-tema="tinta"] .ico-mov .marca-corr { box-shadow: 0 0 0 2px #111111; }
+/* Detalle de una anotación (hoja) */
+.det-mov { display: flex; flex-direction: column; gap: 0.5rem; font-size: 1.0625rem; line-height: 1.5rem; }
+.det-mov .linea { display: flex; gap: 0.625rem; align-items: flex-start; }
+.det-mov .linea > .ic-caja { margin-top: 0.125rem; color: var(--gris); }
+.det-cifra { font-family: var(--letra-titulo); font-weight: 800; font-size: 1.75rem; line-height: 2.25rem; letter-spacing: -0.02em; }
+.det-cifra.pago { color: var(--verde); }
+
+/* ───── Menú «más» de la ficha y hoja «Agregar» ───── */
+.menu-hoja .fila { min-height: 3.75rem; }
+.menu-hoja .fila .nombre { font-size: 1.0625rem; }
+.menu-hoja .fila.peligro { color: var(--alerta-texto); }
+.menu-hoja .fila.peligro .ic-fondo { background: var(--alerta-fondo); color: var(--alerta); }
+html[data-tema="tinta"] .menu-hoja .fila.peligro .ic-fondo { background: #111111; color: #FFFFFF; }
+
+/* ───── Hoja «Fiar»: la cifra sobre el toldo y el resto sobre papel ───── */
+dialog.hoja.con-toldo { padding-top: 0; background: var(--fondo); }
+dialog.hoja.con-toldo .asa { position: absolute; top: 0.25rem; left: 50%; z-index: 2; margin: 0; transform: translateX(-50%); background: rgba(255, 255, 255, 0.6) content-box; opacity: 1; }
+.hoja-toldo { margin: 0 -1.25rem; padding: 1.5rem 1.25rem 0.875rem; background-color: var(--azul); background-image: repeating-linear-gradient(90deg, transparent 0 2.5rem, var(--raya) 2.5rem 5rem); color: var(--blanco); display: flex; flex-direction: column; gap: 0.75rem; }
+.hoja-toldo + .toldo { margin: -0.75rem -1.25rem 0.125rem; }
+.hoja-toldo .fila-quien { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.quien { min-width: 0; max-width: calc(100% - 3.75rem); min-height: 3rem; padding: 0.25rem 0.75rem 0.25rem 0.25rem; border: none; border-radius: 999px; background: rgba(255, 255, 255, 0.16); color: var(--blanco); display: inline-flex; align-items: center; gap: 0.5rem; font-size: 1.125rem; font-weight: 600; }
+.quien .avatar { width: 2.5rem; height: 2.5rem; background: var(--blanco); color: var(--azul-osc); }
+.quien .nq { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.quien svg { flex-shrink: 0; }
+.hoja-toldo .cerrar-hoja { background: rgba(255, 255, 255, 0.16); color: var(--blanco); }
+.hoja-toldo .centro { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.125rem; }
+dialog.hoja .hoja-toldo h2 { font-family: var(--letra); font-weight: 400; font-size: 1.0625rem; line-height: 1.5rem; letter-spacing: 0; color: var(--azul-claro-texto); }
+.hoja-toldo .monto-grande { color: var(--blanco); }
+.hoja-toldo .suma { color: var(--azul-claro-texto); min-height: 0; }
+.hoja-toldo .suma b { color: var(--blanco); }
+.quedaria { display: inline-flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0 0.375rem; min-height: 2.25rem; margin-top: 0.375rem; padding: 0.25rem 0.875rem; border-radius: 999px; background: rgba(20, 27, 52, 0.24); color: var(--blanco); font-size: 1rem; font-weight: 600; }
+.quedaria b { font-family: var(--letra-titulo); font-weight: 700; }
+html[data-tema="tinta"] .quien, html[data-tema="tinta"] .hoja-toldo .cerrar-hoja { background: transparent; color: #FFFFFF; box-shadow: inset 0 0 0 2px #FFFFFF; }
+html[data-tema="tinta"] .quedaria { background: transparent; box-shadow: inset 0 0 0 2px #FFFFFF; }
+.rapidos { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.5rem; }
+.rapidos button { min-width: 0; min-height: 3rem; padding: 0; border: none; border-radius: 999px; background: var(--azul-fondo); color: var(--azul-osc); font-family: var(--letra-titulo); font-weight: 700; font-size: min(1.0625rem, 4.3vw); white-space: nowrap; }
+.rapidos button:active { transform: scale(0.95); }
+html[data-tema="tinta"] .rapidos button { background: #FFFFFF; color: #1D3BA8; box-shadow: inset 0 0 0 2px #1D3BA8; }
+.campo-que { width: 100%; min-height: 3.25rem; padding: 0 1rem; border: 2px solid var(--control); border-radius: 1rem; background: var(--blanco); color: var(--gris); display: flex; align-items: center; gap: 0.625rem; font-size: 1.0625rem; text-align: left; }
+.campo-que svg { color: var(--tinta); flex-shrink: 0; }
+.campo-que[hidden] { display: none; }
+.dos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
+.dos > .chip { min-width: 0; justify-content: center; padding-inline: 0.625rem !important; }
+.dos > .chip:only-child { grid-column: 1 / -1; }
+.con-toldo .teclado button { background: var(--blanco); box-shadow: 0 1px 2px rgba(20, 27, 52, 0.06), 0 3px 10px -6px rgba(20, 27, 52, 0.14); }
+.con-toldo .teclado .ceros { background: var(--azul-fondo); box-shadow: none; }
+.con-toldo .teclado .borrar { background: var(--divisor); box-shadow: none; }
+html[data-tema="tinta"] .con-toldo .teclado button { box-shadow: inset 0 0 0 2px #111111; }
+html[data-letra="mas"] .rapidos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.pildoras-hoja { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.375rem; }
+.pildoras-hoja:not(:has(:not([hidden]))) { display: none; }
+
+/* ───── Botón de fiar: siempre naranja ───── */
+.btn.fiar { background: var(--moneda); color: var(--tinta); box-shadow: 0 10px 24px -10px rgba(154, 74, 18, 0.6); }
+.btn.fiar:hover { background: #FF9A55; }
+#h-anotar[disabled] { opacity: 1; background: var(--moneda-fondo); color: var(--moneda-texto); box-shadow: none; }
+html[data-tema="tinta"] .btn.fiar { background: #111111; color: #FFFFFF; box-shadow: none; }
+html[data-tema="tinta"] .btn.fiar:hover { background: #000000; }
+html[data-tema="tinta"] #h-anotar[disabled] { background: #FFFFFF; color: #111111; box-shadow: inset 0 0 0 2px #111111; }
+
+/* ───── Hoja «Pagó»: cuatro medios iguales, con ícono ───── */
+.medios { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.5rem; }
+.medios .chip { min-width: 0; min-height: 4.375rem; flex-direction: column; justify-content: center; gap: 0.3125rem; padding: 0.375rem 0.125rem !important; border-radius: 1rem; font-size: 1rem; line-height: 1.2; }
+.medios .chip .ok { display: none !important; }
+html[data-letra="mas"] .medios { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.al-dia-nota { margin-top: 0.25rem; }
+
+/* ───── Consejos de la primera vez: flotan, no empujan ───── */
+.consejo { position: fixed; z-index: 20; left: 0.75rem; right: 0.75rem; bottom: calc(1rem + env(safe-area-inset-bottom, 0px)); max-width: 28.5rem; margin: 0 auto; box-shadow: var(--sombra-alta); animation: entrar var(--medio) var(--suave) both; }
+.pantalla:has(.abajo) .consejo { bottom: calc(6.25rem + env(safe-area-inset-bottom, 0px)); }
+.pantalla:has(.pie) .consejo { bottom: calc(6rem + env(safe-area-inset-bottom, 0px)); }
+.consejo ~ .consejo { display: none; }
+body:has(.guia-foco) .consejo, body:has(.aviso.ver) .consejo { visibility: hidden; }
+html[data-tema="tinta"] .consejo { box-shadow: inset 0 0 0 2px #1D3BA8, 0 0 0 2px #FFFFFF; }
+
+/* ───── Cobros: monto a la derecha y la acción debajo de la fila ───── */
+.cobro-accion { padding: 0 1rem 0.875rem 4.625rem; display: flex; justify-content: flex-start; }
+.cobro-accion .btn-mini { width: 100%; }
+.cobro-accion .estado { min-height: 2rem; }
+.lista-cobros .fila { padding-block: 0.75rem; }
+.lista-cobros .fila + .cobro-accion { margin-top: -0.25rem; }
+html[data-letra="mas"] .cobro-accion { padding-left: 1rem; }
+
+/* ───── Resumen: el mes con flechas, en el estilo de la app ───── */
+.mes-nav { display: flex; align-items: center; justify-content: space-between; gap: 0.25rem; padding: 0.25rem; border-radius: 999px; background: var(--blanco); box-shadow: var(--sombra); }
+.mes-nav b { font-family: var(--letra-titulo); font-size: 1.125rem; line-height: 1.5rem; text-align: center; }
+.mes-nav .btn-icono[aria-disabled="true"] { opacity: 0.35; pointer-events: none; }
+html[data-tema="tinta"] .mes-nav { box-shadow: 0 0 0 2px #111111; }
+
+/* ───── Mostrar: la tienda arriba, para que el vecino sepa de dónde viene la cuenta ───── */
+.mostrar-barra { background: var(--azul-fondo); color: var(--azul-osc); }
+.mostrar-barra .btn-icono { color: var(--tinta); }
+.mostrar-barra .btn-icono:hover { background: var(--blanco); }
+.mostrar-cab { padding-top: 0.875rem; padding-bottom: 1rem; gap: 0; }
+.mostrar-cab .tienda-mostrar { display: flex; align-items: center; gap: 0.75rem; }
+.mostrar-cab .tienda-mostrar b { display: block; font-family: var(--letra-titulo); font-size: 1.375rem; line-height: 1.75rem; color: var(--blanco); overflow-wrap: anywhere; }
+.mostrar-cab .tienda-mostrar span span { display: block; font-size: 1rem; color: var(--azul-claro-texto); }
+.mostrar .acordado { align-self: flex-start; min-height: 2.5rem; padding: 0.25rem 0.875rem 0.25rem 0.75rem; border-radius: 999px; background: var(--divisor); font-size: 1.0625rem; font-weight: 600; }
+.mostrar .recibo { background: var(--fondo); box-shadow: none; }
+.mostrar .recibo::after { background: radial-gradient(circle at 0.5rem 0, var(--fondo) 0.45rem, transparent 0.5rem) 0 0 / 1rem 0.625rem repeat-x; }
+.mostrar .recibo .lista { background: transparent; }
+html[data-tema="tinta"] .mostrar-barra { background: #E8EDFA; color: #1D3BA8; box-shadow: 0 2px 0 #111111; }
+html[data-tema="tinta"] .mostrar-barra .btn-icono:hover { background: #FFFFFF; }
+html[data-tema="tinta"] .mostrar .acordado { background: #FFFFFF; box-shadow: inset 0 0 0 2px #111111; }
+html[data-tema="tinta"] .mostrar .recibo { background: #FFFFFF; box-shadow: 0 0 0 1px #111111; }
+
+/* ───── Recibo del vecino y «Mostrar»: cada línea con su ícono y su hora ───── */
+.movs-vecino li { gap: 0.75rem; }
+.movs-vecino .ico-mov { width: 2.25rem; height: 2.25rem; }
+.movs-vecino .d small.h { color: var(--gris); }
+
+/* ───── «Así se mueve por Fiao»: la barra de verdad, en pequeño ───── */
+.como-menu .nav-demo { width: 100%; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 0.875rem 0.25rem 0.5rem; border-radius: 1.25rem; background: var(--blanco); box-shadow: var(--sombra); }
+.nav-demo .tab-demo { min-width: 0; height: auto; padding: 0; border-radius: 0; background: none; display: flex; flex-direction: column; align-items: center; gap: 0.25rem; color: var(--gris); font-size: min(0.875rem, 3.6vw); font-weight: 600; white-space: nowrap; }
+.nav-demo .tab-demo .ico { width: 3rem; max-width: 100%; height: 2rem; border-radius: 999px; display: flex; align-items: center; justify-content: center; }
+.nav-demo .tab-demo.activa { background: none; padding: 0; color: var(--azul-osc); font-weight: 700; }
+.nav-demo .tab-demo.activa .ico { background: var(--azul-fondo); }
+.nav-demo .tab-demo.fiar { color: var(--tinta); font-weight: 700; }
+.nav-demo .tab-demo.fiar .ico { width: 2.5rem; height: 2.5rem; margin-top: -0.25rem; border-radius: 50%; background: var(--moneda); color: var(--tinta); }
+html[data-tema="tinta"] .como-menu .nav-demo { box-shadow: 0 0 0 2px #111111; }
+html[data-tema="tinta"] .nav-demo .tab-demo.fiar .ico { background: #111111; color: #FFFFFF; }
+
+/* ───── Selección de varios clientes dentro de la barra de abajo ───── */
+.abajo .sel-panel { width: auto; max-width: none; margin: 0.75rem 1rem; box-shadow: none; padding-inline: 0; }
+
+/* ───── Avisos de Cobros: la ley se explica en tono neutro (no es un error) ───── */
+.info.ley > svg { color: var(--azul-osc); }
+
+/* ───── El subrayado queda para las explicaciones («¿Por qué?») y los enlaces dentro de un texto.
+   Los botones de texto se reconocen por su color y su peso, con área de toque de 48 px. ───── */
+.btn-link { text-decoration: none; }
+.btn-link:hover { text-decoration: underline; }
+/* 2.0.0 · Letra Más grande en la hoja de fiar y en la ficha */
+html[data-letra="mas"] .rapidos button { font-size: 1.0625rem; }
+html[data-letra="mas"] .dos { grid-template-columns: 1fr; }
+.encabezado-mov { flex-wrap: wrap; }
+.encabezado-lista { flex-wrap: wrap; row-gap: 0.375rem; }

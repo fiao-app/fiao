@@ -257,28 +257,30 @@ V.tienda = () => {
   };
 };
 
-/* ───── Libreta (inicio) ───── */
+/* ───── Libreta (inicio) ─────
+   2.0.0 · Menos piezas antes de la lista: las cifras del día van en el toldo, la lupa arriba y tres filtros iguales
+   (Atrasados, Pagan hoy, Al día) que muestran solo a esos clientes. Agregar y traer contactos, en el «+» de «Clientes». */
 V.inicio = () => {
   const t = tienda();
   const hayClientes = Datos.clientes.size > 0;
   const total = totalEnLaCalle(), hoy = totalesDelDia();
   const cuerpo = hayClientes ? `<section class="cifra-cab" aria-labelledby="t-calle"><span class="rotulo" id="t-calle">En la calle</span><span class="cifra" id="cifra-calle">${monto(total)}</span>
     <span class="extra"><span>Fiado hoy <b>${monto(hoy.fiado)}</b></span><span>Pagos hoy <b>${monto(hoy.pagos)}</b></span></span></section>` : '';
-  const botones = hayClientes ? btnRedondo('ojoNo', 'Ocultar montos', { accion: 'ocultar', presionado: Vista.oculto }) : '';
+  const botones = hayClientes ? btnRedondo('buscar', 'Buscar por nombre o celular', { accion: 'buscar', presionado: false }) + btnRedondo('ojoNo', 'Ocultar montos', { accion: 'ocultar', presionado: Vista.oculto }) : '';
   const cab = cabMarca({ titulo: esc(t.nombre || 'Mi tienda'), extra: chipAtiende(), botones, cuerpo });
   const inst = puedeInstalar();
   const bandas = `${t.demo ? `<div class="banda demo compacta">${ic('ojo', 20)}<span>Tienda de ejemplo.</span><button type="button" class="btn-mini sec" data-accion="salir-demo">Usar la mía</button></div>` : ''}
     ${inst && !t.demo && !t.noInstalar ? `<div class="banda">${ic('celular', 20)}<span>${inst === 'ios' ? 'Instale Fiao para que Safari no borre su libreta.' : 'Instale Fiao: abre sin internet.'}</span><button type="button" class="btn-mini" data-accion="instalar">${inst === 'ios' ? 'Cómo' : 'Instalar'}</button></div>` : ''}`;
-  const pie = `<div class="abajo"><button type="button" class="fab" data-accion="anotar" data-guia="anotar">${ic('mas', 24, 2.8)}Anotar fiado</button>${nav('libreta')}</div>`;
+  const pie = `<div class="abajo">${nav('libreta')}</div>`;
   if (!hayClientes) return {
     titulo: 'Libreta',
     html: `<div class="pantalla">${cab}<main class="contenido">${bandas}
       <section aria-labelledby="vacia" class="tarjeta" style="align-items:center;text-align:center;padding:1.5rem 1rem;gap:.75rem">
         <div class="ilustracion">${ILUS.anotar}</div>
         <h2 id="vacia" style="font-size:1.5rem;line-height:1.875rem">Su libreta está lista</h2>
-        <p>Anote el primer fiado del día.</p>
-        <a class="btn-link" href="#nuevo">Pasar clientes del cuaderno</a>
-        <button type="button" class="btn-link" data-accion="importar">${ic('contactos', 20, 2.2)}Traer de mis contactos</button>
+        <p>Toque «Fiar», abajo en el centro, para anotar el primer fiado del día.</p>
+        <a class="btn-sec" href="#nuevo">${ic('mas', 22, 2.4)}Pasar clientes del cuaderno</a>
+        <button type="button" class="btn-sec" data-accion="importar">${ic('contactos', 22, 2.2)}Traer de mis contactos</button>
       </section>
       ${pasosHtml()}
     </main>${pie}</div>`,
@@ -290,40 +292,60 @@ V.inicio = () => {
   const atr = lista.filter(x => x.e.tipo === 'atrasado'), deHoy = lista.filter(x => x.e.tipo === 'hoy');
   const suma = xs => xs.reduce((s, x) => s + x.e.saldo, 0);
   const alDia = lista.filter(x => x.e.tipo !== 'atrasado').length;
-  const tarjetaHoy = (clase, href, icono, texto, valor) => `<a class="aviso-hoy ${clase}" href="#${href}"><span class="i" aria-hidden="true">${ic(icono, 20, 2.4)}</span><span class="t">${texto}</span><b>${valor}</b></a>`;
-  const avisosHoy = `<section class="avisos-hoy" aria-label="Hoy">
-    ${atr.length ? tarjetaHoy('atr', 'cobros', 'atencion', `${atr.length} ${atr.length === 1 ? 'atrasado' : 'atrasados'}`, monto(suma(atr))) : ''}
-    ${deHoy.length ? tarjetaHoy('hoy', 'cobros', 'reloj', `Hoy ${deHoy.length === 1 ? 'paga' : 'pagan'}&nbsp;${deHoy.length}`, monto(suma(deHoy))) : ''}
-    ${!atr.length && !deHoy.length ? tarjetaHoy('ok', 'cobros', 'ok', 'Cobros de hoy', 'Ninguno') : ''}
-    ${lista.length > 1 ? tarjetaHoy('ok', 'resumen', 'estrella', 'Al día', `${alDia} de ${lista.length}`) : ''}</section>`;
+  const filtro = (clave, clase, icono, rotulo, n, sub, etiqueta) => `<button type="button" class="filtro ${clase}" data-filtro="${clave}" aria-pressed="false" aria-label="${etiqueta}"><span class="l">${rotulo}</span><span class="v">${ic(icono, 22, 2.6)}${n}</span><span class="s">${sub}</span></button>`;
+  const filtros = lista.length > 1 ? `<section class="filtros" aria-label="Ver solo">
+    ${filtro('atrasado', 'atr', 'atencion', 'Atrasados', atr.length, monto(suma(atr)), `Atrasados: ${atr.length}, ${monto(suma(atr))}. Toque para ver solo a ellos.`)}
+    ${filtro('hoy', 'hoy', 'reloj', 'Pagan hoy', deHoy.length, monto(suma(deHoy)), `Pagan hoy: ${deHoy.length}, ${monto(suma(deHoy))}. Toque para ver solo a ellos.`)}
+    ${filtro('aldia', 'ok', 'ok', 'Al día', alDia, `de ${lista.length}`, `Al día: ${alDia} de ${lista.length}. Toque para ver solo a ellos.`)}</section>` : '';
   return {
     titulo: 'Libreta',
     html: `<div class="pantalla">${cab}<main class="contenido">${bandas}
       ${iosSinInstalar() && !t.avisoIos ? `<div class="banda">${ic('celular', 20)}<span><b>En iPhone, instale Fiao</b> para que Safari no borre su libreta: toque ${ic('compartir', 18, 2.2)} Compartir y luego «Agregar a inicio».</span><button type="button" class="btn-mini sec" data-accion="ios-ok">Entendido</button></div>` : ''}
       ${copiaVieja ? `<div class="banda vieja">${ic('reloj', 20)}<span>${dc === null ? 'Aún no guarda una copia de su libreta.' : `Su última copia fue hace ${dc} días.`}</span><button type="button" class="btn-mini sec" data-accion="copia">Guardar</button></div>` : ''}
-      ${avisosHoy}
+      ${filtros}
       ${pasosHtml()}
-      <div class="buscador"><label for="buscar" class="vh">Buscar cliente por nombre o celular</label>${ic('buscar', 24)}<input class="entrada" id="buscar" type="search" placeholder="Buscar por nombre o celular" autocomplete="off"></div>
-      <div class="encabezado-lista"><h2 class="titulo-seccion" id="t-clientes">Clientes</h2><span id="cuantos">${lista.length}</span>${lista.length > 1 ? `<button type="button" class="btn-link sel-entrar" data-accion="seleccionar">${ic('ok', 18, 2.6)}Seleccionar</button>` : ''}</div>
+      <div class="buscador" id="caja-buscar" hidden><label for="buscar" class="vh">Buscar cliente por nombre o celular</label>${ic('buscar', 24)}<input class="entrada" id="buscar" type="search" placeholder="Buscar por nombre o celular" autocomplete="off" enterkeyhint="search"></div>
+      <div class="encabezado-lista"><h2 class="titulo-seccion" id="t-clientes">Clientes</h2><span id="cuantos">${lista.length}</span>${lista.length > 1 ? `<button type="button" class="btn-mini suave sel-entrar" data-accion="seleccionar">Seleccionar</button>` : ''}<button type="button" class="btn-mini suave cuadrado" data-accion="agregar" aria-label="Agregar clientes">${ic('mas', 22, 2.6)}</button></div>
       <ul class="lista lista-borrable" id="lista-clientes" aria-labelledby="t-clientes">${lista.map(({ c, e }) => filaCliente(c, e, `cliente-${c.id}`)
         .replace('<a class="fila"', '<a class="fila" draggable="false"')
         .replace(/<\/li>$/, `<button type="button" class="fila-borrar" data-borrar="${esc(c.id)}" aria-label="Borrar a ${esc(c.nombre)}">${ic('basura', 24, 2.2)}<span>Borrar</span></button></li>`)).join('')}</ul>
       <p class="vacio" id="sin-resultados" hidden></p>
       ${lista.length ? consejo('deslizar', 'Deslice un cliente a la izquierda para borrarlo.') : ''}
-      <div class="fila-enlaces"><a class="btn-link" href="#nuevo">${ic('mas', 20, 2.4)}Agregar cliente</a><button type="button" class="btn-link" data-accion="importar">${ic('contactos', 20, 2.2)}Traer de mis contactos</button></div>
     </main>${pie.replace('<nav class="nav"', `${panelSeleccion(lista)}<nav class="nav"`)}</div>`,
     montar(r) {
       montarInicio(r);
       const cifra = r.querySelector('#cifra-calle');
       if (typeof Vista.ultimoTotal === 'number' && Vista.ultimoTotal !== total) contar(cifra, Vista.ultimoTotal, total);
       Vista.ultimoTotal = total;
-      const b = r.querySelector('#buscar'), ul = r.querySelector('#lista-clientes'), sin = r.querySelector('#sin-resultados'), cuantos = r.querySelector('#cuantos');
+      const b = r.querySelector('#buscar'), caja = r.querySelector('#caja-buscar'), lupa = r.querySelector('[data-accion="buscar"]');
+      const ul = r.querySelector('#lista-clientes'), sin = r.querySelector('#sin-resultados'), cuantos = r.querySelector('#cuantos');
+      /* La lupa abre el buscador (y lo cierra si está vacío). Al volver a la Libreta, sigue abierto si quedó algo escrito. */
+      const abrirBuscar = (abrir, foco = true) => { caja.hidden = !abrir; lupa?.setAttribute('aria-pressed', String(abrir)); if (abrir && foco) b.focus(); };
+      lupa?.addEventListener('click', () => { if (caja.hidden) abrirBuscar(true); else { b.value = ''; aplicar(); abrirBuscar(false); } });
       /* Se busca por nombre o, si solo escribe números, por celular (sin importar espacios ni el +57). */
       const filas = [...ul.children];
       filas.forEach((li, i) => {
         const c = lista[i].c; if (!c.cel) return;
         const x = document.createElement('span'); x.className = 'cel-hallado'; x.hidden = true; li.querySelector('.medio').appendChild(x);
       });
+      let filtroActivo = '';
+      const pasaFiltro = e => !filtroActivo || (filtroActivo === 'atrasado' ? e.tipo === 'atrasado' : filtroActivo === 'hoy' ? e.tipo === 'hoy' : e.tipo !== 'atrasado');
+      const TXT_FILTRO = { atrasado: 'Nadie está atrasado.', hoy: 'Hoy nadie tiene día de pago.', aldia: 'Nadie está al día todavía.' };
+      function aplicar() {
+        const q = normalizar(b.value), dig = b.value.replace(/\D/g, '');
+        const porNumero = dig.length > 0 && !/\p{L}/u.test(q);
+        const qd = porNumero && dig.startsWith('57') && (dig.length > 10 || /^\s*\+/.test(b.value)) ? dig.slice(2) : dig;
+        let n = 0;
+        filas.forEach((li, i) => {
+          const { c, e } = lista[i], cel = celDigitos(c.cel), x = li.querySelector('.cel-hallado');
+          const si = pasaFiltro(e) && (!q || (porNumero ? !!cel && cel.includes(qd) : normalizar(c.nombre).includes(q)));
+          li.hidden = !si; if (si) n++;
+          if (x) { x.hidden = !(si && q && porNumero); if (si && q && porNumero) x.innerHTML = `${ic('celular', 18, 2.2)}<span>${celResaltado(cel, qd)}</span>`; }
+        });
+        cuantos.textContent = q || filtroActivo ? `${n} de ${lista.length}` : lista.length;
+        sin.hidden = n > 0;
+        sin.innerHTML = n ? '' : q ? (porNumero ? `Nadie tiene un celular con «${esc(b.value.trim())}».` : `Nadie se llama «${esc(b.value)}». <a href="#nuevo" data-prefill>Agregarlo</a>`) : TXT_FILTRO[filtroActivo] || '';
+      }
       b.addEventListener('input', () => {
         /* Si pega un aviso de pago (el enlace del vecino, o el mensaje entero), abre esa cuenta con el aviso. */
         const aviso = b.value.match(/#pago-([A-Za-z0-9]+)-(\d{0,9}(?:\.[a-z]+)?)/);
@@ -331,20 +353,14 @@ V.inicio = () => {
         /* 1.3.0 · Igual con «Necesito otro día» y «Algo no me cuadra». */
         const otro = b.value.match(/#(fecha|revisar)-([A-Za-z0-9]+)-(\d{8}|[a-z]{1,8})/);
         if (otro) { b.value = ''; ir(`${otro[1]}-${otro[2]}-${otro[3]}`); return; }
-        const q = normalizar(b.value), dig = b.value.replace(/\D/g, '');
-        const porNumero = dig.length > 0 && !/\p{L}/u.test(q);
-        const qd = porNumero && dig.startsWith('57') && (dig.length > 10 || /^\s*\+/.test(b.value)) ? dig.slice(2) : dig;
-        let n = 0;
-        filas.forEach((li, i) => {
-          const c = lista[i].c, cel = celDigitos(c.cel), x = li.querySelector('.cel-hallado');
-          const si = !q || (porNumero ? !!cel && cel.includes(qd) : normalizar(c.nombre).includes(q));
-          li.hidden = !si; if (si) n++;
-          if (x) { x.hidden = !(si && porNumero); if (si && porNumero) x.innerHTML = `${ic('celular', 18, 2.2)}<span>${celResaltado(cel, qd)}</span>`; }
-        });
-        cuantos.textContent = q ? `${n} de ${lista.length}` : lista.length;
-        sin.hidden = n > 0;
-        sin.innerHTML = n ? '' : porNumero ? `Nadie tiene un celular con «${esc(b.value.trim())}».` : `Nadie se llama «${esc(b.value)}». <a href="#nuevo" data-prefill>Agregarlo</a>`;
+        aplicar();
       });
+      r.querySelectorAll('[data-filtro]').forEach(f => f.addEventListener('click', () => {
+        filtroActivo = filtroActivo === f.dataset.filtro ? '' : f.dataset.filtro;
+        r.querySelectorAll('[data-filtro]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.filtro === filtroActivo)));
+        aplicar(); vibrar(6);
+        if (filtroActivo) anunciar(`Viendo ${cuantos.textContent} clientes.`);
+      }));
       sin.addEventListener('click', ev => { if (ev.target.closest('[data-prefill]')) Vista.prefill = b.value.trim(); });
       filas.forEach((li, i) => { li.dataset.id = lista[i].c.id; });
       montarSeleccion(r, ul, lista);
@@ -449,7 +465,7 @@ function panelSeleccion(lista) {
 }
 function montarSeleccion(r, ul, lista) {
   const panel = r.querySelector('#sel-panel'); if (!panel) return;
-  const entrar = r.querySelector('[data-accion="seleccionar"]'), fab = r.querySelector('.fab'), navAbajo = r.querySelector('.abajo .nav');
+  const entrar = r.querySelector('[data-accion="seleccionar"]'), fab = r.querySelector('[data-accion="agregar"]'), navAbajo = r.querySelector('.abajo .nav');
   const cuantos = panel.querySelector('#sel-cuantos'), bBorrar = panel.querySelector('[data-accion="sel-borrar"]');
   const sel = new Set(); let modo = false, presion = null;
   const liDe = id => ul.querySelector(`li[data-id="${CSS.escape(id)}"]`);
@@ -554,11 +570,13 @@ function montarInicio(r) {
   const cab = r.querySelector('.cab-marca'), h1 = cab && cab.querySelector('h1');
   const ubicar = () => { if (!h1 || !h1.isConnected || cab.classList.contains('titulo-abajo')) return; const lh = parseFloat(getComputedStyle(h1).lineHeight); if (lh && h1.offsetHeight > lh * 2.5) cab.classList.add('titulo-abajo'); };
   ubicar(); if (document.fonts && document.fonts.status !== 'loaded') document.fonts.ready.then(ubicar);
-  /* Si las tarjetas de hoy no caben, la última se desvanece en vez de partir un número. */
-  const ah = r.querySelector('.avisos-hoy');
-  if (ah) requestAnimationFrame(() => ah.classList.toggle('desborda', ah.scrollWidth > ah.clientWidth + 2));
   if (Datos.clientes.size === 0) Vista.ultimoTotal = 0;
-  r.querySelector('[data-accion="anotar"]').addEventListener('click', () => abrirAnotar());
+  /* 2.0.0 · El «+» de «Clientes»: agregar uno a mano o traerlos de los contactos. */
+  r.querySelector('[data-accion="agregar"]')?.addEventListener('click', () => abrirHoja(`${cabHoja('Agregar clientes')}
+    <ul class="lista menu-hoja">
+      <li><a class="fila" href="#nuevo"><span class="ic-caja ic-fondo">${ic('mas', 22, 2.4)}</span><span class="medio"><span class="nombre">Cliente nuevo</span><span class="detalle">Escribo su nombre y, si quiero, lo que debe del cuaderno.</span></span>${ic('sigue', 22, 2.2)}</a></li>
+      <li><button type="button" class="fila" data-accion="importar"><span class="ic-caja ic-fondo">${ic('contactos', 22, 2.2)}</span><span class="medio"><span class="nombre">Traer de mis contactos</span><span class="detalle">Elijo varios a la vez.</span></span>${ic('sigue', 22, 2.2)}</button></li>
+    </ul>`, () => {}, { nombre: 'agregar' }));
   r.querySelector('[data-accion="instalar"]')?.addEventListener('click', instalar);
   r.querySelector('[data-accion="ios-ok"]')?.addEventListener('click', async () => { const t = tienda(); t.avisoIos = true; await guardarTienda(t); mostrarRuta({ animar: false }); });
   r.querySelector('[data-accion="copia"]')?.addEventListener('click', async () => { if (await guardarCopia()) mostrarRuta({ animar: false }); });

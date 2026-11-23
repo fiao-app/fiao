@@ -107,9 +107,10 @@ const _ilus = {};
 const ILUS = new Proxy({}, { get: (_, k) => { const t = document.documentElement.dataset.tema === 'tinta' ? 'tinta' : 'color'; return (_ilus[t] || (_ilus[t] = armarIlus()))[k]; } });
 /* 6 · El menú de verdad (sin enlaces: es una muestra) y una línea por sección. Sus colores salen del CSS. */
 const MENU_DEMO = (() => {
-  const secc = [['libreta', 'Libreta', 'Quién le debe y cuánto.'], ['campana', 'Cobros', 'A quién recordar hoy, en el horario de la ley.'], ['grafica', 'Resumen', 'Cuánto fió y cuánto recuperó en el mes.'], ['ajustes', 'Ajustes', 'Letra, mensajes y copia de su libreta.']];
-  const pildora = `<div class="nav" aria-hidden="true">${secc.map(([i, n], k) => `<span class="tab-demo${k === 0 ? ' activa' : ''}">${ic(i, 24, k === 0 ? 2.4 : 2)}${k === 0 ? n : ''}</span>`).join('')}</div>`;
-  return `<div class="como-menu">${pildora}<ul>${secc.map(([i, n, d]) => `<li><span class="c" aria-hidden="true">${ic(i, 22, 2.2)}</span><span><b>${n}</b><span class="d">${d}</span></span></li>`).join('')}</ul></div>`;
+  /* 2.0.0 · La barra de abajo tiene cinco lugares, siempre con nombre, y «Fiar» en el centro. */
+  const secc = [['libreta', 'Libreta', 'Quién le debe y cuánto.'], ['cobros', 'Cobros', 'A quién recordar hoy, en el horario de la ley.'], ['mas', 'Fiar', 'Anota un fiado desde cualquier sección.', 'moneda'], ['grafica', 'Resumen', 'Cuánto fió y cuánto recuperó en el mes.'], ['ajustes', 'Ajustes', 'Letra, mensajes y copia de su libreta.']];
+  const barra = `<div class="nav-demo" aria-hidden="true">${secc.map(([i, n, , m], k) => `<span class="tab-demo${k === 0 ? ' activa' : ''}${m ? ' fiar' : ''}"><span class="ico">${ic(i, m ? 22 : 22, m ? 2.8 : k === 0 ? 2.4 : 2)}</span>${n}</span>`).join('')}</div>`;
+  return `<div class="como-menu">${barra}<ul>${secc.map(([i, n, d, m]) => `<li${m ? ' class="moneda"' : ''}><span class="c" aria-hidden="true">${ic(i, 22, 2.2)}</span><span><b>${n}</b><span class="d">${d}</span></span></li>`).join('')}</ul></div>`;
 })();
 
 /* Tarjetas de "Así funciona": título de 6 palabras o menos y una frase corta. */
@@ -119,5 +120,5 @@ const COMO = [
   ['claras', 'Cuentas claras, sin borrones', 'Si se equivoca, corrige. Los dos ven qué cambió.'],
   ['cobrar', 'Cobre sin pena', 'Fiao le dice a quién recordar y cuándo se puede.'],
   ['privada', 'Su libreta es solo suya', 'Queda en este celular. Sin registro ni contraseñas.'],
-  ['menu', 'Así se mueve por Fiao', 'Abajo están las cuatro secciones. «Anotar fiado» flota a la derecha.']
+  ['menu', 'Así se mueve por Fiao', 'Abajo están las secciones, siempre con su nombre. «Fiar» va en el centro.']
 ];

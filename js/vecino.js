@@ -36,7 +36,10 @@ function pintarVecino() {
     const pago = tipo === 'p';
     const nombre = pago ? `Pagó${desc ? ' ' + desc : ''}` : tipo === 's' ? (desc || 'Lo que venía del cuaderno') : (desc ? desc[0].toUpperCase() + desc.slice(1) : 'Fiado');
     const notas = [corr ? `Corregido: decía ${pesos(corr)}` : '', anul ? 'Anulado: no cuenta' : ''].filter(Boolean).map(x => `<small>${x}</small>`).join('');
-    return `<li class="${pago ? 'pago' : ''}${anul ? ' anulada' : ''}"><span class="d"><span>${esc(nombre)}</span>${notas}</span><span class="v">${pago ? '− ' : '+ '}${pesos(montoMov)}</span></li>`;
+    /* 2.0.0 · Cada línea con su ícono (+ fiado, ✓ pago) y su hora, como en la libreta de la tienda. */
+    const icono = anul ? 'cerrar' : pago ? 'ok' : tipo === 's' ? 'libreta' : 'mas';
+    const h = new Date(f); const cuandoFue = isNaN(h) ? '' : `<small class="h">${hora(h)}</small>`;
+    return `<li class="${pago ? 'pago' : ''}${anul ? ' anulada' : ''}"><span class="ico-mov" aria-hidden="true">${ic(icono, 20, pago ? 2.8 : 2.6)}</span><span class="d"><span>${esc(nombre)}</span>${cuandoFue}${notas}</span><span class="v">${pago ? '− ' : '+ '}${pesos(montoMov)}</span></li>`;
   };
   const filas = agruparPorDia(movs, g).map(gr => `<h3 class="dia-historial">${gr.dia}</h3><ul class="lista movs-vecino">${gr.items.map(fila).join('')}</ul>`).join('');
   const ant = k.ant ? `<ul class="lista movs-vecino"><li><span class="d" style="color:var(--gris)">Venía debiendo de antes</span><span class="v" style="color:var(--gris)">${pesos(k.ant)}</span></li></ul>` : '';

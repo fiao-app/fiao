@@ -97,7 +97,8 @@ function mayuscula(s) { return s ? s[0].toUpperCase() + s.slice(1) : s; }
 function normalizar(s) { return String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim(); }
 /** Iniciales para el círculo del cliente. */
 function iniciales(nombre) {
-  const p = String(nombre).replace(/[,(].*$/, '').trim().split(/\s+/).filter(w => !/^(la|el|de|del|las|los)$/i.test(w));
+  /* 2.0.0 · Sin tratamientos: «Don Édgar» → «É», «Profe Ramiro» → «R» (antes «DÉ» y «PR»). */
+  const p = String(nombre).replace(/[,(].*$/, '').trim().split(/\s+/).filter(w => !/^(la|el|de|del|las|los|don|doña|dona|profe|seño|señor|señora|sr\.?|sra\.?|tía|tia|tío|tio|abuela|abuelo|mamá|papá)$/i.test(w));
   const base = p.length ? p : String(nombre).trim().split(/\s+/);
   return (base[0]?.[0] || '?').toUpperCase() + (base[1]?.[0] || '').toUpperCase();
 }

@@ -61,7 +61,7 @@ const VOZ = {
   // Guía del primer uso
   'g-anotar': 'Anote su primer fiado. Toque aquí.',
   'g-nuevo': 'Escriba el nombre de un cliente y toque «Seguir».',
-  'g-monto': 'Marque cuánto se llevó. Luego toque «Anotar».',
+  'g-monto': 'Marque cuánto se llevó. Luego toque «Fiar».',
   'practica': '¡Muy bien! Así de fácil anota un fiado.',
   'r-total': 'Esto es lo que le deben entre todos.',
   'r-lista': 'Primero salen los atrasados y los que pagan hoy.',
@@ -86,6 +86,10 @@ Object.assign(VOZ, VOZ_NUEVAS);
 for (const [k, [, lineas]] of Object.entries(AYUDA)) VOZ[`ayuda-${k}`] = lineas.join(' ');
 for (const [k, [t, x]] of Object.entries(POR_QUE)) VOZ[`porque-${k}`] = `${t} ${x}`;
 
+/* 2.0.0 · Frases cuyo texto cambió con el rediseño («Fiar» en vez de «Anotar», la lupa, los tres puntos):
+   se graban de nuevo con la misma voz y van en archivos nuevos. Mientras un archivo no exista, Fiao no suena
+   (y «Escuchar» usa la voz del celular): nunca dice una frase vieja que ya no coincide con la pantalla. */
+const VOZ_ARCHIVO = { 'g-monto': 'g-monto-2', 'ayuda-inicio': 'ayuda-inicio-2', 'ayuda-cliente': 'ayuda-cliente-2' };
 /** Texto que se ve en pantalla → clave de la frase grabada (montos y nombres no se dicen). */
 const VOZ_REGLAS = [
   [/^\$[\d.]+ a .+\. Va en /, 'anotado'], [/^Pago de \$/, 'pago'], [/ quedó al día\.$/, 'al-dia'],
@@ -139,7 +143,7 @@ const Voz = {
   /** Los bytes del archivo (sin preparar todavía). */
   traer(clave) {
     if (this.bytes[clave]) return Promise.resolve(this.bytes[clave]);
-    return fetch(`audio/${clave}.mp3`).then(r => { if (!r.ok) throw new Error('sin audio'); return r.arrayBuffer(); }).then(b => (this.bytes[clave] = b));
+    return fetch(`audio/${VOZ_ARCHIVO[clave] || clave}.mp3`).then(r => { if (!r.ok) throw new Error('sin audio'); return r.arrayBuffer(); }).then(b => (this.bytes[clave] = b));
   },
   /** La frase lista para sonar. Se prepara una sola vez, aunque la pidan dos veces seguidas. */
   cargar(clave) {

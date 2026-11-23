@@ -41,6 +41,8 @@ const ICONOS = {
   altavoz: '<path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/>',
   dinero: '<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/><path d="M6 12h.01M18 12h.01"/>',
   estrella: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
+  cobros: '<circle cx="12" cy="12" r="9"/><path d="M14.6 9.3c-.5-.8-1.5-1.3-2.6-1.3-1.5 0-2.6.8-2.6 1.9 0 2.6 5.2 1.5 5.2 4.2 0 1.1-1.1 1.9-2.6 1.9-1.2 0-2.2-.5-2.7-1.4M12 6.4V8M12 16v1.6"/>',
+  mas3: '<circle cx="5" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.6" fill="currentColor" stroke="none"/>',
   idea: '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.5 1.1 1.3 1.1 2.2h5c0-.9.4-1.7 1.1-2.2A6 6 0 0 0 12 3z"/>'
 };
 /* Centrado óptico: estos íconos no tienen su dibujo en el centro de la cuadrícula de 24 (medido con getBBox).
@@ -105,11 +107,13 @@ function chipAtiende() {
   return `<button type="button" class="chip-atiende" data-accion="atiende">${ic('contactos', 18, 2.2)}Atiende: ${esc(t.atiendeAhora)}${(t.atienden || []).length > 1 ? ic('abajo', 18, 2.4) : ''}</button>`;
 }
 
-/* ───── Navegación inferior ───── */
+/* ───── Barra de abajo (2.0.0) ─────
+   Cinco lugares fijos, siempre con nombre. «Fiar» va en el centro: abre la hoja de fiar desde cualquier sección. */
 function nav(activa) {
   const g = cuentaCobrosPendientes();
   const it = (clave, icono, rotulo, globo = 0) => `<a href="#${clave === 'libreta' ? 'inicio' : clave}"${clave === activa ? ' aria-current="page"' : ''}><span class="ico">${ic(icono, 24, clave === activa ? 2.4 : 2)}${globo ? `<span class="globo" aria-hidden="true">${globo}</span>` : ''}</span><span class="rot">${rotulo}</span>${globo ? `<span class="vh">, ${globo} ${globo === 1 ? 'pendiente' : 'pendientes'}</span>` : ''}</a>`;
-  return `<nav class="nav" aria-label="Secciones">${it('libreta', 'libreta', 'Libreta')}${it('cobros', 'campana', 'Cobros', g)}${it('resumen', 'grafica', 'Resumen')}${it('ajustes', 'ajustes', 'Ajustes')}</nav>`;
+  const fiar = `<button type="button" class="fiar" data-accion="anotar" data-guia="anotar"><span class="ico">${ic('mas', 30, 2.8)}</span><span class="rot">Fiar</span></button>`;
+  return `<nav class="nav" aria-label="Secciones">${it('libreta', 'libreta', 'Libreta')}${it('cobros', 'cobros', 'Cobros', g)}${fiar}${it('resumen', 'grafica', 'Resumen')}${it('ajustes', 'ajustes', 'Ajustes')}</nav>`;
 }
 function cuentaCobrosPendientes(hoy = new Date()) {
   let n = 0;
@@ -147,16 +151,27 @@ function estadoHtml(c, e) {
   if (e.tipo === 'atrasado') return `<span class="estado atrasado">${ic('atencion', 16, 2.4)}${t}</span>`;
   if (e.tipo === 'hoy') return `<span class="estado hoy">${ic('reloj', 16, 2.4)}${t}</span>`;
   if (e.tipo === 'nada') return `<span class="estado ok">${ic('ok', 16, 2.6)}${t}</span>`;
+  if (e.tipo === 'futuro') return `<span class="estado">${ic('calendario', 16, 2.2)}${t}</span>`;
   return `<span class="estado">${t}</span>`;
 }
-/** Cada cliente con un color fijo, calculado de su nombre, para reconocerlo de un vistazo. */
-const TONOS_AVATAR = [228, 262, 292, 335, 18, 38, 152, 172, 198, 95];
+/** Cada cliente con un color fijo, calculado de su nombre, para reconocerlo de un vistazo.
+    2.0.0 · Tonos de la paleta (fondo, letra), con contraste de 5,6:1 o más. Nunca verde, rojo ni naranja:
+    esos colores ya dicen «pagó», «atrasado» y «fiar». */
+const TONOS_AVATAR = [['#E9ECFF', '#2B3BC4'], ['#F3EADB', '#6B5530'], ['#E3F1F8', '#1F5A73'], ['#EFE8FA', '#5B3E96'], ['#EEEBE4', '#4A5060'], ['#F6EBD3', '#6E5210']];
 function tonoDe(nombre = '') { let h = 0; for (const ch of normalizar(nombre)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return TONOS_AVATAR[h % TONOS_AVATAR.length]; }
-function avatarHtml(c) { return `<span class="avatar" style="--h:${tonoDe(c.nombre)}" aria-hidden="true">${esc(iniciales(c.nombre))}</span>`; }
+function avatarHtml(c) { const [f, t] = tonoDe(c.nombre); return `<span class="avatar" style="--av-f:${f};--av-t:${t}" aria-hidden="true">${esc(iniciales(c.nombre))}</span>`; }
+/** 2.0.0 · El nombre y su apodo: «Rosiris, la de la esquina» → «Rosiris» y, en gris, «, la de la esquina».
+    Si no hay apodo en el nombre, va lo que se escribió para reconocerlo («· vende sopa»). El apodo se corta antes que el nombre. */
+function nombreHtml(c) {
+  const n = String(c.nombre || ''), i = n.indexOf(',');
+  if (i > 0 && i < n.length - 1) return `<span class="n1">${esc(n.slice(0, i))}</span><span class="apodo">${esc(n.slice(i))}</span>`;
+  if (c.detalle) return `<span class="n1">${esc(n)}</span><span class="apodo">&nbsp;· ${esc(c.detalle)}</span>`;
+  return esc(n);
+}
 /** Fila de cliente para listas. */
 function filaCliente(c, e, href) {
   const m = e.saldo > 0 ? `<span class="monto">${monto(e.saldo)}</span>` : '';
-  return `<li><a class="fila" href="#${href}">${avatarHtml(c)}<span class="medio"><span class="nombre">${esc(c.nombre)}</span>${estadoHtml(c, e)}</span>${m}</a></li>`;
+  return `<li><a class="fila" href="#${href}">${avatarHtml(c)}<span class="medio"><span class="nombre">${nombreHtml(c)}</span>${estadoHtml(c, e)}</span>${m}</a></li>`;
 }
 
 /* ───── Avisos abajo, con acciones y "Deshacer" ─────
@@ -218,6 +233,7 @@ function abrirHoja(html, alMontar = () => {}, { nombre = '' } = {}) {
 /** Cambia el contenido de la hoja abierta (pasos dentro de la misma hoja). */
 function pintarHoja(html, alMontar = () => {}, d = document.getElementById('hoja')) {
   const cuerpo = d.querySelector('.cuerpo');
+  d.classList.remove('con-toldo'); // 2.0.0 · cada paso decide si lleva el toldo arriba (la hoja de fiar)
   cuerpo.innerHTML = html;
   const t = cuerpo.querySelector('h2'); if (t) { t.id = t.id || 'hoja-titulo'; d.setAttribute('aria-labelledby', t.id); }
   cuerpo.querySelectorAll('[data-cerrar]').forEach(b => b.addEventListener('click', ev => { ev.preventDefault(); cerrarHoja(); }));
@@ -320,7 +336,7 @@ document.addEventListener('input', ev => {
 }, true);
 
 /* ───── 1.3.0 · Las cifras grandes se achican solas, y solo cuando no caben (montos altos o letra Más grande) ───── */
-const CIFRAS_GRANDES = '.cifra, .cifra-xl, .cifra-l, .monto-grande, .aviso-hoy b';
+const CIFRAS_GRANDES = '.cifra, .cifra-xl, .cifra-l, .monto-grande, .filtro .v, .det-cifra, .cuadre-monto, .kpi b';
 function encajarCifra(el) {
   if (el.dataset.encaja) { el.style.fontSize = el.dataset.fs0 || ''; el.style.lineHeight = el.dataset.lh0 || ''; delete el.dataset.encaja; }
   const p = el.parentElement; if (!p || !el.offsetWidth) return;
@@ -401,8 +417,8 @@ const GLOSARIO = [
   ['En la calle', 'lo que le deben entre todos.']
 ];
 const AYUDA = {
-  inicio: ['Libreta', ['Arriba ve cuánto le deben entre todos.', 'Primero salen los atrasados y los que pagan hoy.', 'Toque un nombre para ver su cuenta. Puede buscarlo por nombre o por celular.', 'Para borrar un cliente, deslícelo a la izquierda.', 'Con «Anotar fiado» anota en segundos.']],
-  cliente: ['Cuenta del cliente', ['Arriba ve cuánto debe y su cupo.', '«Anotar» suma un fiado. «Pagó» registra un pago.', 'Toque una línea del historial para ver el detalle o corregirla.', 'La basurita de arriba borra al cliente. Antes de borrar, Fiao le pregunta.']],
+  inicio: ['Libreta', ['Arriba ve cuánto le deben entre todos.', 'Toque Atrasados, Pagan hoy o Al día para ver solo a esos clientes.', 'Toque un nombre para ver su cuenta. Con la lupa lo busca por nombre o por celular.', 'Para borrar un cliente, deslícelo a la izquierda.', 'Con «Fiar», abajo en el centro, anota en segundos.']],
+  cliente: ['Cuenta del cliente', ['Arriba ve cuánto debe y su cupo.', '«Fiar» suma un fiado. «Pagó» registra un pago.', 'Toque un movimiento para ver el detalle o corregirlo.', 'En los tres puntos de arriba puede enviarle su cuenta, escribirle o borrarlo. Antes de borrar, Fiao le pregunta.']],
   cobros: ['Cobros', ['Aquí salen quienes se atrasaron o pagan hoy.', '«Recordar» abre WhatsApp con el mensaje listo.', 'Solo se puede en el horario que permite la ley.']],
   resumen: ['Resumen', ['Vea cuánto le deben, cuánto recuperó y cuánto fió este mes.', 'Abajo ve a quién conviene revisar.']],
   ajustes: ['Ajustes', ['Cambie el tamaño de la letra, la apariencia y el movimiento, y cómo suenan sus mensajes.', 'Guarde una copia de su libreta cada semana.']],

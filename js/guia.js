@@ -47,7 +47,7 @@ const Guia = {
   practica: [
     { cuando: 'vista:inicio', sel: '[data-guia="anotar"]', texto: 'Anote su primer fiado. Toque aquí.', sigue: 'hoja-abierta:anotar' },
     { cuando: 'anotar-nuevo', sel: '[data-guia="cliente-nuevo"]', texto: 'Escriba el nombre de un cliente y toque «Seguir».', sigue: 'anotar-monto' },
-    { cuando: 'anotar-monto', sel: '[data-guia="monto"]', texto: 'Marque cuánto se llevó. Luego toque «Anotar».', sigue: 'anotado' }
+    { cuando: 'anotar-monto', sel: '[data-guia="monto"]', texto: 'Marque cuánto se llevó. Luego toque «Fiar».', sigue: 'anotado' }
   ],
   /* ── Recorrido de la tienda de ejemplo ── */
   recorrido: [

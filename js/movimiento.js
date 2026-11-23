@@ -40,9 +40,9 @@ const Mov = {
     /* 9 · El ícono de la sección nueva da un saltico. */
     const ico = app.querySelector('.nav a[aria-current="page"] .ico');
     if (ico && antes.split('-')[0] !== ruta) ico.classList.add('rebota');
-    /* 10 · Los avisos de hoy se asoman desde la derecha (la primera vez). */
+    /* 10 · Los filtros de hoy se asoman desde la derecha (la primera vez). */
     if (ruta === 'inicio' || !antes) {
-      const cajas = app.querySelectorAll('.avisos-hoy .aviso-hoy');
+      const cajas = app.querySelectorAll('.filtros .filtro');
       if (cajas.length && this.primeraVez('avisos')) cajas.forEach((c, k) => { c.style.setProperty('--i', k); c.classList.add('asoma'); });
       /* 12 · «Atrasado» late una vez, para que se note sin asustar. */
       const atr = app.querySelectorAll('.lista .estado.atrasado');
@@ -82,7 +82,7 @@ const Mov = {
     const fin = () => { m.remove(); meta.classList.remove('salta'); void meta.offsetWidth; meta.classList.add('salta'); };
     anim.onfinish = fin; anim.oncancel = () => m.remove();
   },
-  /** Recuerda desde dónde se abrió «Anotar» (el botón flotante o el atajo de la ficha). */
+  /** Recuerda desde dónde se abrió «Anotar» (el «Fiar» de la barra de abajo o el atajo de la ficha). */
   origen: null,
 
   /* ── 6 · Hojas que se cierran arrastrándolas hacia abajo ── */
@@ -136,13 +136,13 @@ const Mov = {
 document.addEventListener('click', ev => {
   const f = ev.target.closest('a.fila[href^="#cliente-"]');
   if (f && !reducido()) { Mov.nombrar(f); Mov.desdeFila = true; }
-  const o = ev.target.closest('.fab, .atajo[data-accion="anotar"]');
-  if (o) Mov.origen = o.classList.contains('fab') ? '.fab' : '.atajo[data-accion="anotar"]';
+  const o = ev.target.closest('.nav .fiar, .atajo[data-accion="anotar"]');
+  if (o) Mov.origen = o.classList.contains('fiar') && o.closest('.nav') ? '.nav .fiar .ico' : '.atajo[data-accion="anotar"]';
 }, true);
 
 /* 7 · Las teclas se hunden y rebotan al tocarlas. */
 document.addEventListener('pointerdown', ev => {
-  const b = ev.target.closest('.teclado button, .paso-btn, .atajo .c, .frecuentes button');
+  const b = ev.target.closest('.teclado button, .paso-btn, .atajo .c, .frecuentes button, .rapidos button');
   if (!b || reducido()) return;
   b.classList.remove('pulsa'); void b.offsetWidth; b.classList.add('pulsa');
 }, { passive: true });
