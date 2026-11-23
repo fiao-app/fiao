@@ -15,8 +15,15 @@ const Foco = {
     this.capa.setAttribute('aria-hidden', 'true');
     this.burbuja = Object.assign(document.createElement('div'), { className: 'guia-burbuja' });
     this.burbuja.setAttribute('role', 'dialog'); this.burbuja.setAttribute('aria-label', 'Guía');
-    this.burbuja.innerHTML = `${paso ? `<span class="paso">${paso}</span>` : ''}<p>${html}</p><div class="acciones">${acciones || '<button type="button" class="btn-link izq" data-guia-saltar>Saltar guía</button>'}</div>`;
+    /* 2.0.2 · Sin botones propios (la práctica), «Saltar guía» va arriba, junto al paso: la burbuja queda más baja. */
+    const saltar = '<button type="button" class="btn-link" data-guia-saltar>Saltar guía</button>';
+    this.burbuja.innerHTML = acciones
+      ? `${paso ? `<span class="paso">${paso}</span>` : ''}<p>${html}</p><div class="guia-botones">${acciones}</div>`
+      : `<div class="guia-cabeza"><span class="paso">${paso}</span>${saltar}</div><p>${html}</p>`;
     raiz.append(this.capa, this.burbuja);
+    /* 2.0.2 · Si lo señalado quedó fuera de la vista (letra «Más grande»), se trae al centro primero. */
+    const el = (hojaAbierta() || document).querySelector(selector), rr = el?.getBoundingClientRect();
+    if (rr && rr.height && (rr.top < 0 || rr.bottom > innerHeight)) el.scrollIntoView({ block: 'center', behavior: reducido() ? 'auto' : 'smooth' });
     anunciar(this.burbuja.querySelector('p').textContent);
     if (typeof Voz !== 'undefined') Voz.decirTexto(this.burbuja.querySelector('p').textContent);
     this.burbuja.querySelector('[data-guia-saltar]')?.addEventListener('click', () => Guia.terminar());
@@ -26,13 +33,26 @@ const Foco = {
   ubicar() {
     if (!this.capa) return;
     const raiz = hojaAbierta() || document;
-    const el = this.objetivo ? raiz.querySelector(this.objetivo) : null;
+    const els = this.objetivo ? [...raiz.querySelectorAll(this.objetivo)].filter(e => e.getClientRects().length) : [];
     const alto = innerHeight;
-    if (!el || !el.getClientRects().length) { this.capa.style.opacity = '0'; this.burbuja.style.top = '1rem'; this.burbuja.style.bottom = 'auto'; return; }
-    const r = el.getBoundingClientRect(), pad = 6;
+    if (!els.length) { this.capa.style.opacity = '0'; this.burbuja.style.top = '1rem'; this.burbuja.style.bottom = 'auto'; return; }
+    /* 2.0.2 · El foco abraza todo lo que se ve de los objetivos, también lo que sobresale
+       (el círculo naranja de «Fiar» sube por encima de la barra), y nunca se sale de la pantalla ni de la hoja. */
+    const r = { left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity }, pad = 6;
+    for (const el of els) for (const n of [el, ...el.querySelectorAll('*')]) {
+      const b = n.getBoundingClientRect(); if (!b.width || !b.height) continue;
+      r.left = Math.min(r.left, b.left); r.top = Math.min(r.top, b.top); r.right = Math.max(r.right, b.right); r.bottom = Math.max(r.bottom, b.bottom);
+    }
+    const lim = hojaAbierta()?.getBoundingClientRect() || { top: 0, bottom: alto };
+    r.top = Math.max(r.top, lim.top + pad, pad); r.bottom = Math.min(r.bottom, lim.bottom - pad, alto - pad);
+    r.width = r.right - r.left; r.height = r.bottom - r.top;
     Object.assign(this.capa.style, { opacity: '1', left: `${r.left - pad}px`, top: `${r.top - pad}px`, width: `${r.width + pad * 2}px`, height: `${r.height + pad * 2}px` });
-    if (r.top + r.height / 2 > alto / 2) { this.burbuja.style.top = 'auto'; this.burbuja.style.bottom = `${Math.max(12, alto - r.top + 16)}px`; }
-    else { this.burbuja.style.bottom = 'auto'; this.burbuja.style.top = `${Math.min(alto - 160, r.bottom + 16)}px`; }
+    /* La burbuja no tapa el foco: va del lado donde cabe (el de más aire si caben los dos). */
+    const h = this.burbuja.offsetHeight, margen = 14, arriba = r.top - pad - margen, abajo = alto - r.bottom - pad - margen;
+    const cabeArriba = arriba >= h + 12, cabeAbajo = abajo >= h + 12;
+    const ponerArriba = cabeArriba && cabeAbajo ? arriba >= abajo : cabeArriba || (!cabeAbajo && arriba >= abajo);
+    const top = ponerArriba ? r.top - pad - margen - h : r.bottom + pad + margen;
+    this.burbuja.style.bottom = 'auto'; this.burbuja.style.top = `${Math.max(12, Math.min(alto - h - 12, top))}px`;
   },
   quitar() { cancelAnimationFrame(this.raf); this.capa?.remove(); this.burbuja?.remove(); this.capa = this.burbuja = null; }
 };
@@ -47,7 +67,7 @@ const Guia = {
   practica: [
     { cuando: 'vista:inicio', sel: '[data-guia="anotar"]', texto: 'Anote su primer fiado. Toque aquí.', sigue: 'hoja-abierta:anotar' },
     { cuando: 'anotar-nuevo', sel: '[data-guia="cliente-nuevo"]', texto: 'Escriba el nombre de un cliente y toque «Seguir».', sigue: 'anotar-monto' },
-    { cuando: 'anotar-monto', sel: '[data-guia="monto"]', texto: 'Marque cuánto se llevó. Luego toque «Fiar».', sigue: 'anotado' }
+    { cuando: 'anotar-monto', sel: '#h-monto, #h-anotar', texto: 'Marque cuánto se llevó. Luego toque «Fiar».', sigue: 'anotado' }
   ],
   /* ── Recorrido de la tienda de ejemplo ── */
   recorrido: [
@@ -82,7 +102,7 @@ const Guia = {
     Foco.quitar(); celebrar();
     const b = Object.assign(document.createElement('div'), { className: 'guia-burbuja' });
     b.setAttribute('role', 'dialog'); b.setAttribute('aria-label', 'Guía'); b.style.top = '1rem';
-    b.innerHTML = `<span class="paso">Práctica terminada</span><p>¡Muy bien! Así de fácil anota un fiado.</p><p style="font-weight:400;font-size:1.0625rem">Si fue de prueba, toque «Deshacer» abajo.</p><div class="acciones"><span></span><button type="button" class="btn-mini">Entendido</button></div>`;
+    b.innerHTML = `<span class="paso">Práctica terminada</span><p>¡Muy bien! Así de fácil anota un fiado.</p><p style="font-weight:400;font-size:1.0625rem">Si fue de prueba, toque «Deshacer» abajo.</p><div class="guia-botones"><span></span><button type="button" class="btn-mini">Entendido</button></div>`;
     document.body.appendChild(b); anunciar('¡Muy bien! Así de fácil anota un fiado.'); if (typeof Voz !== 'undefined') Voz.decir('practica');
     b.querySelector('button').focus();
     b.querySelector('button').addEventListener('click', () => { b.remove(); this.terminar(); });

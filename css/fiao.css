@@ -547,7 +547,9 @@ html[data-letra="mas"] .kpis, html[data-letra="grande"] .kpis { grid-template-co
 .guia-burbuja { position: fixed; z-index: 51; left: 0.75rem; right: 0.75rem; max-width: 28.5rem; margin: 0 auto; padding: 1rem 1rem 0.75rem; border-radius: 1.375rem; background: var(--blanco); color: var(--tinta); box-shadow: var(--sombra-alta); display: flex; flex-direction: column; gap: 0.5rem; animation: entrar var(--medio) var(--suave); }
 .guia-burbuja .paso { font-size: 0.9375rem; color: var(--gris); font-weight: 600; }
 .guia-burbuja p { font-size: 1.1875rem; line-height: 1.625rem; font-weight: 600; }
-.guia-burbuja .acciones { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
+.guia-burbuja .guia-botones { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
+.guia-burbuja .guia-cabeza { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; margin: -0.625rem -0.5rem -0.25rem 0; }
+.guia-burbuja .guia-cabeza .btn-link { min-height: 2.75rem; padding: 0 0.5rem; font-size: 1rem; white-space: nowrap; }
 
 /* ───── Primer acceso ───── */
 .bienvenida { flex: 1; display: flex; flex-direction: column; }
@@ -899,19 +901,19 @@ html[data-tema="tinta"] .estado.hoy { padding: 0.125rem 0.625rem 0.125rem 0.5rem
 
 /* ───── Ficha: una tarjeta de acciones montada sobre el toldo ───── */
 .cab-marca.con-acciones { padding-bottom: 4.75rem; }
-.acciones { position: relative; z-index: 1; margin-top: -5.75rem; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 0.25rem; padding: 1rem 0.375rem 0.875rem; border-radius: 1.5rem; background: var(--blanco); box-shadow: 0 12px 30px -12px rgba(20, 27, 52, 0.30), 0 0 0 1px rgba(20, 27, 52, 0.04); }
-.acciones .atajo { min-height: 0; padding: 0; gap: 0.5rem; font-size: 1rem; }
-.acciones .atajo .c { box-shadow: none; background: var(--azul-fondo); color: var(--azul-osc); }
-.acciones .atajo.fiar .c { background: var(--moneda); color: var(--tinta); box-shadow: 0 6px 14px -6px rgba(154, 74, 18, 0.55); }
-.acciones .atajo.pago .c { background: var(--verde); color: var(--blanco); box-shadow: 0 6px 14px -6px rgba(18, 122, 69, 0.6); }
-.acciones .atajo[disabled] .c { background: var(--divisor); color: var(--gris); }
-html[data-letra="grande"] .acciones, html[data-letra="mas"] .acciones { grid-auto-flow: row; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.25rem; padding: 0.5rem; }
-html[data-letra="grande"] .acciones .atajo, html[data-letra="mas"] .acciones .atajo { flex-direction: row; justify-content: flex-start; gap: 0.5rem; padding: 0.25rem; min-height: 3.5rem; text-align: left; border-radius: 1rem; }
-html[data-letra="grande"] .acciones .atajo .c, html[data-letra="mas"] .acciones .atajo .c { width: 2.75rem; height: 2.75rem; flex-shrink: 0; }
-html[data-tema="tinta"] .acciones { box-shadow: 0 0 0 2px #111111; }
-html[data-tema="tinta"] .acciones .atajo .c { background: #FFFFFF; color: #1D3BA8; box-shadow: inset 0 0 0 2px #1D3BA8; }
-html[data-tema="tinta"] .acciones .atajo.fiar .c { background: #111111; color: #FFFFFF; box-shadow: none; }
-html[data-tema="tinta"] .acciones .atajo.pago .c { background: #1D3BA8; color: #FFFFFF; box-shadow: none; }
+.acciones:where(nav) { position: relative; z-index: 1; margin-top: -5.75rem; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 0.25rem; padding: 1rem 0.375rem 0.875rem; border-radius: 1.5rem; background: var(--blanco); box-shadow: 0 12px 30px -12px rgba(20, 27, 52, 0.30), 0 0 0 1px rgba(20, 27, 52, 0.04); }
+.acciones:where(nav) .atajo { min-height: 0; padding: 0; gap: 0.5rem; font-size: 1rem; }
+.acciones:where(nav) .atajo .c { box-shadow: none; background: var(--azul-fondo); color: var(--azul-osc); }
+.acciones:where(nav) .atajo.fiar .c { background: var(--moneda); color: var(--tinta); box-shadow: 0 6px 14px -6px rgba(154, 74, 18, 0.55); }
+.acciones:where(nav) .atajo.pago .c { background: var(--verde); color: var(--blanco); box-shadow: 0 6px 14px -6px rgba(18, 122, 69, 0.6); }
+.acciones:where(nav) .atajo[disabled] .c { background: var(--divisor); color: var(--gris); }
+html[data-letra="grande"] .acciones:where(nav), html[data-letra="mas"] .acciones:where(nav) { grid-auto-flow: row; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.25rem; padding: 0.5rem; }
+html[data-letra="grande"] .acciones:where(nav) .atajo, html[data-letra="mas"] .acciones:where(nav) .atajo { flex-direction: row; justify-content: flex-start; gap: 0.5rem; padding: 0.25rem; min-height: 3.5rem; text-align: left; border-radius: 1rem; }
+html[data-letra="grande"] .acciones:where(nav) .atajo .c, html[data-letra="mas"] .acciones:where(nav) .atajo .c { width: 2.75rem; height: 2.75rem; flex-shrink: 0; }
+html[data-tema="tinta"] .acciones:where(nav) { box-shadow: 0 0 0 2px #111111; }
+html[data-tema="tinta"] .acciones:where(nav) .atajo .c { background: #FFFFFF; color: #1D3BA8; box-shadow: inset 0 0 0 2px #1D3BA8; }
+html[data-tema="tinta"] .acciones:where(nav) .atajo.fiar .c { background: #111111; color: #FFFFFF; box-shadow: none; }
+html[data-tema="tinta"] .acciones:where(nav) .atajo.pago .c { background: #1D3BA8; color: #FFFFFF; box-shadow: none; }
 .encabezado-mov { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.25rem 0.125rem 0; }
 .encabezado-mov .titulo-seccion { font-size: 1.25rem; line-height: 1.625rem; }
 .encabezado-mov .por-que { margin-right: -0.5rem; }

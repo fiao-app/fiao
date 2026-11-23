@@ -14,6 +14,7 @@ Fiao sigue el versionado semántico (MAJOR.MINOR.PATCH): las versiones 0.x fuero
 
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.0.2 | 2026-11-23 | Parche | La guía del primer uso y los avisos de abajo se ven completos: la tarjeta de acciones de la ficha ya no se cuela en ellos; el foco abraza el botón «Fiar» entero y la burbuja nunca tapa lo que señala |
 | 2.0.1 | 2026-11-23 | Parche | Las tres frases de voz del rediseño, grabadas con la voz de siempre |
 | 2.0.0 | 2026-11-23 | Mayor | Rediseño de la interfaz: «Fiar» en el centro, colores con un solo trabajo y los 24 hallazgos de la crítica resueltos |
 | 1.7.2 | 2026-11-12 | Parche | La zona flotante de abajo ya no deja tocar lo que queda escondido detrás |
