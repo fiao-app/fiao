@@ -266,7 +266,7 @@ V.inicio = () => {
   const total = totalEnLaCalle(), hoy = totalesDelDia();
   const cuerpo = hayClientes ? `<section class="cifra-cab" aria-labelledby="t-calle"><span class="rotulo" id="t-calle">En la calle</span><span class="cifra" id="cifra-calle">${monto(total)}</span>
     <span class="extra"><span>Fiado hoy <b>${monto(hoy.fiado)}</b></span><span>Pagos hoy <b>${monto(hoy.pagos)}</b></span></span></section>` : '';
-  const botones = hayClientes ? btnRedondo('buscar', 'Buscar por nombre o celular', { accion: 'buscar', presionado: false }) + btnRedondo('ojoNo', 'Ocultar montos', { accion: 'ocultar', presionado: Vista.oculto }) : '';
+  const botones = hayClientes ? btnRedondo('buscar', 'Buscar por nombre o celular', { accion: 'buscar', presionado: false }) + btnRedondo(Vista.oculto ? 'ojoNo' : 'ojo', 'Ocultar montos', { accion: 'ocultar', presionado: Vista.oculto }) : '';
   const cab = cabMarca({ titulo: esc(t.nombre || 'Mi tienda'), extra: chipAtiende(), botones, cuerpo });
   const inst = puedeInstalar();
   const bandas = `${t.demo ? `<div class="banda demo compacta">${ic('ojo', 20)}<span>Tienda de ejemplo.</span><button type="button" class="btn-mini sec" data-accion="salir-demo">Usar la mía</button></div>` : ''}

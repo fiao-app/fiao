@@ -5,12 +5,18 @@
    Todo se puede saltar. Nada aparece dos veces. */
 'use strict';
 
+/* 2.0.3 · Alto de la barra de estado del iPhone (muesca o isla), para que nada quede debajo. */
+function margenSeguroArriba() {
+  if (margenSeguroArriba.v == null) { const m = Object.assign(document.createElement('div'), { style: 'position:fixed;top:0;height:env(safe-area-inset-top,0px);visibility:hidden;pointer-events:none' }); document.body.appendChild(m); margenSeguroArriba.v = m.offsetHeight; m.remove(); }
+  return margenSeguroArriba.v;
+}
+
 const Foco = {
-  capa: null, burbuja: null, objetivo: null, raf: 0,
-  mostrar(selector, html, { paso = '', acciones = '' } = {}) {
+  capa: null, burbuja: null, objetivo: null, raf: 0, arriba: false,
+  mostrar(selector, html, { paso = '', acciones = '', arriba = false } = {}) {
     this.quitar();
     const raiz = hojaAbierta() || document.body;
-    this.objetivo = selector;
+    this.objetivo = selector; this.arriba = arriba;
     this.capa = Object.assign(document.createElement('div'), { className: 'guia-foco' });
     this.capa.setAttribute('aria-hidden', 'true');
     this.burbuja = Object.assign(document.createElement('div'), { className: 'guia-burbuja' });
@@ -21,6 +27,9 @@ const Foco = {
       ? `${paso ? `<span class="paso">${paso}</span>` : ''}<p>${html}</p><div class="guia-botones">${acciones}</div>`
       : `<div class="guia-cabeza"><span class="paso">${paso}</span>${saltar}</div><p>${html}</p>`;
     raiz.append(this.capa, this.burbuja);
+    /* 2.0.3 · Dentro de una hoja, la burbuja sube a la capa superior (popover): Safari recorta lo que
+       sobresale de la hoja y la burbuja se veía cortada. Donde no hay popover, se queda dentro de la hoja. */
+    if (hojaAbierta() && this.burbuja.showPopover) { this.burbuja.setAttribute('popover', 'manual'); try { this.burbuja.showPopover(); } catch (e) { /* sigue dentro de la hoja */ } }
     /* 2.0.2 · Si lo señalado quedó fuera de la vista (letra «Más grande»), se trae al centro primero. */
     const el = (hojaAbierta() || document).querySelector(selector), rr = el?.getBoundingClientRect();
     if (rr && rr.height && (rr.top < 0 || rr.bottom > innerHeight)) el.scrollIntoView({ block: 'center', behavior: reducido() ? 'auto' : 'smooth' });
@@ -35,7 +44,7 @@ const Foco = {
     const raiz = hojaAbierta() || document;
     const els = this.objetivo ? [...raiz.querySelectorAll(this.objetivo)].filter(e => e.getClientRects().length) : [];
     const alto = innerHeight;
-    if (!els.length) { this.capa.style.opacity = '0'; this.burbuja.style.top = '1rem'; this.burbuja.style.bottom = 'auto'; return; }
+    if (!els.length) { this.capa.style.opacity = '0'; this.burbuja.style.top = 'calc(env(safe-area-inset-top, 0px) + 1rem)'; this.burbuja.style.bottom = 'auto'; return; }
     /* 2.0.2 · El foco abraza todo lo que se ve de los objetivos, también lo que sobresale
        (el círculo naranja de «Fiar» sube por encima de la barra), y nunca se sale de la pantalla ni de la hoja. */
     const r = { left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity }, pad = 6;
@@ -44,15 +53,20 @@ const Foco = {
       r.left = Math.min(r.left, b.left); r.top = Math.min(r.top, b.top); r.right = Math.max(r.right, b.right); r.bottom = Math.max(r.bottom, b.bottom);
     }
     const lim = hojaAbierta()?.getBoundingClientRect() || { top: 0, bottom: alto };
+    /* 2.0.3 · Lo que de verdad se ve: sin la barra de estado del iPhone ni lo que tape el teclado. */
+    const vv = window.visualViewport, vTop = Math.max(vv ? vv.offsetTop : 0, margenSeguroArriba()), vBot = vv ? vv.offsetTop + vv.height : alto;
     r.top = Math.max(r.top, lim.top + pad, pad); r.bottom = Math.min(r.bottom, lim.bottom - pad, alto - pad);
     r.width = r.right - r.left; r.height = r.bottom - r.top;
     Object.assign(this.capa.style, { opacity: '1', left: `${r.left - pad}px`, top: `${r.top - pad}px`, width: `${r.width + pad * 2}px`, height: `${r.height + pad * 2}px` });
     /* La burbuja no tapa el foco: va del lado donde cabe (el de más aire si caben los dos). */
-    const h = this.burbuja.offsetHeight, margen = 14, arriba = r.top - pad - margen, abajo = alto - r.bottom - pad - margen;
+    const h = this.burbuja.offsetHeight, margen = 14, arriba = r.top - pad - margen - vTop, abajo = vBot - r.bottom - pad - margen;
     const cabeArriba = arriba >= h + 12, cabeAbajo = abajo >= h + 12;
     const ponerArriba = cabeArriba && cabeAbajo ? arriba >= abajo : cabeArriba || (!cabeAbajo && arriba >= abajo);
-    const top = ponerArriba ? r.top - pad - margen - h : r.bottom + pad + margen;
-    this.burbuja.style.bottom = 'auto'; this.burbuja.style.top = `${Math.max(12, Math.min(alto - h - 12, top))}px`;
+    let top = ponerArriba ? r.top - pad - margen - h : r.bottom + pad + margen;
+    /* Pasos dentro de la hoja de fiar: la burbuja va arriba de la hoja, sobre el nombre y la pregunta, que repite. */
+    if (this.arriba) top = Math.max(lim.top + 8, vTop + 8);
+    const minTop = vTop + 8;
+    this.burbuja.style.bottom = 'auto'; this.burbuja.style.top = `${Math.max(minTop, Math.min(vBot - h - 12, top))}px`;
   },
   quitar() { cancelAnimationFrame(this.raf); this.capa?.remove(); this.burbuja?.remove(); this.capa = this.burbuja = null; }
 };
@@ -67,7 +81,7 @@ const Guia = {
   practica: [
     { cuando: 'vista:inicio', sel: '[data-guia="anotar"]', texto: 'Anote su primer fiado. Toque aquí.', sigue: 'hoja-abierta:anotar' },
     { cuando: 'anotar-nuevo', sel: '[data-guia="cliente-nuevo"]', texto: 'Escriba el nombre de un cliente y toque «Seguir».', sigue: 'anotar-monto' },
-    { cuando: 'anotar-monto', sel: '#h-monto, #h-anotar', texto: 'Marque cuánto se llevó. Luego toque «Fiar».', sigue: 'anotado' }
+    { cuando: 'anotar-monto', sel: '.rapidos, #h-anotar', texto: 'Marque cuánto se llevó. Luego toque «Fiar».', sigue: 'anotado', arriba: true, apartaCon: 'monto' }
   ],
   /* ── Recorrido de la tienda de ejemplo ── */
   recorrido: [
@@ -83,6 +97,8 @@ const Guia = {
     if (modo === 'practica') {
       const p = this.practica[this.indice];
       if (paso === 'anotado' && this.indice === this.practica.length - 1) { this.indice++; this.felicitar(); return; }
+      /* 2.0.3 · Con el primer monto marcado, la burbuja se aparta: ya se ve la cifra y «Fiar $…» en naranja. */
+      if (p && p.apartaCon === clave && Foco.capa) { Foco.quitar(); return; }
       if (p && p.sigue === clave) { this.indice++; Foco.quitar(); setTimeout(() => this.pintarPractica(), 360); }
       else if (p && p.cuando === clave) setTimeout(() => this.pintarPractica(), 360);
       if (paso === 'hoja-cerrada' && nombre === 'anotar' && this.indice > 0 && this.indice < this.practica.length) {
@@ -96,12 +112,12 @@ const Guia = {
   pintarPractica() {
     const p = this.practica[this.indice]; if (!p || this.modo() !== 'practica') return;
     if (!(hojaAbierta() || document).querySelector(p.sel)) return;
-    Foco.mostrar(p.sel, p.texto, { paso: `Práctica · paso ${this.indice + 1} de ${this.practica.length}` });
+    Foco.mostrar(p.sel, p.texto, { paso: `Práctica · paso ${this.indice + 1} de ${this.practica.length}`, arriba: !!p.arriba });
   },
   felicitar() {
     Foco.quitar(); celebrar();
     const b = Object.assign(document.createElement('div'), { className: 'guia-burbuja' });
-    b.setAttribute('role', 'dialog'); b.setAttribute('aria-label', 'Guía'); b.style.top = '1rem';
+    b.setAttribute('role', 'dialog'); b.setAttribute('aria-label', 'Guía'); b.style.top = 'calc(env(safe-area-inset-top, 0px) + 1rem)';
     b.innerHTML = `<span class="paso">Práctica terminada</span><p>¡Muy bien! Así de fácil anota un fiado.</p><p style="font-weight:400;font-size:1.0625rem">Si fue de prueba, toque «Deshacer» abajo.</p><div class="guia-botones"><span></span><button type="button" class="btn-mini">Entendido</button></div>`;
     document.body.appendChild(b); anunciar('¡Muy bien! Así de fácil anota un fiado.'); if (typeof Voz !== 'undefined') Voz.decir('practica');
     b.querySelector('button').focus();

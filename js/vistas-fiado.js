@@ -105,7 +105,7 @@ function pasoMonto(est) {
   const total = () => est.sumados.reduce((s, v) => s + v, 0) + est.monto;
   /* 2.0.0 · La cifra va sobre el toldo, con lo que quedaría debiendo en vivo. Debajo: montos rápidos que suman,
      el detalle, lo de siempre, el teclado y «Fiar» en naranja, el mismo color del botón que abrió la hoja. */
-  pintarHoja(`<div data-guia="monto" style="display:flex;flex-direction:column;gap:.75rem">
+  pintarHoja(`<div data-guia="monto" class="hoja-fiar">
     <div class="hoja-toldo">
       <div class="fila-quien"><button type="button" class="quien" data-accion="cambiar" aria-label="${esc(c.nombre)}. Cambiar de cliente">${avatar(c)}<span class="nq">${esc(nombreCorto(c.nombre))}</span>${ic('abajo', 20, 2.4)}</button><button type="button" class="cerrar-hoja" data-cerrar aria-label="Cerrar">${ic('cerrar', 24, 2.4)}</button></div>
       <div class="centro"><h2 tabindex="-1" id="r-monto">¿Cuánto se llevó?</h2><output class="monto-grande" id="h-monto" aria-labelledby="r-monto" aria-live="polite">$0</output>
@@ -113,12 +113,12 @@ function pasoMonto(est) {
     </div><div class="toldo" aria-hidden="true"></div>
     <div class="pildoras-hoja"><span class="pildora atencion" id="h-cupo" role="status" hidden></span><span class="pildora atencion" id="h-raro" role="status" hidden>${ic('atencion', 18, 2.2)}Es mucho más de lo normal. Revise el monto.</span></div>
     <div class="rapidos" role="group" aria-label="Sumar al monto">${[1000, 2000, 5000, 10000].map(v => `<button type="button" data-rapido="${v}" aria-label="Sumar ${pesos(v)}">+${pesos(v).slice(1)}</button>`).join('')}</div>
-    <button type="button" class="campo-que" data-accion="detalle" aria-expanded="${est.detalle}" aria-controls="h-detalle"${est.detalle ? ' hidden' : ''}>${ic('lapiz', 20, 2.2)}<span>¿Qué se llevó? <span class="opcional">(opcional)</span></span></button>
     <div id="h-detalle" style="display:flex;flex-direction:column;gap:.625rem"${est.detalle ? '' : ' hidden'}>
       <div class="campo"><label for="h-que">¿Qué se llevó? <span class="opcional">(opcional)</span></label><input class="entrada" id="h-que" value="${esc(est.que)}" maxlength="${LIMITES.que}" placeholder="Ej.: pan, leche y huevos" autocomplete="off"></div>
       <div class="campo"><label for="h-llevo">¿Quién lo llevó? <span class="opcional">(opcional)</span></label><input class="entrada" id="h-llevo" value="${esc(est.llevo)}" maxlength="${LIMITES.llevo}" placeholder="Ej.: su hijo Daniel" autocomplete="off"></div>
     </div>
-    <div class="dos">
+    <div class="fila-extra">
+    <button type="button" class="campo-que" data-accion="detalle" aria-expanded="${est.detalle}" aria-controls="h-detalle"${est.detalle ? ' hidden' : ''}>${ic('lapiz', 20, 2.2)}<span>¿Qué se llevó? <span class="opcional">(opcional)</span></span></button>
       ${c.lista ? `<button type="button" class="chip" aria-pressed="${est.conLista}" data-accion="lista"><span class="ok">${ic('ok', 18, 2.6)}</span>${esc(c.lista.nombre || 'Lo de siempre')}</button>` : ''}
       <button type="button" class="chip" aria-pressed="false" data-accion="sumar">${ic('mas', 18, 2.6)}Sumar otro</button>
     </div>
