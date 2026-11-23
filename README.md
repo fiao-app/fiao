@@ -14,6 +14,7 @@ Fiao sigue el versionado semántico (MAJOR.MINOR.PATCH): las versiones 0.x fuero
 
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.0.1 | 2026-11-23 | Parche | Las tres frases de voz del rediseño, grabadas con la voz de siempre |
 | 2.0.0 | 2026-11-23 | Mayor | Rediseño de la interfaz: «Fiar» en el centro, colores con un solo trabajo y los 24 hallazgos de la crítica resueltos |
 | 1.7.2 | 2026-11-12 | Parche | La zona flotante de abajo ya no deja tocar lo que queda escondido detrás |
 | 1.7.1 | 2026-11-11 | Parche | Frase de voz al borrar varios clientes que deben |
@@ -169,7 +170,7 @@ Después de la entrega para la Muestra de Proyectos, una crítica de la interfaz
 - **Consejos de la primera vez.** Flotan sobre la pantalla en vez de empujar el contenido hacia abajo.
 - **Dos tamaños de cifra.** Protagonista (una por pantalla) y secundaria (en tarjetas). «Mostrar» usa una más grande porque se lee desde el otro lado del mostrador.
 - **Regla del toldo.** Lo llevan las cuatro secciones, la ficha y lo que se le muestra al vecino. Los formularios y las pantallas de un solo paso llevan cabecera lisa.
-- **Voz.** Tres frases cambiaron de texto («Fiar» en vez de «Anotar», la lupa y los tres puntos): `g-monto`, `ayuda-inicio` y `ayuda-cliente`. Se graban de nuevo con la misma voz en archivos nuevos (`g-monto-2.mp3`, `ayuda-inicio-2.mp3` y `ayuda-cliente-2.mp3`). Mientras no estén, Fiao no dice la frase vieja: calla, y «Escuchar» usa la voz del celular.
+- **Voz.** Tres frases cambiaron de texto («Fiar» en vez de «Anotar», la lupa y los tres puntos): `g-monto`, `ayuda-inicio` y `ayuda-cliente`. Se graban de nuevo con la misma voz en archivos nuevos (`g-monto-2.mp3`, `ayuda-inicio-2.mp3` y `ayuda-cliente-2.mp3`). Quedaron grabadas en la 2.0.1, en una sola toma con la misma voz y el mismo volumen de las demás.
 - **La dirección no cambia.** El QR de la Muestra de Proyectos sigue abriendo Fiao. Quien ya la tenía abierta ve el aviso «Hay una versión nueva de Fiao» con el botón «Actualizar».
 
 ## Decisiones que sostienen la confianza
