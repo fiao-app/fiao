@@ -1106,3 +1106,6 @@ dialog.hoja.con-toldo:has(.hoja-fiar) { overflow: hidden; }
 .guia-burbuja[popover] { border: 0; width: auto; height: auto; overflow: visible; inset: auto 0.75rem auto 0.75rem; }
 /* 2.0.3 · Con Fiao instalado en un iPhone con muesca o isla, ninguna hoja sube debajo de la barra de estado. */
 dialog.hoja:not(.con-toldo) { max-height: min(94dvh, calc(100dvh - env(safe-area-inset-top, 0px) - 0.5rem)); }
+/* 2.0.5 · Sin zoom por doble toque: los toques rápidos (borrar una cifra, sumar +1.000 dos veces) no agrandan la pantalla.
+   El zoom con dos dedos sigue disponible para quien lo necesite. Las reglas más específicas (deslizar, arrastrar la hoja) se mantienen. */
+* { touch-action: manipulation; }
