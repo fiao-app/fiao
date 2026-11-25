@@ -111,6 +111,7 @@ function pasoMonto(est) {
       <div class="centro"><h2 tabindex="-1" id="r-monto">¿Cuánto se llevó?</h2><output class="monto-grande" id="h-monto" aria-labelledby="r-monto" aria-live="polite">$0</output>
         <span class="suma" id="h-suma"></span><span class="quedaria" id="h-quedaria" aria-live="polite"></span></div>
     </div><div class="toldo" aria-hidden="true"></div>
+    <div class="hoja-fiar-medio">
     <div class="pildoras-hoja"><span class="pildora atencion" id="h-cupo" role="status" hidden></span><span class="pildora atencion" id="h-raro" role="status" hidden>${ic('atencion', 18, 2.2)}Es mucho más de lo normal. Revise el monto.</span></div>
     <div class="rapidos" role="group" aria-label="Sumar al monto">${[1000, 2000, 5000, 10000].map(v => `<button type="button" data-rapido="${v}" aria-label="Sumar ${pesos(v)}">+${pesos(v).slice(1)}</button>`).join('')}</div>
     <div id="h-detalle" style="display:flex;flex-direction:column;gap:.625rem"${est.detalle ? '' : ' hidden'}>
@@ -123,9 +124,15 @@ function pasoMonto(est) {
       <button type="button" class="chip" aria-pressed="false" data-accion="sumar">${ic('mas', 18, 2.6)}Sumar otro</button>
     </div>
     ${teclado()}
+    </div>
     <button type="button" class="btn fiar" id="h-anotar" disabled>Marque el monto</button>
   </div>`, d => {
     d.classList.add('con-toldo');
+    /* 2.0.4 · Si el medio no cabe, se desplaza solo él y una línea fina lo separa de «Fiar». */
+    const medio = d.querySelector('.hoja-fiar-medio');
+    const marcarDesborde = () => medio.classList.toggle('desborda', medio.scrollHeight > medio.clientHeight + 1);
+    if (window.ResizeObserver) { const ro = new ResizeObserver(marcarDesborde); ro.observe(medio); [...medio.children].forEach(n => ro.observe(n)); }
+    requestAnimationFrame(marcarDesborde);
     const out = d.querySelector('#h-monto'), suma = d.querySelector('#h-suma'), aviso = d.querySelector('#h-cupo'), btn = d.querySelector('#h-anotar'), quedaria = d.querySelector('#h-quedaria');
     const que = d.querySelector('#h-que'), llevo = d.querySelector('#h-llevo');
     const pintar = () => {

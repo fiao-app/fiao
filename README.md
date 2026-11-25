@@ -14,6 +14,7 @@ Fiao sigue el versionado semántico (MAJOR.MINOR.PATCH): las versiones 0.x fuero
 
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.0.4 | 2026-11-24 | Parche | La hoja de fiar tiene tres zonas: el toldo arriba, el medio (lo único que se desplaza si no cabe) y «Fiar» abajo en su propio espacio, sin tapar el teclado; en Cobros, «¿Por qué?» va en su propia línea y el aviso del horario tiene el interlineado parejo |
 | 2.0.3 | 2026-11-23 | Parche | «Fiar» se ve sin desplazar en la hoja de fiar (el teclado se ajusta al alto de la pantalla y el botón queda pegado abajo si no cabe); la burbuja del paso 3 de la guía ya no se recorta en iPhone y se aparta al marcar el monto; el ojo de «Ocultar montos» se ve abierto o tachado según el estado; nada queda debajo de la barra de estado del iPhone |
 | 2.0.2 | 2026-11-23 | Parche | La guía del primer uso y los avisos de abajo se ven completos: la tarjeta de acciones de la ficha ya no se cuela en ellos; el foco abraza el botón «Fiar» entero y la burbuja nunca tapa lo que señala |
 | 2.0.1 | 2026-11-23 | Parche | Las tres frases de voz del rediseño, grabadas con la voz de siempre |
