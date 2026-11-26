@@ -14,6 +14,7 @@ Fiao sigue el versionado semántico (MAJOR.MINOR.PATCH): las versiones 0.x fuero
 
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.3.0 | 2026-11-26 | Menor | Portada inmediata (Fiao se ve antes de que cargue el JavaScript) y pantallas de arranque para iPhone; capturas en el manifiesto para la instalación en Android; la gráfica del Resumen se recorre deslizando el dedo o con flechas de 48 px y muestra su escala; «Recuperó el X % de lo que fió»; nuevas pantallas Novedades y Accesibilidad en Ajustes; «Animaciones: Todas / Pocas»; el Cuadre dice «fiados» como el Resumen; pruebas automáticas en `pruebas/` |
 | 2.2.0 | 2026-11-26 | Menor | Tema Oscuro: Apariencia = Automático (sigue al celular), Color, Oscuro o Tinta; fondo azul noche, tarjetas un tono más claras y la marca intacta (letra 14,1:1, gris 7,2:1, enlaces 8,2:1); la página del vecino sigue el modo de su celular; el recibo como imagen sigue claro; 0 fallas de axe en el tema oscuro y Color y Tinta idénticos píxel a píxel |
 | 2.1.1 | 2026-11-26 | Parche | Las cifras «de hoy» (Libreta, Cuadre, recordatorios) usan el día de Colombia y no el de UTC: lo anotado después de las 7 p. m. ya no se pasa al día siguiente; la versión se escribe en un solo lugar (`js/version.js`) y Ajustes muestra la real; los filtros de la Libreta toman su nombre del texto visible (WCAG 2.5.3); anillo de foco blanco sobre las zonas azules; el recorrido guiado retiene el foco (fondo inerte, Escape para saltar); «Atiende» se toca en 44 px; globo de pendientes más legible; 0 fallas de axe en las 29 vistas |
 | 2.1.0 | 2026-11-26 | Menor | Resumen por periodos: Día, Mes, Año, Todo o un rango de fechas elegido en un calendario, con la gráfica «Fió y recuperó» en pares y el detalle de cada día o mes; el menú de abajo ilumina entera la pestaña activa (ícono y nombre) en una cápsula cobalto, también en Tinta |
@@ -176,6 +177,7 @@ Después de la entrega para la Muestra de Proyectos, una crítica de la interfaz
 - **Resumen por periodos (2.1.0).** Día, Mes, Año y Todo, o «Elegir día o rango de fechas» con atajos (Hoy, Ayer, Últimos 14 días, Este mes, Mes pasado) y un calendario para marcar de qué día a qué día. Cada periodo muestra lo que recuperó y lo que fió, cuánto más o menos le deben, el promedio por fiado y una gráfica de barras en pares: se toca una barra (o se recorre con las flechas del teclado) para ver las cifras exactas de ese día o mes. «En la calle» arriba sigue siendo el valor de hoy, y «Quién debe más» y «A quién revisar» van debajo, bajo «Así están sus cuentas hoy». En Tinta, lo recuperado se distingue por el rayado y no solo por el color. Los enlaces de antes (#resumen y #resumen-AAAAMM) siguen llevando al mes.
 - **Menú de abajo (2.1.0).** La pestaña activa se ilumina entera —ícono y nombre en blanco— sobre una cápsula cobalto sólida; en Tinta, azul oscuro con borde negro. La muestra del menú en «Así se mueve por Fiao» sigue el mismo diseño.
 - **Tema Oscuro (2.2.0).** En Ajustes › Apariencia: Automático, Color, Oscuro y Tinta. Automático sigue al celular: oscuro si el celular está en modo oscuro y Tinta si pide más contraste. Los colores pasan por alias de papel (`--superficie`, `--azul-letra`, `--verde-letra`, `--alerta-letra`, `--sobre-moneda`) para que cada tema decida sin tocar los componentes.
+- **Primera impresión y sustentación (2.3.0).** Portada en el HTML para la primera visita (el QR), capturas de instalación y pantallas de arranque para iPhone. En Ajustes, «Novedades» (lo nuevo de cada versión, en palabras del tendero) y «Accesibilidad» (meta WCAG 2.2 AA, qué se puede ajustar, cómo se probó y qué falta). Las pruebas automáticas viven en `pruebas/` (ver su README).
 - **Mostrar.** Arriba va el nombre de la tienda y la fecha, para que el vecino sepa de dónde viene la cuenta. Lo último que se anotó lleva ícono y hora, igual que en la página del vecino.
 - **Consejos de la primera vez.** Flotan sobre la pantalla en vez de empujar el contenido hacia abajo.
 - **Dos tamaños de cifra.** Protagonista (una por pantalla) y secundaria (en tarjetas). «Mostrar» usa una más grande porque se lee desde el otro lado del mostrador.
@@ -254,10 +256,12 @@ js/guia.js              Guía del primer uso: práctica, recorrido y primeros pa
 js/voz.js               La voz de Fiao: qué frase suena en cada momento
 js/ilustraciones.js     Ilustraciones del primer acceso, con un mismo sistema de composición
 js/vistas-*.js          Las pantallas y las hojas (anotar, pagó, permiso)
+js/extras.js            Pantallas Novedades y Accesibilidad
 js/resumen-periodos.js  Resumen por periodos: Día, Mes, Año, Todo, rango, gráfica y hoja «Elegir días»
 js/app.js               Rutas y arranque
 js/vecino.js            Pantalla del vecino
 audio/                  Las frases grabadas de la voz de Fiao
+pruebas/                Pruebas automáticas: funcionamiento, correcciones, accesibilidad y versión
 sw.js                   Funciona sin internet (y avisa cuando hay una versión nueva)
 manifest.webmanifest    Instalación como app
 ```

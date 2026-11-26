@@ -113,7 +113,9 @@ function htmlPeriodoResumen(per, mapa) {
   const balance = kp.fi === 0 && kp.pa === 0
     ? { ic: 'menos', t: 'Sin movimientos en este periodo', s: 'No hay fiados ni pagos anotados.' }
     : { ic: neto >= 0 ? 'mas' : 'menos', t: neto === 0 ? 'Le deben lo mismo que antes' : `Le deben ${monto(Math.abs(neto))} ${neto > 0 ? 'más' : 'menos'}`,
-        s: kp.nf ? `${kp.nf} ${kp.nf === 1 ? 'fiado' : 'fiados'} en este periodo<br>Promedio por fiado: ${monto(Math.round(kp.fi / kp.nf))}` : 'Ningún fiado en este periodo' };
+        s: (kp.nf ? `${kp.nf} ${kp.nf === 1 ? 'fiado' : 'fiados'} en este periodo<br>Promedio por fiado: ${monto(Math.round(kp.fi / kp.nf))}` : 'Ningún fiado en este periodo')
+          /* 2.3.0 · Qué parte de lo fiado volvió en el periodo (puede pasar de 100 % si cobró deudas viejas). */
+          + (kp.fi > 0 && !Vista.oculto ? `<br>Recuperó el ${Math.round(kp.pa / kp.fi * 100)} % de lo que fió` : '') };
   const g0 = grupos[sel];
   const barras = grupos.map((g, i) => `<button type="button" class="dia" tabindex="${i === sel ? 0 : -1}" aria-pressed="${i === sel}" data-largo="${esc(g.largo)}" data-fi="${monto(g.fi)}" data-pa="${monto(g.pa)}" aria-label="${esc(g.largo)}: fió ${monto(g.fi)}, recuperó ${monto(g.pa)}"><span class="b fio" style="height:${g.fi / mx * 100}%"></span><span class="b pag" style="height:${g.pa / mx * 100}%"></span></button>`).join('');
   const eje = grupos.map(g => `<span${g.hoy ? ' class="hoy"' : ''}>${g.et}</span>`).join('');
@@ -124,21 +126,39 @@ function htmlPeriodoResumen(per, mapa) {
     <div class="balance"><span class="ic">${ic(balance.ic, 22, 2.6)}</span><div><b>${balance.t}</b><span>${balance.s}</span></div></div>
     <section class="tarjeta grafica" aria-labelledby="t-gr"><h2 class="titulo-seccion" id="t-gr">${titulo}</h2>
       <div class="leyenda-gr" aria-hidden="true"><span><i class="l-fio"></i>Fió</span><span><i class="l-pag"></i>Recuperó</span></div>
+      <div class="escala" aria-hidden="true"><span>${monto(mx)}</span></div>
       <div class="barras" role="group" aria-label="Fiado y recuperado, uno por uno" style="--gap:${gap}">${barras}</div>
       <div class="ejex" aria-hidden="true" style="--gap:${gap}">${eje}</div>
-      <div class="detalle-dia" aria-live="polite"><b>${esc(g0.largo)}</b><div class="par"><span>Fió <b class="n">${monto(g0.fi)}</b></span><span>Recuperó <b class="v">${monto(g0.pa)}</b></span></div></div>
+      <div class="detalle-fila"><button type="button" class="btn-icono" data-paso="-1" aria-label="${unidadG(grupos)} anterior"${sel === 0 ? ' disabled' : ''}>${ic('volver', 24, 2.4)}</button>
+        <div class="detalle-dia" aria-live="polite"><b>${esc(g0.largo)}</b><div class="par"><span>Fió <b class="n">${monto(g0.fi)}</b></span><span>Recuperó <b class="v">${monto(g0.pa)}</b></span></div></div>
+        <button type="button" class="btn-icono" data-paso="1" aria-label="${unidadG(grupos)} siguiente"${sel === grupos.length - 1 ? ' disabled' : ''}>${ic('sigue', 24, 2.4)}</button></div>
+      <p class="ayuda pista-grafica">Deslice el dedo sobre las barras o use las flechas.</p>
     </section>`;
 }
 
+/** ¿Las barras son días o meses? (para las flechas) */
+function unidadG(g) { return /^[A-Za-zé]+ de \d{4}$/.test(g[0]?.largo || '') ? 'Mes' : 'Día'; }
 /** Barras que se tocan (o se recorren con las flechas) para ver cuánto fió y recuperó ese día o mes. */
 function montarGraficaResumen(r, per, mapa) {
   const bar = r.querySelector('.barras'); if (!bar) return;
   const det = r.querySelector('.detalle-dia');
+  const lista = [...bar.querySelectorAll('.dia')];
+  const ant = r.querySelector('[data-paso="-1"]'), sig = r.querySelector('[data-paso="1"]');
+  let actual = lista.find(x => x.getAttribute('aria-pressed') === 'true');
   const poner = b => {
-    bar.querySelectorAll('.dia').forEach(x => { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); x.tabIndex = x === b ? 0 : -1; });
+    if (!b || b === actual) return; actual = b;
+    lista.forEach(x => { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); x.tabIndex = x === b ? 0 : -1; });
     det.innerHTML = `<b>${esc(b.dataset.largo)}</b><div class="par"><span>Fió <b class="n">${esc(b.dataset.fi)}</b></span><span>Recuperó <b class="v">${esc(b.dataset.pa)}</b></span></div>`;
+    const i = lista.indexOf(b); if (ant) ant.disabled = i === 0; if (sig) sig.disabled = i === lista.length - 1;
   };
   bar.addEventListener('click', ev => { const b = ev.target.closest('.dia'); if (b) poner(b); });
+  /* 2.3.0 · Deslizar el dedo sobre la gráfica la recorre (las barras finas del mes no piden puntería). */
+  const enX = x => { const rs = bar.getBoundingClientRect(); const i = Math.max(0, Math.min(lista.length - 1, Math.floor((x - rs.left) / rs.width * lista.length))); return lista[i]; };
+  let arrastra = false;
+  bar.addEventListener('pointerdown', ev => { arrastra = true; poner(enX(ev.clientX)); });
+  bar.addEventListener('pointermove', ev => { if (arrastra) poner(enX(ev.clientX)); });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(t => bar.addEventListener(t, () => { arrastra = false; }));
+  [[ant, -1], [sig, 1]].forEach(([b, d]) => b?.addEventListener('click', () => { const i = lista.indexOf(actual) + d; if (lista[i]) poner(lista[i]); }));
   bar.addEventListener('keydown', ev => {
     const lista = [...bar.querySelectorAll('.dia')], i = lista.indexOf(document.activeElement);
     if (i < 0) return;

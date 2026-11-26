@@ -267,7 +267,7 @@ V.cuadre = () => {
   return {
     titulo: 'Cuadre de hoy',
     html: `<div class="pantalla">${barra({ titulo: 'Cuadre de hoy', volver: 'resumen', sub: mayuscula(fechaLarga(hoy)), ayuda: false })}<main class="contenido" style="gap:.875rem">
-      ${cifra('Fió hoy', x.h.fiado, x.h.nFiado ? `${x.h.nFiado} ${x.h.nFiado === 1 ? 'anotación' : 'anotaciones'}` : 'Nada anotado hoy', comparacion(x.h.fiado, x.a.fiado, 'ayer'), comparacion(x.h.fiado, x.s.fiado, x.diaSemana))}
+      ${cifra('Fió hoy', x.h.fiado, x.h.nFiado ? `${x.h.nFiado} ${x.h.nFiado === 1 ? 'fiado' : 'fiados'}` : 'Nada anotado hoy', comparacion(x.h.fiado, x.a.fiado, 'ayer'), comparacion(x.h.fiado, x.s.fiado, x.diaSemana))}
       ${cifra('Cobró hoy', x.h.pagos, x.h.nPagos ? `${x.h.nPagos} ${x.h.nPagos === 1 ? 'pago' : 'pagos'}` : 'Ningún pago hoy', comparacion(x.h.pagos, x.a.pagos, 'ayer'), comparacion(x.h.pagos, x.s.pagos, x.diaSemana),
         medios.length ? `<dl class="cuadre-medios">${medios.map(([k, n]) => `<div><dt>${n}</dt><dd>${monto(x.h.medios[k])}</dd></div>`).join('')}</dl>${x.h.medios.nequi || x.h.medios.breb ? '<p class="ayuda">Lo de Nequi y Bre-B no está en el cajón: revíselo en su celular.</p>' : ''}` : '')}
       <section class="tarjeta" aria-labelledby="t-cl"><h2 class="titulo-seccion" id="t-cl">Clientes</h2>

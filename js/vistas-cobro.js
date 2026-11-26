@@ -232,7 +232,7 @@ V.ajustes = () => {
       <section class="tarjeta" aria-labelledby="t-pantalla"><h2 class="titulo-seccion" id="t-pantalla">Pantalla y sonido</h2>
         ${segmento('letra', 'Tamaño de la letra', '', [['normal', 'Normal', 'font-size:1rem'], ['grande', 'Grande', 'font-size:1.125rem'], ['mas', 'Más grande', 'font-size:1.25rem']], letra)}
         ${segmento('tema', 'Apariencia', 'Automático sigue a su celular. Oscuro descansa la vista de noche. Tinta, azul y negro sobre blanco, se lee mejor al sol.', [['auto', `<span class="muestra auto" aria-hidden="true"></span>Automático`], ['color', `<span class="muestra color" aria-hidden="true"></span>Color`], ['oscuro', `<span class="muestra oscuro" aria-hidden="true"></span>Oscuro`], ['tinta', `<span class="muestra tinta" aria-hidden="true"></span>Tinta`]], tema, 'cuatro')}
-        ${segmento('movimiento', 'Movimiento', 'Reducido: las pantallas cambian sin animaciones.', [['completo', 'Completo'], ['reducido', 'Reducido']], mov)}
+        ${segmento('movimiento', 'Animaciones', 'Pocas: las pantallas cambian sin animaciones.', [['completo', 'Todas'], ['reducido', 'Pocas']], mov)}
         ${interruptor('ocultar', 'Ocultar montos al abrir', 'Para cuando hay gente en el mostrador', t.ocultarAlAbrir)}
         ${interruptor('voz', 'Voz de Fiao', 'Una frase corta después de cada acción', t.voz !== false)}</section>
       <section class="tarjeta" aria-labelledby="t-tono"><h2 class="titulo-seccion" id="t-tono">Cómo suenan sus mensajes</h2>
@@ -246,6 +246,8 @@ V.ajustes = () => {
       <ul class="lista">
         ${enlace('tienda', 'tienda', 'Su tienda y cómo le pagan')}
         ${enlace('guia', 'idea', 'Ver cómo funciona Fiao')}
+        ${enlace('novedades', 'estrella', 'Novedades de Fiao')}
+        ${enlace('accesibilidad', 'ojo', 'Accesibilidad')}
         ${t.ocultarPasos ? enlace('', 'ok', 'Mostrar los primeros pasos', 'pasos') : ''}
         ${inst ? enlace('', 'celular', 'Instalar Fiao en este celular', 'instalar') : ''}
         ${enlace('restaurar', 'archivo', 'Recuperar desde una copia')}

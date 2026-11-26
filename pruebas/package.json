@@ -1,0 +1,12 @@
+{
+  "name": "fiao-pruebas",
+  "private": true,
+  "description": "Pruebas automáticas de Fiao (funcionamiento, correcciones, accesibilidad y versión).",
+  "scripts": {
+    "servir": "cd .. && python3 -m http.server 8140",
+    "version": "node version.js",
+    "funcionamiento": "node funcionamiento.js && node correcciones.js",
+    "accesibilidad": "node accesibilidad.js 390 color normal && node accesibilidad.js 390 oscuro grande && node accesibilidad.js 360 tinta mas"
+  },
+  "devDependencies": { "playwright": "^1.48.0", "axe-core": "^4.10.0" }
+}

@@ -1232,3 +1232,23 @@ html[data-tema="oscuro"] .muestra.oscuro, .muestra.oscuro { background: conic-gr
 html[data-tema="oscuro"] .muestra.auto, html[data-tema="oscuro"] .muestra.color { box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.35); }
 /* Apariencia con cuatro opciones: dos por fila */
 .segmento.cuatro { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-radius: 1.75rem; }
+
+/* ───── 2.3.0 · Primera impresión y extras ───── */
+/* Portada inmediata: se pinta con el HTML, antes de que llegue el JavaScript */
+.arranque { min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; background-color: #3346E0; color: #FFFFFF; font-family: var(--letra-titulo); }
+.arranque img { width: 5.5rem; height: 5.5rem; border-radius: 1.5rem; box-shadow: 0 14px 22px rgba(20, 27, 52, 0.35); }
+.arranque b { font-size: 2.25rem; font-weight: 800; letter-spacing: -0.02em; }
+@media (prefers-color-scheme: dark) { .arranque { background-color: #2636B8; } }
+/* Gráfica: escala, flechas y deslizar */
+.escala { position: relative; height: 0; }
+.escala span { position: absolute; top: -0.125rem; left: 0; font-size: 0.875rem; font-weight: 600; color: var(--gris); }
+.grafica .barras { touch-action: pan-y; margin-top: 1.25rem; background-image: linear-gradient(var(--divisor), var(--divisor)); background-size: 100% 1px; background-repeat: no-repeat; background-position: 0 0; }
+.detalle-fila { display: flex; align-items: center; gap: 0.375rem; }
+.detalle-fila .detalle-dia { flex: 1; min-width: 0; }
+.detalle-fila .btn-icono { width: 3rem; height: 3rem; flex-shrink: 0; }
+.detalle-fila .btn-icono:disabled { opacity: 0.35; }
+.pista-grafica { margin: 0; font-size: 0.9375rem; }
+/* Novedades y Accesibilidad */
+.novedad { display: flex; flex-direction: column; gap: 0.25rem; }
+.novedad ul, .lista-ac { margin: 0.25rem 0 0; padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.375rem; }
+.pildora-nueva { display: inline-block; margin-left: 0.375rem; padding: 0.0625rem 0.625rem; border-radius: 999px; background: var(--moneda); color: var(--sobre-moneda); font-size: 0.875rem; font-weight: 800; vertical-align: 0.125rem; }
