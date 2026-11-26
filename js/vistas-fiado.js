@@ -778,7 +778,7 @@ V.cliente = (id, extra) => {
           <ul class="lista menu-hoja">
             ${permisoOk(c) && e.saldo > 0 ? fila('cuenta', 'whatsapp', 'Enviarle su cuenta', 'Por WhatsApp, con el enlace a su cuenta') : ''}
             ${c.cel ? fila('chat', 'whatsapp', `Escribirle a ${nc}`, 'Abre su chat de WhatsApp') : ''}
-            ${!c.cupo ? fila('cupo', 'grafica', 'Ponerle cupo', 'Hasta cuánto le fía') : ''}
+            ${!c.cupo ? fila('cupo', 'mano', 'Ponerle cupo', 'Hasta cuánto le fía') : ''}
             ${fila('borrar', 'basura', `Borrar a ${nc}`, 'Fiao le pregunta antes', 'peligro')}
           </ul>
           ${permisoOk(c) && e.saldo > 0 ? `<p class="ayuda" style="display:flex;justify-content:center">${porQue('enlace', '¿Qué ve el vecino en su cuenta?')}</p>` : ''}`, d => {
