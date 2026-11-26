@@ -40,6 +40,7 @@ const ICONOS = {
   basura: '<path d="M4 6h16"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/><path d="M6 6l1 13.1a2 2 0 0 0 2 1.9h6a2 2 0 0 0 2-1.9L18 6"/><path d="M10 10.5v6M14 10.5v6"/>',
   tienda: '<path d="M3 9l1.5-5h15L21 9"/><path d="M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0"/><path d="M5 12v8h14v-8"/><path d="M10 20v-5h4v5"/>',
   ayuda: '<circle cx="12" cy="12" r="9.5"/><path d="M9.3 9.3a2.8 2.8 0 0 1 5.4 1c0 1.9-2.7 2.4-2.7 4"/><path d="M12 17.6h.01"/>',
+  microfono: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/>',
   altavoz: '<path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/>',
   dinero: '<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/><path d="M6 12h.01M18 12h.01"/>',
   estrella: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
@@ -473,6 +474,7 @@ function abrirAyuda() {
     <ul style="margin:0;padding-left:1.25rem;display:flex;flex-direction:column;gap:.5rem;font-size:1.125rem;line-height:1.5">${lineas.map(l => `<li>${l}</li>`).join('')}</ul>
     ${botonEscuchar(lineas.join(' '), `ayuda-${ruta}`)}
     <details class="mas"><summary>${ic('libreta', 22)}Palabras de Fiao</summary><div class="interior"><dl style="margin:0;display:flex;flex-direction:column;gap:.5rem;font-size:1.0625rem">${GLOSARIO.map(([p, d]) => `<div><dt style="display:inline;font-weight:600">${p}:</dt> <dd style="display:inline;margin:0">${d}</dd></div>`).join('')}</dl></div></details>
+    ${Datos.tienda && tienda().asistente ? `<button type="button" class="btn-sec" data-accion="asistente">${ic('microfono', 22, 2.2)}Dígale a Fiao</button><p class="ayuda" style="margin:0">También se abre manteniendo presionado «Fiar».</p>` : ''}
     <a class="btn-link" href="#guia">Ver cómo funciona Fiao</a>`, montarEscuchar, { nombre: 'ayuda' });
 }
 

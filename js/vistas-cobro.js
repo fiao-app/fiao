@@ -239,6 +239,11 @@ V.ajustes = () => {
         ${segmento('movimiento', 'Animaciones', 'Pocas: las pantallas cambian sin animaciones.', [['completo', 'Todas'], ['reducido', 'Pocas']], mov)}
         ${interruptor('ocultar', 'Ocultar montos', 'Para cuando hay gente en el mostrador. Sigue así al volver a abrir Fiao.', Vista.oculto)}
         ${interruptor('voz', 'Voz de Fiao', 'Una frase corta después de cada acción', t.voz !== false)}</section>
+      <section class="tarjeta" aria-labelledby="t-asis"><h2 class="titulo-seccion" id="t-asis">${ic('microfono', 22, 2.2)} Dígale a Fiao <span class="pildora-nueva">Nuevo</span></h2>
+        ${interruptor('asistente', 'Hablarle a Fiao', 'Mantenga presionado «Fiar» y dígale qué hacer: «Fíale cinco mil a Keyla».', !!t.asistente)}
+        ${t.asistente ? interruptor('asistenteVoz', 'Responder en voz alta', 'Fiao le lee las cifras con la voz del celular.', t.asistenteVoz !== false) : ''}
+        ${t.asistente ? `<button type="button" class="btn-sec" data-accion="asistente">${ic('microfono', 22, 2.2)}Probar ahora</button>` : ''}
+        <p class="ayuda">Su voz la convierte en texto el servicio de su celular (Google o Apple). Lo que dice se entiende y se guarda solo en este celular.</p></section>
       <section class="tarjeta" aria-labelledby="t-tono"><h2 class="titulo-seccion" id="t-tono">Cómo suenan sus mensajes</h2>
         <div class="segmento" role="radiogroup" aria-labelledby="t-tono" data-grupo="tono">${Object.entries(TONOS_CORTOS).map(([k, n]) => `<button type="button" role="radio" aria-checked="${k === tono}" data-valor="${k}">${n}</button>`).join('')}</div>
         <div class="burbuja" id="a-ejemplo" style="font-size:1rem;line-height:1.45" aria-live="polite">${vistaMensaje(ejemploMensaje(tono))}</div>
@@ -275,6 +280,9 @@ V.ajustes = () => {
       });
       r.querySelectorAll('[data-interruptor]').forEach(b => b.addEventListener('click', async () => {
         const k = b.dataset.interruptor;
+        /* 2.4.0 · Dígale a Fiao */
+        if (k === 'asistente') { t.asistente = !t.asistente; await guardarTienda(t); vibrar(10); mostrarRuta({ animar: false }); if (t.asistente) avisar('Listo. Mantenga presionado «Fiar» para hablarle a Fiao.', { icono: 'ok' }); return; }
+        if (k === 'asistenteVoz') { t.asistenteVoz = t.asistenteVoz === false; b.setAttribute('aria-checked', t.asistenteVoz); await guardarTienda(t); vibrar(10); return; }
         if (k === 'voz') { t.voz = t.voz === false; b.setAttribute('aria-checked', t.voz); await guardarTienda(t); vibrar(10); if (t.voz) Voz.decir('cambios'); else Voz.callar(); return; }
         /* 2.3.1 · Se aplica de una vez (como el ojo de la Libreta) y queda para la próxima vez que abra Fiao. */
         t.ocultarAlAbrir = !Vista.oculto; Vista.oculto = t.ocultarAlAbrir; b.setAttribute('aria-checked', t.ocultarAlAbrir); await guardarTienda(t); vibrar(10); avisar(Vista.oculto ? 'Montos ocultos.' : 'Montos visibles.', { icono: Vista.oculto ? 'ojoNo' : 'ojo' });

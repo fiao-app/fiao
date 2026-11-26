@@ -1259,3 +1259,30 @@ html[data-tema="oscuro"] .muestra.auto, html[data-tema="oscuro"] .muestra.color 
 /* Avisos de abajo en Oscuro: superficie elevada con borde, letra blanca y botones con contorno visible */
 html[data-tema="oscuro"] .aviso { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14), 0 14px 32px rgba(0, 0, 0, 0.6); }
 html[data-tema="oscuro"] .aviso button:not(.fuerte):not(.cerrar) { background: rgba(255, 255, 255, 0.12); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28); }
+
+/* ───── 2.4.0 · Dígale a Fiao ───── */
+.nav .fiar { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+.nav .fiar.apretado .ico { box-shadow: 0 0 0 0.3125rem var(--superficie), 0 0 0 0.625rem var(--moneda); transition: box-shadow 450ms var(--suave); }
+.asis { display: flex; flex-direction: column; gap: 0.875rem; align-items: stretch; }
+.asis-mic { align-self: center; width: 6rem; height: 6rem; border: none; border-radius: 50%; background: var(--azul); color: var(--blanco); display: flex; align-items: center; justify-content: center; box-shadow: 0 12px 26px -12px rgba(51, 70, 224, 0.8); cursor: pointer; }
+.asis-mic.escucha { animation: asis-pulso 1.4s var(--suave) infinite; }
+@keyframes asis-pulso { 0%, 100% { box-shadow: 0 0 0 0 rgba(51, 70, 224, 0.45); } 50% { box-shadow: 0 0 0 16px rgba(51, 70, 224, 0); } }
+html[data-movimiento="reducido"] .asis-mic.escucha { animation: none; box-shadow: 0 0 0 6px var(--azul-fondo); }
+.asis-estado { margin: 0; text-align: center; font-family: var(--letra-titulo); font-size: 1.25rem; font-weight: 800; }
+.asis-texto, .asis-dicho { margin: 0; text-align: center; font-size: 1.125rem; color: var(--gris); min-height: 1.5rem; }
+.asis-ejemplos, .asis-privacidad { margin: 0; text-align: center; }
+.asis-nota { margin: 0; padding: 0.75rem 1rem; border-radius: 1rem; background: var(--azul-fondo); color: var(--tinta); }
+.asis-form { display: flex; flex-direction: column; gap: 0.625rem; }
+.asis-respuesta { display: flex; flex-direction: column; gap: 0.375rem; padding: 1rem; border-radius: 1.25rem; background: var(--azul-fondo-2); box-shadow: inset 0 0 0 1px var(--divisor); }
+.asis-respuesta > b { font-family: var(--letra-titulo); font-size: 1.375rem; line-height: 1.75rem; font-weight: 800; }
+.asis-lista { margin: 0.25rem 0 0; padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.375rem; }
+.asis-lista b { margin-left: 0.25rem; }
+.asis-opciones { display: grid; grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); gap: 0.5rem; }
+.asis-tarjeta { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; padding: 1.25rem 1rem; border-radius: 1.5rem; text-align: center; background: var(--moneda-fondo); }
+.asis-tarjeta.pago { background: var(--verde-fondo); }
+.asis-tipo { font-size: 1rem; font-weight: 700; color: var(--gris); text-transform: uppercase; letter-spacing: 0.04em; }
+.asis-monto { font-family: var(--letra-titulo); font-size: 2.5rem; line-height: 3rem; font-weight: 800; }
+.asis-quien { font-size: 1.25rem; }
+.asis-detalle, .asis-queda { font-size: 1.0625rem; color: var(--gris); }
+html[data-tema="tinta"] .asis-respuesta, html[data-tema="tinta"] .asis-tarjeta { background: #FFFFFF; box-shadow: inset 0 0 0 2px #111111; }
+html[data-tema="tinta"] .asis-mic { background: #1D3BA8; box-shadow: none; }
