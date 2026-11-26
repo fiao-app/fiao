@@ -27,6 +27,8 @@ const Foco = {
       ? `${paso ? `<span class="paso">${paso}</span>` : ''}<p>${html}</p><div class="guia-botones">${acciones}</div>`
       : `<div class="guia-cabeza"><span class="paso">${paso}</span>${saltar}</div><p>${html}</p>`;
     raiz.append(this.capa, this.burbuja);
+    /* 2.1.1 · Con botones (el recorrido), la burbuja es modal: el fondo queda inerte y Escape la salta. */
+    if (acciones) { this.burbuja.setAttribute('aria-modal', 'true'); Guia.bloquearFondo(true); }
     /* 2.0.3 · Dentro de una hoja, la burbuja sube a la capa superior (popover): Safari recorta lo que
        sobresale de la hoja y la burbuja se veía cortada. Donde no hay popover, se queda dentro de la hoja. */
     if (hojaAbierta() && this.burbuja.showPopover) { this.burbuja.setAttribute('popover', 'manual'); try { this.burbuja.showPopover(); } catch (e) { /* sigue dentro de la hoja */ } }
@@ -68,10 +70,24 @@ const Foco = {
     const minTop = vTop + 8;
     this.burbuja.style.bottom = 'auto'; this.burbuja.style.top = `${Math.max(minTop, Math.min(vBot - h - 12, top))}px`;
   },
-  quitar() { cancelAnimationFrame(this.raf); this.capa?.remove(); this.burbuja?.remove(); this.capa = this.burbuja = null; }
+  quitar() { cancelAnimationFrame(this.raf); this.capa?.remove(); this.burbuja?.remove(); this.capa = this.burbuja = null; Guia.bloquearFondo(false); }
 };
 
 const Guia = {
+  /** 2.1.1 · Mientras habla la guía, el teclado y el lector de pantalla no se van al fondo atenuado. */
+  bloquearFondo(si) {
+    const app = document.getElementById('app'); if (app) app.inert = !!si;
+    if (si && !this._esc) { this._esc = ev => {
+      const bur = document.querySelector('.guia-burbuja[aria-modal="true"]'); if (!bur) return;
+      if (ev.key === 'Escape') { ev.preventDefault(); bur.querySelector('[data-guia-saltar]')?.click(); return; }
+      if (ev.key !== 'Tab') return;
+      /* El Tab da la vuelta dentro de la burbuja */
+      const bs = [...bur.querySelectorAll('button')]; if (!bs.length) return;
+      const i = bs.indexOf(document.activeElement), j = ev.shiftKey ? (i <= 0 ? bs.length - 1 : i - 1) : (i === bs.length - 1 || i < 0 ? 0 : i + 1);
+      ev.preventDefault(); bs[j].focus();
+    }; document.addEventListener('keydown', this._esc); }
+    if (!si && this._esc) { document.removeEventListener('keydown', this._esc); this._esc = null; }
+  },
   modo() { return (Datos.tienda && Datos.tienda.guia) || 'hecha'; },
   async poner(modo) { const t = tienda(); t.guia = modo; await guardarTienda(t); },
   async terminar() { Foco.quitar(); await this.poner('hecha'); this.indice = 0; },

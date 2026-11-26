@@ -94,7 +94,8 @@ function totalEnLaCalle() { return clientes().reduce((s, c) => s + Math.max(0, s
 function totalesDelDia(hoy = new Date()) {
   const d = isoDia(hoy); let fiado = 0, pagos = 0;
   for (const m of Datos.movs.values()) {
-    if (m.anulado || m.fecha.slice(0, 10) !== d) continue;
+    /* 2.1.1 · El día de Colombia, no el de UTC: lo anotado después de las 7 p. m. es de hoy. */
+    if (m.anulado || isoDia(new Date(m.fecha)) !== d) continue;
     if (m.tipo === 'fiado') fiado += m.monto; else if (m.tipo === 'pago') pagos += m.monto;
   }
   return { fiado, pagos };
@@ -168,7 +169,7 @@ function contactosDe(clienteId, tipo) {
 }
 /** Recordatorio ya enviado hoy (la ley permite uno al día). */
 function recordadoHoy(clienteId, hoy = new Date()) {
-  return contactosDe(clienteId, 'recordatorio').find(r => r.fecha.slice(0, 10) === isoDia(hoy)) || null;
+  return contactosDe(clienteId, 'recordatorio').find(r => isoDia(new Date(r.fecha)) === isoDia(hoy)) || null;
 }
 function permisoOk(c) { return !!(c.cel && c.permiso && c.permiso.estado === 'si'); }
 /** ¿Le toca recordatorio? Solo si se atrasó, o si pidió que le recordaran el día de pago. */
@@ -187,16 +188,6 @@ function resumenesPendientes() {
 }
 
 /* ───── Resumen y control ───── */
-function resumenDelMes(y, mes) {
-  let recuperado = 0, fiado = 0;
-  for (const m of Datos.movs.values()) {
-    if (m.anulado) continue;
-    const d = new Date(m.fecha);
-    if (d.getFullYear() !== y || d.getMonth() !== mes) continue;
-    if (m.tipo === 'pago') recuperado += m.monto; else if (m.tipo === 'fiado') fiado += m.monto;
-  }
-  return { recuperado, fiado };
-}
 /* ───── 2.1.0 · El Resumen por periodos ─────
    Todo se arma desde el libro de movimientos: no se guarda nada nuevo. */
 /** Fiado y recuperado de cada día: Map «AAAA-MM-DD» → { fi, pa, nf } (nf = cuántos fiados). Los anulados no cuentan. */
@@ -222,11 +213,6 @@ function primerDiaConDatos(mapa) {
   let a = isoDia();
   for (const k of mapa.keys()) if (k < a) a = k;
   return a;
-}
-function mesesConDatos() {
-  const set = new Set([...Datos.movs.values()].map(m => m.fecha.slice(0, 7)));
-  set.add(isoDia().slice(0, 7));
-  return [...set].sort().reverse();
 }
 function quienesDebenMas(n = 4) {
   return clientes().map(c => ({ c, s: saldoDe(c.id) })).filter(x => x.s > 0).sort((a, b) => b.s - a.s).slice(0, n);

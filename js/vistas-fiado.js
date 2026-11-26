@@ -436,7 +436,7 @@ function abrirPago(c, pre = {}) {
 function cabMostrar(c, n) {
   const t = tienda(), ahora = new Date();
   return `<header class="mostrar-barra"><span style="display:inline-flex;align-items:center;gap:.5rem;min-width:0">${ic('mostrar', 22, 2.2)}<span class="gire">Gire el celular hacia ${esc(n)}</span></span><a class="btn-icono" href="#cliente-${c.id}" data-volver aria-label="Cerrar">${ic('cerrar', 26, 2.4)}</a></header>
-    <div class="cab-marca mostrar-cab"><div class="tienda-mostrar">${LOGO(44, '', '', true)}<span><b>${esc(t.nombre || 'Mi tienda')}</b><span>${mayuscula(fechaLarga(ahora))}, ${hora(ahora)}</span></span></div></div><div class="toldo" aria-hidden="true"></div>`;
+    <section class="cab-marca mostrar-cab" aria-label="Tienda"><div class="tienda-mostrar">${LOGO(44, '', '', true)}<span><b>${esc(t.nombre || 'Mi tienda')}</b><span>${mayuscula(fechaLarga(ahora))}, ${hora(ahora)}</span></span></div></section><div class="toldo" aria-hidden="true"></div>`;
 }
 V.mostrar = id => {
   const m = mov(id); if (!m) return null; const c = cliente(m.clienteId);

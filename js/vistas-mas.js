@@ -237,7 +237,7 @@ document.addEventListener('click', ev => {
 function totalesDe(dia) {
   const d = isoDia(dia), r = { fiado: 0, pagos: 0, nFiado: 0, nPagos: 0, medios: { efectivo: 0, nequi: 0, breb: 0, otro: 0 } };
   for (const m of Datos.movs.values()) {
-    if (m.anulado || m.fecha.slice(0, 10) !== d) continue;
+    if (m.anulado || isoDia(new Date(m.fecha)) !== d) continue;
     if (m.tipo === 'fiado') { r.fiado += m.monto; r.nFiado++; }
     else if (m.tipo === 'pago') { r.pagos += m.monto; r.nPagos++; r.medios[r.medios[m.medio] !== undefined ? m.medio : 'otro'] += m.monto; }
   }
@@ -252,8 +252,8 @@ function comparacion(hoy, antes, contra, fmt = monto) {
 function datosCuadre(hoy = new Date()) {
   const ayer = sumarDias(hoy, -1), semana = sumarDias(hoy, -7), dHoy = isoDia(hoy), dMan = isoDia(sumarDias(hoy, 1));
   const h = totalesDe(hoy), a = totalesDe(ayer), s = totalesDe(semana);
-  const nuevos = clientes().filter(c => (c.creado || '').slice(0, 10) === dHoy || (c.creado && isoDia(new Date(c.creado)) === dHoy));
-  const pagaronHoy = new Set([...Datos.movs.values()].filter(m => m.tipo === 'pago' && !m.anulado && m.fecha.slice(0, 10) === dHoy).map(m => m.clienteId));
+  const nuevos = clientes().filter(c => c.creado && isoDia(new Date(c.creado)) === dHoy);
+  const pagaronHoy = new Set([...Datos.movs.values()].filter(m => m.tipo === 'pago' && !m.anulado && isoDia(new Date(m.fecha)) === dHoy).map(m => m.clienteId));
   const alDia = clientes().filter(c => pagaronHoy.has(c.id) && saldoDe(c.id) <= 0);
   const manana = clientes().filter(c => c.proximaFecha === dMan && saldoDe(c.id) > 0);
   return { h, a, s, nuevos, alDia, manana, diaSemana: `el ${DIAS[semana.getDay()]} pasado`, calle: totalEnLaCalle() };

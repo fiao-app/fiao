@@ -1189,3 +1189,13 @@ html[data-tema="tinta"] .barras .b.pag, html[data-tema="tinta"] .leyenda-gr .l-p
 html[data-tema="tinta"] .atajos-dias button { box-shadow: inset 0 0 0 2px #111111; }
 html[data-tema="tinta"] .atajos-dias button[aria-pressed="true"] { box-shadow: inset 0 0 0 3px #1D3BA8; }
 html[data-tema="tinta"] .cal-dias button:disabled { color: #5A5A5A; }
+
+/* ───── 2.1.1 · Correcciones ───── */
+/* Anillo de foco que se ve sobre cualquier fondo: en las zonas azules va blanco (6,8:1; en Tinta, 8,9:1). */
+:focus-visible { outline-color: var(--foco, var(--tinta)); }
+.cab-marca, .mostrar-barra, .hoja-toldo { --foco: #FFFFFF; }
+/* «Atiende»: se ve igual, pero se puede tocar en 44 px de alto */
+.chip-atiende { position: relative; }
+.chip-atiende::before { content: ''; position: absolute; left: 0; right: 0; top: -0.25rem; bottom: -0.25rem; }
+/* El globo de pendientes, un poco más grande y firme */
+.nav .globo { font-size: 0.8125rem; font-weight: 800; }

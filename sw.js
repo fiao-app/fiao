@@ -2,7 +2,7 @@
    No guarda datos de la libreta (esos viven en IndexedDB) ni toca internet por su cuenta. */
 'use strict';
 
-const VERSION = 'fiao-v2.1.0';
+const VERSION = 'fiao-v2.1.1';
 /* La voz vive en su propio cajón: no se vuelve a bajar con cada versión de la app.
    Si cambia una grabación, se sube este número. */
 const VOZ_CACHE = 'fiao-voz-4';
@@ -10,7 +10,7 @@ const ARCHIVOS = [
   './', './index.html', './manifest.webmanifest', './css/fiao.css',
   './fonts/figtree-400.woff2', './fonts/figtree-600.woff2', './fonts/jakarta-700.woff2', './fonts/jakarta-800.woff2',
   './vendor/lz-string.min.js',
-  './js/util.js', './js/calendario.js', './js/db.js', './js/modelo.js', './js/mensajes.js', './js/demo.js',
+  './js/version.js', './js/util.js', './js/calendario.js', './js/db.js', './js/modelo.js', './js/mensajes.js', './js/demo.js',
   './js/ui.js', './js/movimiento.js', './js/guia.js', './js/voz.js', './js/ilustraciones.js', './js/vistas-inicio.js', './js/vistas-fiado.js', './js/vistas-cobro.js', './js/resumen-periodos.js', './js/vistas-mas.js', './js/app.js', './js/vecino.js',
   './c/', './c/index.html',
   // Voz de Fiao: solo las frases de todos los días; las demás se guardan la primera vez que suenan.

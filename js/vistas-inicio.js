@@ -292,11 +292,11 @@ V.inicio = () => {
   const atr = lista.filter(x => x.e.tipo === 'atrasado'), deHoy = lista.filter(x => x.e.tipo === 'hoy');
   const suma = xs => xs.reduce((s, x) => s + x.e.saldo, 0);
   const alDia = lista.filter(x => x.e.tipo !== 'atrasado').length;
-  const filtro = (clave, clase, icono, rotulo, n, sub, etiqueta) => `<button type="button" class="filtro ${clase}" data-filtro="${clave}" aria-pressed="false" aria-label="${etiqueta}"><span class="l">${rotulo}</span><span class="v">${ic(icono, 22, 2.6)}${n}</span><span class="s">${sub}</span></button>`;
+  const filtro = (clave, clase, icono, rotulo, n, sub, etiqueta) => `<button type="button" class="filtro ${clase}" data-filtro="${clave}" aria-pressed="false" aria-describedby="filtro-ayuda"><span class="l">${rotulo}</span><span class="v">${ic(icono, 22, 2.6)}${n}</span><span class="s">${sub}</span></button>`;
   const filtros = lista.length > 1 ? `<section class="filtros" aria-label="Ver solo">
     ${filtro('atrasado', 'atr', 'atencion', 'Atrasados', atr.length, monto(suma(atr)), `Atrasados: ${atr.length}, ${monto(suma(atr))}. Toque para ver solo a ellos.`)}
     ${filtro('hoy', 'hoy', 'reloj', 'Pagan hoy', deHoy.length, monto(suma(deHoy)), `Pagan hoy: ${deHoy.length}, ${monto(suma(deHoy))}. Toque para ver solo a ellos.`)}
-    ${filtro('aldia', 'ok', 'ok', 'Al día', alDia, `de ${lista.length}`, `Al día: ${alDia} de ${lista.length}. Toque para ver solo a ellos.`)}</section>` : '';
+    ${filtro('aldia', 'ok', 'ok', 'Al día', alDia, `de ${lista.length}`, `Al día: ${alDia} de ${lista.length}. Toque para ver solo a ellos.`)}<span class="vh" id="filtro-ayuda">Toque para ver solo a ellos.</span></section>` : '';
   return {
     titulo: 'Libreta',
     html: `<div class="pantalla">${cab}<main class="contenido">${bandas}

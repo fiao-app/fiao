@@ -14,6 +14,7 @@ Fiao sigue el versionado semántico (MAJOR.MINOR.PATCH): las versiones 0.x fuero
 
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.1.1 | 2026-11-26 | Parche | Las cifras «de hoy» (Libreta, Cuadre, recordatorios) usan el día de Colombia y no el de UTC: lo anotado después de las 7 p. m. ya no se pasa al día siguiente; la versión se escribe en un solo lugar (`js/version.js`) y Ajustes muestra la real; los filtros de la Libreta toman su nombre del texto visible (WCAG 2.5.3); anillo de foco blanco sobre las zonas azules; el recorrido guiado retiene el foco (fondo inerte, Escape para saltar); «Atiende» se toca en 44 px; globo de pendientes más legible; 0 fallas de axe en las 29 vistas |
 | 2.1.0 | 2026-11-26 | Menor | Resumen por periodos: Día, Mes, Año, Todo o un rango de fechas elegido en un calendario, con la gráfica «Fió y recuperó» en pares y el detalle de cada día o mes; el menú de abajo ilumina entera la pestaña activa (ícono y nombre) en una cápsula cobalto, también en Tinta |
 | 2.0.5 | 2026-11-24 | Parche | Sin zoom por doble toque en toda la app: los toques rápidos ya no agrandan la pantalla; el zoom con dos dedos sigue disponible |
 | 2.0.4 | 2026-11-24 | Parche | La hoja de fiar tiene tres zonas: el toldo arriba, el medio (lo único que se desplaza si no cabe) y «Fiar» abajo en su propio espacio, sin tapar el teclado; en Cobros, «¿Por qué?» va en su propia línea y el aviso del horario tiene el interlineado parejo |
@@ -238,6 +239,7 @@ En el repositorio, vaya a **Settings → Pages** y elija **Deploy from a branch*
 index.html              App del tendero
 c/index.html            Página del vecino (lee la cuenta del enlace)
 css/fiao.css            Sistema de diseño (colores, tipografía, componentes)
+js/version.js           La versión de la app, en un solo lugar
 js/util.js              Formatos colombianos: $50.500, viernes 13 de noviembre, 4:10 p. m.
 js/calendario.js        Festivos de Colombia (Ley 51 de 1983) y reglas de la Ley 2300
 js/db.js                Guardado local (IndexedDB)
