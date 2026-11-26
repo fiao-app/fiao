@@ -36,15 +36,18 @@ function aplicarPreferencias() {
   if (!Datos.tienda && !Borrador.letra) document.documentElement.dataset.letra = 'normal';
   const raiz = document.documentElement;
   /* Apariencia: lo que eligió en Ajustes; si nunca eligió, Tinta cuando el celular pide más contraste. */
-  const tema = t.tema || (t.contraste ? 'tinta' : matchMedia('(prefers-contrast: more)').matches ? 'tinta' : 'color');
-  raiz.dataset.tema = tema;
+  /* 2.2.0 · Apariencia: Automático (lo que pide el celular), Color, Oscuro o Tinta. Sin elección = Automático. */
+  const auto = () => matchMedia('(prefers-contrast: more)').matches ? 'tinta' : matchMedia('(prefers-color-scheme: dark)').matches ? 'oscuro' : 'color';
+  const elegido = t.tema || (t.contraste ? 'tinta' : 'auto');
+  const tema = elegido === 'auto' ? auto() : elegido;
+  raiz.dataset.tema = tema; raiz.dataset.apariencia = elegido;
   /* Movimiento: lo que eligió; si nunca eligió, lo que pide el celular. */
   raiz.dataset.movimiento = t.movimiento || (matchMedia('(prefers-reduced-motion: reduce)').matches ? 'reducido' : 'completo');
-  const color = tema === 'tinta' ? '#1D3BA8' : '#3346E0';
+  const color = tema === 'tinta' ? '#1D3BA8' : tema === 'oscuro' ? '#2636B8' : '#3346E0';
   document.querySelectorAll('meta[name="theme-color"]').forEach(m => m.setAttribute('content', color));
 }
 /* Si cambia el ajuste del celular y usted no ha elegido en Fiao, Fiao lo sigue. */
-['(prefers-contrast: more)', '(prefers-reduced-motion: reduce)'].forEach(q => { try { matchMedia(q).addEventListener('change', () => aplicarPreferencias()); } catch (e) { /* navegador viejo */ } });
+['(prefers-contrast: more)', '(prefers-color-scheme: dark)', '(prefers-reduced-motion: reduce)'].forEach(q => { try { matchMedia(q).addEventListener('change', () => aplicarPreferencias()); } catch (e) { /* navegador viejo */ } });
 
 let _primeraVez = true, _rutaAnterior = '';
 function mostrarRuta({ animar = true } = {}) {

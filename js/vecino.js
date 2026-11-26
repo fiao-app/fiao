@@ -15,9 +15,12 @@ function leerCuenta() {
 /* El vecino no tiene Ajustes: la página sigue a su celular (más contraste → Tinta; menos movimiento → quieta). */
 function temaVecino() {
   const r = document.documentElement;
-  r.dataset.tema = matchMedia('(prefers-contrast: more)').matches ? 'tinta' : 'color';
+  /* 2.2.0 · El vecino no tiene Ajustes: la página sigue a su celular (alto contraste, oscuro o claro). */
+  r.dataset.tema = matchMedia('(prefers-contrast: more)').matches ? 'tinta' : matchMedia('(prefers-color-scheme: dark)').matches ? 'oscuro' : 'color';
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', r.dataset.tema === 'tinta' ? '#1D3BA8' : r.dataset.tema === 'oscuro' ? '#2636B8' : '#3346E0');
   r.dataset.movimiento = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'reducido' : 'completo';
 }
+try { ['(prefers-color-scheme: dark)', '(prefers-contrast: more)'].forEach(q => matchMedia(q).addEventListener('change', temaVecino)); } catch (e) { /* navegador viejo */ }
 function pintarVecino() {
   temaVecino();
   const app = document.getElementById('app');

@@ -450,7 +450,7 @@ V.mostrar = id => {
         <span class="cuando">${mayuscula(fechaLarga(new Date(m.fecha)))}, ${hora(new Date(m.fecha))}</span></div>
       <hr>
       <div style="display:flex;flex-direction:column;gap:.25rem">${s > 0 ? `<span style="font-size:1.375rem">${pago ? 'Queda debiendo' : 'Su cuenta va en'}</span><span class="cifra-l">${pesos(s)}</span>
-        ${c.proximaFecha ? `<span class="acordado">${ic('calendario', 22)}Acordaron pagar ${elDia(diaDe(c.proximaFecha))}.</span>` : ''}` : `<span class="cifra-l" style="color:var(--verde)">Su cuenta quedó al día</span>`}</div>
+        ${c.proximaFecha ? `<span class="acordado">${ic('calendario', 22)}Acordaron pagar ${elDia(diaDe(c.proximaFecha))}.</span>` : ''}` : `<span class="cifra-l" style="color:var(--verde-letra)">Su cuenta quedó al día</span>`}</div>
     </main>
     <div class="pie" role="region" aria-label="Acciones" style="padding-inline:1.5rem"><button type="button" class="btn" data-accion="visto">${ic('ok', 24, 2.6)}${esc(n)} está de acuerdo</button><a class="btn-sec" href="#corregir-${m.id}">${ic('lapiz', 22, 2.2)}Hay un error: corregir</a></div></div>`,
     montar(r) {
@@ -478,7 +478,7 @@ V.cuenta = id => {
     <main class="mostrar">
       <h1 class="para" tabindex="-1">${esc(n)}, así va su cuenta:</h1>
       <div style="display:flex;flex-direction:column;gap:.25rem">${s > 0 ? `<span style="font-size:1.375rem">Debe</span><span class="cifra-xl">${pesos(s)}</span>
-        ${c.proximaFecha ? `<span class="acordado">${ic('calendario', 22)}Acordaron pagar ${elDia(diaDe(c.proximaFecha))}.</span>` : ''}` : `<span class="cifra-l" style="color:var(--verde)">No debe nada</span>`}</div>
+        ${c.proximaFecha ? `<span class="acordado">${ic('calendario', 22)}Acordaron pagar ${elDia(diaDe(c.proximaFecha))}.</span>` : ''}` : `<span class="cifra-l" style="color:var(--verde-letra)">No debe nada</span>`}</div>
       ${historial ? `<section class="recibo" aria-labelledby="t-cuenta-hist"><h2 class="titulo-seccion" id="t-cuenta-hist">Lo último</h2>${historial}${antes ? `<ul class="lista movs-vecino"><li><span class="d" style="color:var(--gris)">Venía debiendo de antes</span><span class="v" style="color:var(--gris)">${pesos(antes)}</span></li></ul>` : ''}</section>` : ''}
     </main>
     <div class="pie" role="region" aria-label="Acciones" style="padding-inline:1.5rem"><a class="btn" href="#cliente-${c.id}">${ic('ok', 24, 2.6)}Listo</a></div></div>`
