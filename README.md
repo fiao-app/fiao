@@ -14,6 +14,7 @@ Fiao sigue el versionado semántico (MAJOR.MINOR.PATCH): las versiones 0.x fuero
 
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.3.3 | 2026-11-26 | Parche | El globo de WhatsApp (del ícono oficial entregado por el equipo) en los 12 botones que abren WhatsApp, del color de cada botón |
 | 2.3.2 | 2026-11-26 | Parche | Barras de «Quién debe más» en naranja (el color de lo fiado); «Como imagen» pide el celular y el permiso igual que «Enviar recibo», sin quedarse en el permiso |
 | 2.3.1 | 2026-11-26 | Parche | Avisos de abajo legibles en Oscuro (superficie propia `--inverso`, 10,6:1) y texto oscuro sobre naranja en todos los temas; en el Resumen, «En la calle» ya no se anima al cambiar de periodo (cuentan Recuperó y Fió) y la pantalla no sube al inicio; «Ocultar montos» en Ajustes se aplica al instante; la bienvenida muestra la versión real; Ajustes dice «Todo guardado en este celular» y exporta la libreta a Excel (CSV con tildes y punto y coma) |
 | 2.3.0 | 2026-11-26 | Menor | Portada inmediata (Fiao se ve antes de que cargue el JavaScript) y pantallas de arranque para iPhone; capturas en el manifiesto para la instalación en Android; la gráfica del Resumen se recorre deslizando el dedo o con flechas de 48 px y muestra su escala; «Recuperó el X % de lo que fió»; nuevas pantallas Novedades y Accesibilidad en Ajustes; «Animaciones: Todas / Pocas»; el Cuadre dice «fiados» como el Resumen; pruebas automáticas en `pruebas/` |

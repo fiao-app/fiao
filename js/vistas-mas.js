@@ -276,7 +276,7 @@ V.cuadre = () => {
         <p class="cuadre-linea">${ic('calendario', 20, 2.2)}<span>${x.manana.length ? `<b>Mañana ${x.manana.length === 1 ? 'paga' : 'pagan'} ${x.manana.length}:</b> ${nombres(x.manana)}` : 'Mañana nadie tiene día de pago'}</span></p>
       </section>
       <p class="ayuda" style="text-align:center">En la calle quedan <b>${monto(x.calle)}</b>.</p>
-      ${t.whatsapp ? `<button type="button" class="btn-sec" data-accion="cuadre-wa">${ic('chat', 22, 2.2)}Mandármelo por WhatsApp</button>` : ''}
+      ${t.whatsapp ? `<button type="button" class="btn-sec" data-accion="cuadre-wa">${ic('whatsapp', 22)}Mandármelo por WhatsApp</button>` : ''}
     </main></div>`,
     montar(r) {
       if (typeof Voz !== 'undefined') Voz.decir('cuadre');

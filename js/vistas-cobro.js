@@ -25,7 +25,7 @@ function accionCobro(c, e, ahora) {
   const r = recordadoHoy(c.id, ahora);
   if (r) return `<span class="estado ok">${ic('ok', 18, 2.6)}Recordado hoy, a las ${hora(new Date(r.fecha || r))}</span>`;
   if (!necesitaRecordatorio(c, e) || !puedeRecordarAhora(ahora)) return '';
-  return `<button type="button" class="btn-mini suave" data-recordar="${c.id}">${ic('chat', 18, 2.2)}Recordarle a ${esc(nombreCorto(c.nombre))}</button>`;
+  return `<button type="button" class="btn-mini suave" data-recordar="${c.id}">${ic('whatsapp', 20)}Recordarle a ${esc(nombreCorto(c.nombre))}</button>`;
 }
 function razonHoy(c) {
   if (c.recordar === 'dia') return 'pidió que le recordaran';
@@ -59,7 +59,7 @@ function abrirLote() {
     const nc = sig ? esc(nombreCorto(sig.c.nombre)) : '';
     const cuerpo = sig ? `
       ${bloqueo ? `<div class="info ley" role="alert">${ic('calendario', 22)}<p>${bloqueo} ${porQue('horario')}</p></div>` : ''}
-      <button type="button" class="btn" data-accion="lote-abrir"${bloqueo ? ' disabled' : ''}>${ic('chat', 24, 2.4)}Recordar a ${nc}</button>
+      <button type="button" class="btn" data-accion="lote-abrir"${bloqueo ? ' disabled' : ''}>${ic('whatsapp', 24)}Recordar a ${nc}</button>
       <details class="mas"><summary>${ic('chat', 22)}Ver el mensaje para ${nc}</summary><div class="interior"><div class="burbuja" style="font-size:1rem;line-height:1.4">${esc(mensajeRecordatorio(sig.c, sig.e))}</div></div></details>
       <button type="button" class="btn-link" data-accion="lote-saltar">Saltar a ${nc}</button>`
       : `<div class="lote-fin">${selloOk(40)}<p><b>${listos ? `¡Listo! Le recordó a ${listos} ${listos === 1 ? 'cliente' : 'clientes'}.` : 'No le recordó a nadie.'}</b></p>${saltados.size ? `<p class="ayuda">${saltados.size === 1 ? 'Saltó a 1 cliente' : `Saltó a ${saltados.size} clientes`}: puede recordarle${saltados.size === 1 ? '' : 's'} desde Cobros.</p>` : ''}</div>
@@ -111,7 +111,7 @@ V.cobros = () => {
     html: `<div class="pantalla">${cabMarca({ titulo: 'Cobros', cuerpo })}<main class="contenido" style="gap:.875rem">
       ${consejo('cobros', 'Aquí salen quienes deben pagar. Fiao respeta el horario de la ley.')}
       ${porCobrar.length || !puedeRecordarAhora(ahora) ? ley : ''}
-      ${enFila >= 2 ? `<button type="button" class="btn" data-accion="lote">${ic('chat', 24, 2.4)}Recordar a los ${enFila} de hoy</button>` : ''}
+      ${enFila >= 2 ? `<button type="button" class="btn" data-accion="lote">${ic('whatsapp', 24)}Recordar a los ${enFila} de hoy</button>` : ''}
       ${atrasados.length ? `<section aria-labelledby="t-atr" style="display:flex;flex-direction:column;gap:.375rem"><h2 class="titulo-seccion" id="t-atr">Se atrasaron</h2>
         <ul class="lista lista-cobros">${atrasados.map(x => fila(x, estadoHtml(x.c, x.e))).join('')}</ul></section>` : ''}
       ${deHoy.length ? `<section aria-labelledby="t-hoy" style="display:flex;flex-direction:column;gap:.375rem"><h2 class="titulo-seccion" id="t-hoy">Pagan hoy</h2>

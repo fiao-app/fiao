@@ -284,7 +284,7 @@ function abrirPermiso(c, sigue = null, m = null) {
       <button type="button" class="btn-link" data-r="otra">Preguntarle otra vez</button>`
     : `${cabHoja(`Primero, el permiso de ${n}`)}<p>Antes de escribirle, ${n} debe aceptar. ${porQue('permiso')}</p>
       <div class="burbuja" style="font-size:1rem;line-height:1.45">${esc(mensajePermiso(c))}</div>
-      <button type="button" class="btn" data-r="otra">${ic('enviar', 22, 2.2)}Preguntarle por WhatsApp</button>
+      <button type="button" class="btn" data-r="otra">${ic('whatsapp', 22)}Preguntarle por WhatsApp</button>
       <button type="button" class="btn-sec" data-r="si">Ya me dijo que sí</button>
       ${m ? '<button type="button" class="btn-link" data-r="mostrar">Mejor se lo muestro aquí</button>' : ''}`, d => {
     d.querySelectorAll('[data-r]').forEach(b => b.addEventListener('click', async () => {
@@ -738,7 +738,7 @@ V.cliente = (id, extra) => {
       <nav class="acciones" aria-label="Acciones con ${esc(nombreCorto(c.nombre))}">
         ${atajo('fiar', 'anotar', 'mas', 'Fiar')}
         ${e.saldo > 0 ? atajo('pago', 'pago', 'dinero', 'Pagó') : ''}
-        ${recordar ? (yaRecordado ? atajo('', 'recordar', 'ok', 'Recordado', ' disabled') : atajo('', 'recordar', 'chat', 'Recordar')) : ''}
+        ${recordar ? (yaRecordado ? atajo('', 'recordar', 'ok', 'Recordado', ' disabled') : atajo('', 'recordar', 'whatsapp', 'Recordar')) : ''}
         ${movs.length ? `<a class="atajo" href="#cuenta-${c.id}"><span class="c" aria-hidden="true">${ic('mostrar', 26, 2.4)}</span>Mostrar</a>` : ''}
       </nav>
       ${consejo('cliente', 'Toque un movimiento para ver el detalle.')}
@@ -772,8 +772,8 @@ V.cliente = (id, extra) => {
         const nc = esc(nombreCorto(c.nombre));
         abrirHoja(`${cabHoja(esc(c.nombre))}
           <ul class="lista menu-hoja">
-            ${permisoOk(c) && e.saldo > 0 ? fila('cuenta', 'enviar', 'Enviarle su cuenta', 'Por WhatsApp, con el enlace a su cuenta') : ''}
-            ${c.cel ? fila('chat', 'chat', `Escribirle a ${nc}`, 'Abre su chat de WhatsApp') : ''}
+            ${permisoOk(c) && e.saldo > 0 ? fila('cuenta', 'whatsapp', 'Enviarle su cuenta', 'Por WhatsApp, con el enlace a su cuenta') : ''}
+            ${c.cel ? fila('chat', 'whatsapp', `Escribirle a ${nc}`, 'Abre su chat de WhatsApp') : ''}
             ${!c.cupo ? fila('cupo', 'grafica', 'Ponerle cupo', 'Hasta cuánto le fía') : ''}
             ${fila('borrar', 'basura', `Borrar a ${nc}`, 'Fiao le pregunta antes', 'peligro')}
           </ul>

@@ -67,7 +67,7 @@ function pintarVecino() {
         <div class="campo"><label for="v-monto">¿Cuánto pagó?</label><input class="entrada grande" id="v-monto" inputmode="numeric" value="${pesos(k.s)}" autocomplete="off"></div>
         ${k.b || k.q ? `<fieldset><legend class="leyenda">¿Por dónde?</legend><div class="chips" role="radiogroup" aria-label="Por dónde pagó" data-grupo="medio">
           ${k.b ? chip('Bre-B', true, 'data-valor="breb"', 'radio') : ''}${k.q ? chip('Nequi', !k.b, 'data-valor="nequi"', 'radio') : ''}${chip('Otro', false, 'data-valor="otro"', 'radio')}</div></fieldset>` : ''}
-        <a class="btn" id="v-enviar" href="#" target="_blank" rel="noopener" data-wa>${ic('enviar', 22, 2.4)}Enviar aviso por WhatsApp</a>
+        <a class="btn" id="v-enviar" href="#" target="_blank" rel="noopener" data-wa>${ic('whatsapp', 22)}Enviar aviso por WhatsApp</a>
         <p class="ayuda">${k.w ? 'Le llega a la tienda por WhatsApp.' : 'Elija el chat de la tienda en WhatsApp.'} La tienda confirma el pago y le manda su comprobante.</p>
       </section>${k.i ? cajaOtroDia() : ''}` : `<div class="info ok">${ic('ok', 22)}<p>¡Gracias! Su cuenta está al día.</p></div>`}
       ${k.i && filas ? cajaNoCuadra() : ''}
@@ -86,7 +86,7 @@ function cajaOtroDia() {
         <fieldset><legend class="leyenda">¿Qué día puede pagar?</legend><div class="chips" role="radiogroup" aria-label="Qué día puede pagar" data-grupo="dia">
           ${chip('Mañana', false, `data-valor="${isoDia(d1)}"`, 'radio')}${chip(esc(mayuscula(elDia(d3))), false, `data-valor="${isoDia(d3)}"`, 'radio')}${chip(esc(mayuscula(elDia(d7))), false, `data-valor="${isoDia(d7)}"`, 'radio')}${chip('Otro día', false, 'data-valor="otro"', 'radio')}</div></fieldset>
         <div class="campo" id="v-caja-dia" hidden><label for="v-dia">Elija el día</label><input class="entrada" id="v-dia" type="date" min="${isoDia(d1)}" max="${isoDia(sumarDias(new Date(), 60))}"></div>
-        <a class="btn" id="v-enviar-dia" href="#" target="_blank" rel="noopener" data-wa hidden>${ic('enviar', 22, 2.4)}Pedirlo por WhatsApp</a>
+        <a class="btn" id="v-enviar-dia" href="#" target="_blank" rel="noopener" data-wa hidden>${ic('whatsapp', 22)}Pedirlo por WhatsApp</a>
         <p class="ayuda">La tienda decide y le confirma por WhatsApp.</p>
       </section>`;
 }
@@ -97,7 +97,7 @@ function cajaNoCuadra() {
       <section class="tarjeta" id="caja-no-cuadra" hidden aria-label="Algo no me cuadra">
         <fieldset><legend class="leyenda">¿Qué no le cuadra?</legend><div class="chips" role="radiogroup" aria-label="Qué no le cuadra" data-grupo="motivo">
           ${Object.entries(NO_CUADRA).map(([v, [t]]) => chip(t, false, `data-valor="${v}"`, 'radio')).join('')}</div></fieldset>
-        <a class="btn" id="v-enviar-cuadra" href="#" target="_blank" rel="noopener" data-wa hidden>${ic('enviar', 22, 2.4)}Avisarle a la tienda</a>
+        <a class="btn" id="v-enviar-cuadra" href="#" target="_blank" rel="noopener" data-wa hidden>${ic('whatsapp', 22)}Avisarle a la tienda</a>
         <p class="ayuda">La tienda revisa su cuenta y, si hay un error, le manda la corrección.</p>
       </section>`;
 }

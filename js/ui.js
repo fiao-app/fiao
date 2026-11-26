@@ -49,7 +49,10 @@ const ICONOS = {
    Se corren lo justo para que queden centrados en sus círculos y alineados con el texto. */
 const AJUSTE_ICONOS = { ok: [0, 0.5], chat: [-0.5, -0.55], grafica: [0, -0.5], lapiz: [0, 0.55], contactos: [0, -0.5], copiar: [-1, 0], borrar: [-0.5, 0], estrella: [0, 0.35] };
 for (const [k, [dx, dy]] of Object.entries(AJUSTE_ICONOS)) if (ICONOS[k]) ICONOS[k] = `<g transform="translate(${dx} ${dy})">${ICONOS[k]}</g>`;
+const GLIFO_WA = '<path fill-rule="evenodd" d="M346.99,124.99 C383.96,151.30 406.51,186.49 413.71,230.91 C426.21,308.06 380.30,382.68 305.64,406.68 C266.44,419.28 227.85,416.62 190.22,399.79 C187.89,398.74 184.75,398.40 182.27,398.97 C157.62,404.58 133.03,410.46 108.42,416.23 C100.87,418.00 97.59,414.86 99.16,407.18 C104.22,382.40 109.47,357.66 114.37,332.85 C114.95,329.87 114.58,326.15 113.29,323.42 C68.09,227.65 129.09,113.67 233.58,98.87 C274.60,93.06 312.28,101.76 346.99,124.99 M249.57,131.77 C246.09,132.11 242.60,132.33 239.14,132.82 C157.46,144.50 109.33,231.89 144.17,306.73 C149.84,318.91 151.79,329.79 147.84,342.17 C147.14,344.38 146.75,346.69 146.29,348.97 C144.73,356.74 143.20,364.51 141.54,372.90 C156.10,369.46 169.86,366.39 183.51,362.89 C188.47,361.62 192.60,362.03 197.20,364.50 C221.05,377.29 246.48,382.35 273.42,378.81 C341.02,369.95 388.65,308.10 380.20,240.27 C372.12,175.52 315.78,128.33 249.57,131.77 z"/><path fill-rule="evenodd" d="M190.89,187.89 C193.23,185.73 195.22,183.69 197.44,181.95 C203.51,177.18 211.48,178.57 214.79,185.43 C219.63,195.45 224.32,205.59 228.17,216.01 C229.28,219.02 227.88,223.40 226.55,226.72 C225.35,229.70 222.62,232.04 220.65,234.72 C216.91,239.82 216.47,244.34 220.28,249.42 C233.92,267.63 250.60,282.52 270.46,293.67 C275.91,296.72 280.62,295.83 284.96,291.21 C298.23,277.10 298.32,280.32 313.25,284.18 C320.17,285.97 327.06,287.90 333.85,290.10 C341.35,292.54 344.70,300.45 340.57,306.98 C327.27,328.03 315.21,335.33 290.90,332.20 C281.81,331.04 272.43,328.60 264.23,324.60 C230.62,308.22 203.82,284.00 185.77,251.06 C181.41,243.11 179.23,233.67 177.49,224.63 C174.72,210.21 180.54,198.25 190.89,187.89 z"/>';
 function ic(nombre, tam = 24, grosor = 2) {
+  /* 2.3.2 · El globo de WhatsApp (del ícono oficial que entregó el equipo) en los botones que abren WhatsApp. Toma el color del botón. */
+  if (nombre === 'whatsapp') return `<svg width="${tam}" height="${tam}" viewBox="90 88 336 336" fill="currentColor" aria-hidden="true" focusable="false">${GLIFO_WA}</svg>`;
   return `<svg width="${tam}" height="${tam}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${grosor}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${ICONOS[nombre] || ''}</svg>`;
 }
 /** El ícono de Fiao: el toldo rayado de la tienda de barrio forma el brazo de la F,
@@ -285,7 +288,7 @@ function abrirWhatsAppIOS(app, web, texto) {
 }
 function planBWhatsApp(web, texto) {
   abrirHoja(`${cabHoja('¿No se abrió WhatsApp?')}<p style="font-size:1.125rem;line-height:1.55">Si este celular no tiene WhatsApp, ábralo en la página de WhatsApp${texto ? ' o copie el mensaje' : ''}.</p>
-    <a class="btn" href="${esc(web)}" target="_blank" rel="noopener" data-accion="pagina-wa">${ic('chat', 22, 2.2)}Abrir la página de WhatsApp</a>
+    <a class="btn" href="${esc(web)}" target="_blank" rel="noopener" data-accion="pagina-wa">${ic('whatsapp', 22)}Abrir la página de WhatsApp</a>
     ${texto ? `<button type="button" class="btn-sec" data-accion="copiar-msj">${ic('copiar', 22, 2.2)}Copiar el mensaje</button><p class="burbuja" id="msj-wa" hidden>${esc(texto)}</p>` : ''}
     <button type="button" class="btn-link" data-cerrar>Cerrar</button>`, d => {
     d.querySelector('[data-accion="pagina-wa"]').addEventListener('click', () => cerrarHoja());
