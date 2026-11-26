@@ -1109,3 +1109,83 @@ dialog.hoja:not(.con-toldo) { max-height: min(94dvh, calc(100dvh - env(safe-area
 /* 2.0.5 · Sin zoom por doble toque: los toques rápidos (borrar una cifra, sumar +1.000 dos veces) no agrandan la pantalla.
    El zoom con dos dedos sigue disponible para quien lo necesite. Las reglas más específicas (deslizar, arrastrar la hoja) se mantienen. */
 * { touch-action: manipulation; }
+
+/* ───── 2.1.0 · Menú: la pestaña activa se ilumina entera (ícono y nombre, en una cápsula) ───── */
+.nav a[aria-current="page"] { margin: 0 0.1875rem; background: var(--azul); color: var(--blanco); font-weight: 700; box-shadow: 0 8px 16px -8px rgba(51, 70, 224, 0.85); }
+.nav a[aria-current="page"] .ico, .nav a[aria-current="page"]:hover .ico { background: transparent; }
+.nav a[aria-current="page"] .globo { box-shadow: 0 0 0 2px var(--azul); }
+html[data-tema="tinta"] .nav a[aria-current="page"] { background: #1D3BA8; color: #FFFFFF; box-shadow: 0 0 0 2px #111111; }
+html[data-tema="tinta"] .nav a[aria-current="page"] .ico { background: transparent; color: #FFFFFF; }
+html[data-tema="tinta"] .nav a[aria-current="page"] .globo { box-shadow: 0 0 0 2px #1D3BA8; }
+/* La muestra del menú en «Así se mueve por Fiao» sigue el mismo diseño */
+.nav-demo .tab-demo.activa { background: var(--azul); color: var(--blanco); border-radius: 1rem; padding: 0.25rem 0; margin: 0 0.125rem; }
+.nav-demo .tab-demo.activa .ico { background: transparent; }
+html[data-tema="tinta"] .nav-demo .tab-demo.activa { background: #1D3BA8; color: #FFFFFF; box-shadow: 0 0 0 2px #111111; }
+html[data-tema="tinta"] .nav-demo .tab-demo.activa .ico { background: transparent; color: #FFFFFF; }
+
+/* ───── 2.1.0 · Resumen por periodos ───── */
+.periodos { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.25rem; padding: 0.25rem; border-radius: 999px; background: var(--blanco); box-shadow: var(--sombra); }
+.periodos a { min-height: 3rem; padding: 0 0.25rem; border-radius: 999px; display: flex; align-items: center; justify-content: center; color: var(--tinta); text-decoration: none; font-family: var(--letra); font-size: 1.0625rem; font-weight: 600; text-align: center; }
+.periodos a[aria-current="true"] { background: var(--azul); color: var(--blanco); font-weight: 700; box-shadow: 0 6px 14px -8px rgba(51, 70, 224, 0.8); }
+.rango-fila { width: 100%; min-height: 3.5rem; padding: 0.5rem 1rem 0.5rem 0.625rem; border: none; border-radius: 1.375rem; background: var(--blanco); box-shadow: var(--sombra); display: flex; align-items: center; gap: 0.75rem; color: var(--tinta); font-family: var(--letra); font-size: 1.0625rem; font-weight: 600; text-align: left; cursor: pointer; }
+.rango-fila .ic { width: 2.5rem; height: 2.5rem; border-radius: 50%; background: var(--azul-fondo); color: var(--azul-osc); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.rango-fila .t { flex: 1; min-width: 0; }
+.rango-fila.activa { box-shadow: inset 0 0 0 2px var(--azul), var(--sombra); }
+.balance { display: flex; align-items: center; gap: 0.75rem; padding: 0.875rem 1rem; border-radius: 1.375rem; background: var(--azul-fondo); color: var(--tinta); }
+.balance .ic { width: 2.5rem; height: 2.5rem; border-radius: 50%; background: var(--azul); color: var(--blanco); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.balance b { font-family: var(--letra-titulo); font-size: 1.1875rem; font-weight: 800; display: block; line-height: 1.3; }
+.balance span { font-size: 1rem; color: var(--gris); line-height: 1.3; }
+.balance .ic { color: var(--blanco); }
+.grafica { padding: 1rem 1rem 0.875rem; display: flex; flex-direction: column; gap: 0.625rem; }
+.grafica h2 { margin: 0; }
+.leyenda-gr { display: flex; gap: 1.125rem; font-size: 1rem; color: var(--tinta); font-weight: 600; }
+.leyenda-gr i { display: inline-block; width: 0.875rem; height: 0.875rem; border-radius: 0.25rem; margin-right: 0.375rem; vertical-align: -1px; }
+.leyenda-gr .l-fio { background: var(--moneda); box-shadow: inset 0 0 0 1.5px var(--moneda-texto); }
+.leyenda-gr .l-pag { background: var(--verde); }
+.barras { position: relative; height: 11rem; display: flex; align-items: flex-end; gap: var(--gap, 0.375rem); border-bottom: 2px solid var(--divisor); }
+.barras .dia { flex: 1; min-width: 0; height: 100%; display: flex; align-items: flex-end; justify-content: center; gap: 2px; border: none; background: transparent; padding: 0; border-radius: 0.5rem; cursor: pointer; }
+.barras .dia[aria-pressed="true"] { background: var(--azul-fondo-2); box-shadow: inset 0 0 0 2px var(--azul-fondo); }
+.barras .b { flex: 1; max-width: 1.25rem; border-radius: 0.375rem 0.375rem 0 0; min-height: 3px; }
+.barras .b.fio { background: var(--moneda); box-shadow: inset 0 0 0 1.5px var(--moneda-texto); }
+.barras .b.pag { background: var(--verde); }
+.ejex { display: flex; gap: var(--gap, 0.375rem); font-size: 0.875rem; color: var(--gris); font-weight: 600; }
+.ejex span { flex: 1; text-align: center; min-width: 0; white-space: nowrap; }
+.ejex .hoy { color: var(--azul-osc); font-weight: 800; }
+.detalle-dia { padding: 0.75rem 0.875rem; border-radius: 1rem; background: var(--fondo); display: flex; flex-direction: column; gap: 0.125rem; }
+.detalle-dia > b { font-family: var(--letra-titulo); font-size: 1.0625rem; font-weight: 800; }
+.detalle-dia .par { display: flex; gap: 0.25rem 1rem; flex-wrap: wrap; font-size: 1.0625rem; }
+.detalle-dia .par span { white-space: nowrap; }
+.detalle-dia .par b.v { color: var(--verde); }
+.detalle-dia .par b.n { color: var(--moneda-texto); }
+.es-de-hoy { display: flex; align-items: center; gap: 0.75rem; font-size: 1rem; color: var(--gris); font-weight: 600; margin: 0.5rem 0 0; }
+.es-de-hoy span { flex: 1; height: 2px; background: var(--divisor); }
+/* La hoja «Elegir días» */
+.atajos-dias { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.atajos-dias button { min-height: 2.75rem; padding: 0 1rem; border: none; border-radius: 999px; background: var(--blanco); box-shadow: inset 0 0 0 2px var(--divisor); display: inline-flex; align-items: center; color: var(--tinta); font-family: var(--letra); font-weight: 600; font-size: 1.0625rem; cursor: pointer; }
+.atajos-dias button[aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--azul); color: var(--azul-osc); background: var(--azul-fondo-2); }
+.cal { background: var(--blanco); border-radius: 1.375rem; padding: 0.5rem 0.5rem 0.75rem; box-shadow: var(--sombra); }
+.cal-cab { display: flex; align-items: center; justify-content: space-between; padding: 0 0.25rem; }
+.cal-cab b { font-family: var(--letra-titulo); font-size: 1.125rem; }
+.cal-cab .btn-icono:disabled { opacity: 0.35; pointer-events: none; }
+.cal-sem, .cal-dias { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); text-align: center; }
+.cal-sem span { font-size: 0.875rem; font-weight: 700; color: var(--gris); padding: 0.25rem 0; }
+.cal-dias > span { height: 2.875rem; }
+.cal-dias button { height: 2.875rem; padding: 0; border: none; background: transparent; position: relative; display: flex; align-items: center; justify-content: center; color: var(--tinta); font-family: var(--letra); font-size: 1.0625rem; font-weight: 600; cursor: pointer; }
+.cal-dias button:disabled { color: #8A8FA0; font-weight: 400; cursor: default; }
+.cal-dias button i { position: relative; z-index: 1; font-style: normal; width: 2.625rem; height: 2.625rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.cal-dias button.mid { background: var(--azul-fondo); }
+.cal-dias button.ini { background: linear-gradient(90deg, transparent 50%, var(--azul-fondo) 50%); }
+.cal-dias button.fin { background: linear-gradient(90deg, var(--azul-fondo) 50%, transparent 50%); }
+.cal-dias button.uno { background: none; }
+.cal-dias button.ini i, .cal-dias button.fin i, .cal-dias button.uno i { background: var(--azul); color: var(--blanco); font-weight: 800; }
+.cal-dias button.hoyc:not(.ini):not(.fin):not(.uno) i { box-shadow: inset 0 0 0 2px var(--tinta); }
+.cal-ayuda { margin: 0; text-align: center; }
+html[data-tema="tinta"] .periodos, html[data-tema="tinta"] .rango-fila, html[data-tema="tinta"] .cal { box-shadow: 0 0 0 2px #111111; }
+html[data-tema="tinta"] .rango-fila.activa { box-shadow: 0 0 0 2px #111111, inset 0 0 0 3px #1D3BA8; }
+html[data-tema="tinta"] .periodos a[aria-current="true"] { box-shadow: none; }
+html[data-tema="tinta"] .balance { background: #FFFFFF; box-shadow: 0 0 0 2px #111111; }
+html[data-tema="tinta"] .barras .dia[aria-pressed="true"] { background: #E8EDFA; box-shadow: inset 0 0 0 2px #1D3BA8; }
+html[data-tema="tinta"] .barras .b.pag, html[data-tema="tinta"] .leyenda-gr .l-pag { background: repeating-linear-gradient(135deg, #1D3BA8 0 3px, #FFFFFF 3px 6px); box-shadow: inset 0 0 0 1.5px #1D3BA8; }
+html[data-tema="tinta"] .atajos-dias button { box-shadow: inset 0 0 0 2px #111111; }
+html[data-tema="tinta"] .atajos-dias button[aria-pressed="true"] { box-shadow: inset 0 0 0 3px #1D3BA8; }
+html[data-tema="tinta"] .cal-dias button:disabled { color: #5A5A5A; }

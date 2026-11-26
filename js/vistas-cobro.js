@@ -160,31 +160,23 @@ V.resumenes = () => {
 
 /* ───── Resumen del mes ───── */
 V.resumen = mesParam => {
-  if (/^\d{6}$/.test(mesParam || '')) mesParam = `${mesParam.slice(0, 4)}-${mesParam.slice(4)}`;
-  const meses = mesesConDatos();
-  const mesSel = meses.includes(mesParam) ? mesParam : meses[0];
-  const [y, mm] = mesSel.split('-').map(Number);
-  const res = resumenDelMes(y, mm - 1);
+  /* 2.1.0 · Día, Mes, Año, Todo o un rango (js/resumen-periodos.js). Los enlaces de antes, #resumen y #resumen-AAAAMM, siguen llevando al mes. */
+  const mapa = movimientosPorDia(), per = periodoDeRuta(mesParam, mapa);
   const top = quienesDebenMas(4); const max = top[0]?.s || 1;
   const revisar = aQuienRevisar().slice(0, 4);
   /* «Al día» = sin pagos vencidos, aunque deba (así se dice en el barrio). */
   const nCli = Datos.clientes.size, alDia = clientes().filter(c => estadoDe(c).tipo !== 'atrasado').length;
-  const esActual = mesSel === isoDia().slice(0, 7);
+  const incluyeHoy = per.hasta === isoDia();
   const total = totalEnLaCalle();
   const cuerpo = `<section class="cifra-cab" aria-labelledby="t-calle-r"><span class="rotulo" id="t-calle-r">En la calle</span><span class="cifra" id="k-calle">${monto(total)}</span>
     <span class="extra"><span><b>${alDia} de ${nCli}</b> ${nCli === 1 ? 'cliente está' : 'clientes están'} al día</span></span></section>`;
   return {
     titulo: 'Resumen',
-    html: `<div class="pantalla">${cabMarca({ titulo: 'Resumen', sub: `${mayuscula(MESES[mm - 1])}${esActual ? ', hasta hoy' : ` de ${y}`}`, cuerpo })}<main class="contenido" style="gap:.875rem">
+    html: `<div class="pantalla">${cabMarca({ titulo: 'Resumen', sub: mayuscula(fechaLarga(new Date())), cuerpo })}<main class="contenido" style="gap:.875rem">
       ${consejo('resumen', 'Aquí ve cuánto le deben, cuánto recuperó y a quién revisar.')}
-      ${esActual ? `<a class="btn-sec" href="#cuadre">${ic('libreta', 22, 2.2)}Cuadre de hoy</a>` : ''}
-      ${meses.length > 1 ? (() => {
-        /* 2.0.0 · El mes con flechas, en el estilo de la app (antes, el selector del navegador). Los meses van del más nuevo al más viejo. */
-        const k = meses.indexOf(mesSel), nuevo = meses[k - 1], viejo = meses[k + 1];
-        const flecha = (destino, icono, texto) => destino ? `<a class="btn-icono" href="#resumen-${destino.replace('-', '')}" aria-label="${texto}">${ic(icono, 26, 2.4)}</a>` : `<span class="btn-icono" aria-disabled="true" aria-hidden="true">${ic(icono, 26, 2.4)}</span>`;
-        return `<nav class="mes-nav" aria-label="Mes">${flecha(viejo, 'volver', 'Mes anterior')}<b aria-live="polite">${mayuscula(MESES[mm - 1])} de ${y}</b>${flecha(nuevo, 'sigue', 'Mes siguiente')}</nav>`;
-      })() : ''}
-      <div class="kpis"><div class="kpi verde"><span>Recuperó</span><b>${monto(res.recuperado)}</b></div><div class="kpi"><span>Fió</span><b>${monto(res.fiado)}</b></div></div>
+      ${incluyeHoy ? `<a class="btn-sec" href="#cuadre">${ic('libreta', 22, 2.2)}Cuadre de hoy</a>` : ''}
+      ${htmlPeriodoResumen(per, mapa)}
+      <p class="es-de-hoy"><span aria-hidden="true"></span>Así están sus cuentas hoy<span aria-hidden="true"></span></p>
       ${top.length === 1 ? `<section class="tarjeta" aria-labelledby="t-mas"><h2 class="titulo-seccion" id="t-mas">Quién le debe</h2><a class="dato" href="#cliente-${top[0].c.id}"><span class="par"><span class="nombre-dato">${esc(top[0].c.nombre)}</span><b>${monto(top[0].s)}</b></span></a><p class="ayuda">Cuando le deban varios, aquí verá quién debe más.</p></section>` : `<section class="tarjeta" aria-labelledby="t-mas"><h2 class="titulo-seccion" id="t-mas">Quién debe más</h2>
         ${top.length ? top.map(x => `<a class="dato" href="#cliente-${x.c.id}"><span class="par"><span class="nombre-dato">${esc(x.c.nombre)}</span><b>${monto(x.s)}</b></span><span class="barra-dato" aria-hidden="true"><span style="width:${Math.max(4, x.s / max * 100)}%"></span></span></a>`).join('') : '<p class="ayuda">Nadie le debe. ¡Libreta al día!</p>'}</section>`}
       <section aria-labelledby="t-rev" style="display:flex;flex-direction:column;gap:.375rem"><h2 class="titulo-seccion" id="t-rev">A quién revisar</h2>
@@ -193,6 +185,7 @@ V.resumen = mesParam => {
     </main><div class="abajo">${nav('resumen')}</div></div>`,
     montar(r) {
       contar(r.querySelector('#k-calle'), 0, total);
+      montarGraficaResumen(r, per, mapa);
     }
   };
 };

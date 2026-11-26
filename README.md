@@ -14,6 +14,7 @@ Fiao sigue el versionado semántico (MAJOR.MINOR.PATCH): las versiones 0.x fuero
 
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.1.0 | 2026-11-26 | Menor | Resumen por periodos: Día, Mes, Año, Todo o un rango de fechas elegido en un calendario, con la gráfica «Fió y recuperó» en pares y el detalle de cada día o mes; el menú de abajo ilumina entera la pestaña activa (ícono y nombre) en una cápsula cobalto, también en Tinta |
 | 2.0.5 | 2026-11-24 | Parche | Sin zoom por doble toque en toda la app: los toques rápidos ya no agrandan la pantalla; el zoom con dos dedos sigue disponible |
 | 2.0.4 | 2026-11-24 | Parche | La hoja de fiar tiene tres zonas: el toldo arriba, el medio (lo único que se desplaza si no cabe) y «Fiar» abajo en su propio espacio, sin tapar el teclado; en Cobros, «¿Por qué?» va en su propia línea y el aviso del horario tiene el interlineado parejo |
 | 2.0.3 | 2026-11-23 | Parche | «Fiar» se ve sin desplazar en la hoja de fiar (el teclado se ajusta al alto de la pantalla y el botón queda pegado abajo si no cabe); la burbuja del paso 3 de la guía ya no se recorta en iPhone y se aparta al marcar el monto; el ojo de «Ocultar montos» se ve abierto o tachado según el estado; nada queda debajo de la barra de estado del iPhone |
@@ -170,6 +171,8 @@ Después de la entrega para la Muestra de Proyectos, una crítica de la interfaz
 - **Hoja «Pagó».** Los cuatro medios tienen el mismo tamaño y su ícono, y la hoja dice «Queda al día» antes de confirmar.
 - **Cobros.** El aviso de la ley va en tono neutro (no es un error) y, si hoy no se puede, dice desde cuándo. Fuera de horario no aparece un botón apagado que parezca tocable. Cada cobro se ve como en la Libreta, con el monto a la derecha y la acción debajo.
 - **Resumen.** El mes se cambia con flechas, en el estilo de la app.
+- **Resumen por periodos (2.1.0).** Día, Mes, Año y Todo, o «Elegir día o rango de fechas» con atajos (Hoy, Ayer, Últimos 14 días, Este mes, Mes pasado) y un calendario para marcar de qué día a qué día. Cada periodo muestra lo que recuperó y lo que fió, cuánto más o menos le deben, el promedio por fiado y una gráfica de barras en pares: se toca una barra (o se recorre con las flechas del teclado) para ver las cifras exactas de ese día o mes. «En la calle» arriba sigue siendo el valor de hoy, y «Quién debe más» y «A quién revisar» van debajo, bajo «Así están sus cuentas hoy». En Tinta, lo recuperado se distingue por el rayado y no solo por el color. Los enlaces de antes (#resumen y #resumen-AAAAMM) siguen llevando al mes.
+- **Menú de abajo (2.1.0).** La pestaña activa se ilumina entera —ícono y nombre en blanco— sobre una cápsula cobalto sólida; en Tinta, azul oscuro con borde negro. La muestra del menú en «Así se mueve por Fiao» sigue el mismo diseño.
 - **Mostrar.** Arriba va el nombre de la tienda y la fecha, para que el vecino sepa de dónde viene la cuenta. Lo último que se anotó lleva ícono y hora, igual que en la página del vecino.
 - **Consejos de la primera vez.** Flotan sobre la pantalla en vez de empujar el contenido hacia abajo.
 - **Dos tamaños de cifra.** Protagonista (una por pantalla) y secundaria (en tarjetas). «Mostrar» usa una más grande porque se lee desde el otro lado del mostrador.
@@ -247,6 +250,7 @@ js/guia.js              Guía del primer uso: práctica, recorrido y primeros pa
 js/voz.js               La voz de Fiao: qué frase suena en cada momento
 js/ilustraciones.js     Ilustraciones del primer acceso, con un mismo sistema de composición
 js/vistas-*.js          Las pantallas y las hojas (anotar, pagó, permiso)
+js/resumen-periodos.js  Resumen por periodos: Día, Mes, Año, Todo, rango, gráfica y hoja «Elegir días»
 js/app.js               Rutas y arranque
 js/vecino.js            Pantalla del vecino
 audio/                  Las frases grabadas de la voz de Fiao

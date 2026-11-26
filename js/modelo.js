@@ -197,6 +197,32 @@ function resumenDelMes(y, mes) {
   }
   return { recuperado, fiado };
 }
+/* ───── 2.1.0 · El Resumen por periodos ─────
+   Todo se arma desde el libro de movimientos: no se guarda nada nuevo. */
+/** Fiado y recuperado de cada día: Map «AAAA-MM-DD» → { fi, pa, nf } (nf = cuántos fiados). Los anulados no cuentan. */
+function movimientosPorDia() {
+  const mapa = new Map();
+  for (const m of Datos.movs.values()) {
+    if (m.anulado || (m.tipo !== 'fiado' && m.tipo !== 'pago')) continue;
+    const k = isoDia(new Date(m.fecha));
+    const x = mapa.get(k) || { fi: 0, pa: 0, nf: 0 };
+    if (m.tipo === 'pago') x.pa += m.monto; else { x.fi += m.monto; x.nf++; }
+    mapa.set(k, x);
+  }
+  return mapa;
+}
+/** Suma de los días entre dos fechas (AAAA-MM-DD, las dos incluidas). */
+function sumaDelPeriodo(mapa, desde, hasta) {
+  const t = { fi: 0, pa: 0, nf: 0 };
+  for (const [k, x] of mapa) if (k >= desde && k <= hasta) { t.fi += x.fi; t.pa += x.pa; t.nf += x.nf; }
+  return t;
+}
+/** El primer día que tiene movimientos (o hoy, si la libreta está vacía). */
+function primerDiaConDatos(mapa) {
+  let a = isoDia();
+  for (const k of mapa.keys()) if (k < a) a = k;
+  return a;
+}
 function mesesConDatos() {
   const set = new Set([...Datos.movs.values()].map(m => m.fecha.slice(0, 7)));
   set.add(isoDia().slice(0, 7));
