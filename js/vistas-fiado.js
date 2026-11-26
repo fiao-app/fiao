@@ -249,8 +249,12 @@ async function enviarRecibo(c, m, o = {}) {
   const t = tienda();
   if (!t.preguntoPagos && !t.demo) return pedirDatosPago(() => enviarRecibo(c, m, o));
   if (o.imagen) return abrirReciboImagen(c, m);
-  abrirWhatsApp(c.cel, m.tipo === 'pago' ? mensajePago(c, m) : mensajeFiado(c, m));
+  /* 2.3.4 · Primero queda anotado que se envió (al abrir WhatsApp el celular puede dejar la app en pausa) y la pantalla se repinta:
+     así «Mostrar o enviar un recibo» se marca en Primeros pasos, igual que al mostrarlo o enviarlo como imagen. */
+  const texto = m.tipo === 'pago' ? mensajePago(c, m) : mensajeFiado(c, m);
   m.enviado = new Date().toISOString(); await guardarMov(m); await registrarContacto(c.id, 'recibo', m.id);
+  abrirWhatsApp(c.cel, texto);
+  mostrarRuta({ animar: false });
   avisar('Abrimos WhatsApp con el recibo listo.');
 }
 function pedirCelular(c, m, o = {}) {

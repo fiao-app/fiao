@@ -14,6 +14,7 @@ Fiao sigue el versionado semántico (MAJOR.MINOR.PATCH): las versiones 0.x fuero
 
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.3.4 | 2026-11-26 | Parche | «Palabras de Fiao» pasa de 8 a 23 términos (saldo inicial, comprobante, permiso, mostrar, enlace, corregir, anular, atiende, cuadre, resumen, recuperó, ocultar montos, copia, exportar…); enviar el recibo por WhatsApp marca «Mostrar o enviar un recibo» en Primeros pasos (se anota antes de abrir WhatsApp y la pantalla se repinta) |
 | 2.3.3 | 2026-11-26 | Parche | El globo de WhatsApp (del ícono oficial entregado por el equipo) en los 12 botones que abren WhatsApp, del color de cada botón |
 | 2.3.2 | 2026-11-26 | Parche | Barras de «Quién debe más» en naranja (el color de lo fiado); «Como imagen» pide el celular y el permiso igual que «Enviar recibo», sin quedarse en el permiso |
 | 2.3.1 | 2026-11-26 | Parche | Avisos de abajo legibles en Oscuro (superficie propia `--inverso`, 10,6:1) y texto oscuro sobre naranja en todos los temas; en el Resumen, «En la calle» ya no se anima al cambiar de periodo (cuentan Recuperó y Fió) y la pantalla no sube al inicio; «Ocultar montos» en Ajustes se aplica al instante; la bienvenida muestra la versión real; Ajustes dice «Todo guardado en este celular» y exporta la libreta a Excel (CSV con tildes y punto y coma) |

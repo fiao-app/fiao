@@ -409,15 +409,31 @@ function abrirPorQue(clave) {
 }
 
 /* ───── Ayuda: corta, por pantalla, con "Escuchar" ───── */
+/* 2.3.4 · Las palabras de Fiao, al día con lo que hace la app: primero la plata, después lo que se hace con el vecino y al final las pantallas y ajustes. */
 const GLOSARIO = [
   ['Fiado', 'lo que el vecino se lleva y paga después.'],
   ['Pago', 'lo que el vecino abona a su cuenta. Puede ser todo o una parte.'],
+  ['Saldo inicial', 'lo que un vecino ya le debía antes de usar Fiao.'],
   ['Cuenta', 'lo que un vecino le debe ahora.'],
+  ['En la calle', 'lo que le deben entre todos, hoy.'],
   ['Cupo', 'hasta cuánto le fía a cada uno.'],
-  ['Recibo', 'el mensaje que le confirma al vecino lo anotado.'],
-  ['Recordatorio', 'el mensaje para cobrar, solo en el horario que permite la ley.'],
+  ['Atrasado', 'pasó el día acordado y todavía debe.'],
+  ['Recibo', 'el mensaje que le confirma al vecino un fiado. Va por WhatsApp, como imagen o mostrándole el celular.'],
+  ['Comprobante', 'el mensaje que le confirma al vecino un pago.'],
+  ['Permiso', 'el «sí» del vecino para recibir mensajes por WhatsApp. Sin él, Fiao no le escribe.'],
+  ['Recordatorio', 'el mensaje para cobrar, solo en el horario que permite la ley y una vez al día.'],
+  ['Mostrar', 'girar el celular hacia el vecino para que vea su cuenta en el mostrador.'],
+  ['Enlace de su cuenta', 'la página donde el vecino ve su cuenta sin instalar nada.'],
+  ['Corregir', 'cambiar un monto mal anotado. El vecino ve qué cambió: nada se borra.'],
+  ['Anular', 'dejar sin efecto un fiado o un pago. Queda a la vista, tachado.'],
   ['Historial', 'todo lo anotado y pagado, con fecha y hora.'],
-  ['En la calle', 'lo que le deben entre todos.']
+  ['Atiende', 'quién está en el mostrador. Queda anotado en cada fiado y cada pago.'],
+  ['Cuadre de hoy', 'cuánto fió y cuánto cobró hoy, comparado con ayer.'],
+  ['Resumen', 'cuánto fió y cuánto recuperó por día, mes, año o en las fechas que elija.'],
+  ['Recuperó', 'lo que le pagaron en ese periodo, sea de fiados nuevos o viejos.'],
+  ['Ocultar montos', 'tapa las cifras cuando hay gente en el mostrador.'],
+  ['Copia de respaldo', 'un archivo con toda su libreta, para recuperarla si cambia o pierde el celular.'],
+  ['Exportar a Excel', 'una tabla con todos los fiados y pagos, para abrir en Excel o Google Sheets.']
 ];
 const AYUDA = {
   inicio: ['Libreta', ['Arriba ve cuánto le deben entre todos.', 'Toque Atrasados, Pagan hoy o Al día para ver solo a esos clientes.', 'Toque un nombre para ver su cuenta. Con la lupa lo busca por nombre o por celular.', 'Para borrar un cliente, deslícelo a la izquierda.', 'Con «Fiar», abajo en el centro, anota en segundos.']],
