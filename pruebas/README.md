@@ -7,6 +7,7 @@ Pruebas automáticas que se corren antes de publicar cada versión.
 | `version.js` | Que la versión de la app (`js/version.js`), la del service worker y el README coincidan |
 | `funcionamiento.js` | 40 casos del Resumen por periodos: rutas, enlaces viejos, rango de fechas, calendario, teclado y ocultar montos |
 | `correcciones.js` | Fechas de Colombia en las cifras de hoy, versión visible, filtros accesibles, guía modal, anillo de foco y área de toque |
+| `correcciones-231.js` | Avisos legibles en Color, Oscuro y Tinta; «En la calle» fija al cambiar de periodo; Ocultar montos al instante; versión en la bienvenida; «Todo guardado»; exportar a Excel |
 | `accesibilidad.js` | axe (WCAG 2.2 AA y buenas prácticas) en 29 vistas, toques menores de 44 px, letra menor de 14 px, desbordes y errores de JavaScript |
 
 ## Cómo correrlas

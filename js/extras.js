@@ -3,6 +3,7 @@
 
 /* Lo nuevo de cada versión, en palabras del tendero. El detalle técnico está en el README. */
 const NOVEDADES = [
+  ['2.3.1', '26 de noviembre', ['Exporte su libreta a Excel desde Ajustes.', 'Ajustes confirma que todo está guardado en el celular.', 'Ocultar montos funciona de una vez, sin volver a abrir.', 'Los avisos de abajo se leen bien en el tema Oscuro.']],
   ['2.3.0', '26 de noviembre', ['Fiao abre al instante, aun con mala señal.', 'En el Resumen, deslice el dedo sobre la gráfica o use las flechas para ver cada día.', 'El Resumen dice qué parte de lo fiado ya volvió.', 'Nuevas: esta pantalla y la de Accesibilidad.']],
   ['2.2.0', '26 de noviembre', ['Tema Oscuro para descansar la vista de noche.', 'Apariencia Automática: Fiao sigue a su celular.']],
   ['2.1.1', '26 de noviembre', ['Lo que anota después de las 7 p. m. cuenta para hoy en el Cuadre.', 'Se maneja mejor con teclado y lector de pantalla.']],
@@ -50,3 +51,35 @@ V.accesibilidad = () => ({
           <li>La copia de respaldo es un archivo: guardarla en Drive o WhatsApp depende del celular.</li></ul></section>
     </main></div>`
 });
+
+/* ───── 2.3.1 · «Todo guardado» y exportar a Excel ───── */
+/** Una línea que confirma que la libreta está guardada en el celular, y desde cuándo. */
+function lineaGuardado() {
+  if (Datos.modo === 'memoria') return `<span class="estado atrasado">${ic('atencion', 16, 2.4)}Este navegador no deja guardar: use la copia de respaldo</span>`;
+  const t = Datos.guardadoEn, min = t ? Math.floor((Date.now() - t) / 60000) : null;
+  const cuando = t == null ? '' : min < 1 ? ' · hace un momento' : min < 60 ? ` · hace ${min} min` : ` · a las ${hora(new Date(t))}`;
+  return `<span class="estado ok">${ic('ok', 16, 2.6)}Todo guardado en este celular${cuando}</span>`;
+}
+/** Exporta fiados y pagos a un CSV que Excel abre con tildes y columnas (punto y coma, como en Colombia). */
+async function exportarExcel() {
+  const campo = v => { const s = String(v ?? ''); return /[;"\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+  const TIPO = { fiado: 'Fiado', pago: 'Pago', saldo: 'Saldo inicial' };
+  const filas = [['Fecha', 'Hora', 'Cliente', 'Tipo', 'Monto', 'Qué llevó o cómo pagó', 'Atendió', 'Estado', 'Saldo actual del cliente']];
+  const movs = [...Datos.movs.values()].sort((a, b) => a.fecha.localeCompare(b.fecha));
+  for (const m of movs) {
+    const c = cliente(m.clienteId); const d = new Date(m.fecha);
+    filas.push([isoDia(d), hora(d), c ? c.nombre : '(cliente borrado)', TIPO[m.tipo] || m.tipo, m.monto,
+      m.tipo === 'pago' ? (MEDIOS[m.medio] || '').replace(/^(en|por) /, '') : (m.que || ''), m.atendio || '',
+      m.anulado ? 'Anulado' : (m.correcciones && m.correcciones.length ? 'Corregido' : ''), c ? saldoDe(c.id) : '']);
+  }
+  const texto = '﻿' + filas.map(f => f.map(campo).join(';')).join('\r\n');
+  const hoy = new Date(), nombre = `fiao-libreta-${isoDia(hoy)}.csv`;
+  const archivo = new File([texto], nombre, { type: 'text/csv' });
+  try {
+    if (navigator.canShare && navigator.canShare({ files: [archivo] })) { await navigator.share({ files: [archivo], title: 'Libreta de Fiao' }); avisar('Listo: ábrala en Excel o Google Sheets.'); return; }
+  } catch (e) { if (e.name === 'AbortError') return; }
+  const url = URL.createObjectURL(archivo);
+  const a = Object.assign(document.createElement('a'), { href: url, download: nombre });
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000);
+  avisar(`Descargó ${filas.length - 1} movimientos. Ábralos en Excel o Google Sheets.`);
+}

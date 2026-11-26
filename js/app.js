@@ -73,6 +73,9 @@ function mostrarRuta({ animar = true } = {}) {
     document.dispatchEvent(new CustomEvent('fiao', { detail: { paso: 'vista', nombre: ruta } }));
   };
   const antes = _rutaAnterior; _rutaAnterior = hash;
+  /* 2.3.1 · Cambiar de periodo en el Resumen no es cambiar de pantalla: sin transición, sin subir al inicio y sin mover el foco. */
+  Vista.cambioDePeriodo = antes !== hash && antes.split('-')[0] === 'resumen' && hash.split('-')[0] === 'resumen';
+  if (Vista.cambioDePeriodo) animar = false;
   if (animar && !_primeraVez && antes !== hash && document.startViewTransition && !reducido()) {
     const a = profundidad(antes), b = profundidad(hash);
     document.documentElement.dataset.dir = b > a ? 'adelante' : b < a ? 'atras' : 'lado';

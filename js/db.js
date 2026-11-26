@@ -91,7 +91,7 @@ function _respaldoLocal() {
 }
 function _escribir(almacen, registro, borrar = false) {
   if (typeof invalidarIndice === 'function') invalidarIndice();
-  if (!_bd) return Promise.resolve(_respaldoLocal());
+  if (!_bd) { const r = _respaldoLocal(); if (r) Datos.guardadoEn = Date.now(); return Promise.resolve(r); }
   return new Promise(ok => {
     let fallo = false;
     const mal = () => { if (!fallo) { fallo = true; _falloAlGuardar(); } ok(false); };
@@ -99,7 +99,7 @@ function _escribir(almacen, registro, borrar = false) {
       const tx = _bd.transaction(almacen, 'readwrite');
       const st = tx.objectStore(almacen);
       borrar ? st.delete(registro) : st.put(registro);
-      tx.oncomplete = () => { _avisarCambio(); ok(true); };
+      tx.oncomplete = () => { Datos.guardadoEn = Date.now(); _avisarCambio(); ok(true); };
       tx.onerror = mal;
       tx.onabort = mal;
     } catch (e) { mal(); }
@@ -116,14 +116,14 @@ function borrarMov(id) { Datos.movs.delete(id); return _escribir('movimientos', 
 /** Varias escrituras en una sola operación: o quedan todas o ninguna. ops: [almacén, registro o id, ¿borrar?] */
 function _escribirVarios(ops) {
   if (typeof invalidarIndice === 'function') invalidarIndice();
-  if (!_bd) return Promise.resolve(_respaldoLocal());
+  if (!_bd) { const r = _respaldoLocal(); if (r) Datos.guardadoEn = Date.now(); return Promise.resolve(r); }
   return new Promise(ok => {
     let fallo = false;
     const mal = () => { if (!fallo) { fallo = true; _falloAlGuardar(); } ok(false); };
     try {
       const tx = _bd.transaction([...new Set(ops.map(o => o[0]))], 'readwrite');
       for (const [a, r, borrar] of ops) borrar ? tx.objectStore(a).delete(r) : tx.objectStore(a).put(r);
-      tx.oncomplete = () => { _avisarCambio(); ok(true); };
+      tx.oncomplete = () => { Datos.guardadoEn = Date.now(); _avisarCambio(); ok(true); };
       tx.onerror = mal;
       tx.onabort = mal;
     } catch (e) { mal(); }

@@ -39,7 +39,7 @@ V.bienvenida = (paso = '') => {
     <div class="pie" role="region" aria-label="Acciones" style="padding-top:1.5rem">
       <a class="btn" href="#bienvenida-letra">Empezar</a>
       <a class="btn-link" href="#restaurar">Ya tengo una copia de mi libreta</a>
-      <p class="nota">Gratis. Sin registro. Versión de prueba.</p>
+      <p class="nota">Gratis. Sin registro. Versión ${VERSION_APP}.</p>
     </div></div>`
   };
 };

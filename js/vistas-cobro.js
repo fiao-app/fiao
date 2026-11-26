@@ -184,7 +184,11 @@ V.resumen = mesParam => {
           : '<p class="ayuda">Todo en orden: nadie atrasado ni cerca del cupo.</p>'}</section>
     </main><div class="abajo">${nav('resumen')}</div></div>`,
     montar(r) {
-      contar(r.querySelector('#k-calle'), 0, total);
+      /* 2.3.1 · «En la calle» es el valor de hoy: solo cuenta al entrar al Resumen. Al cambiar de periodo cuentan Recuperó y Fió. */
+      const pa = r.querySelector('#k-pa'), fi = r.querySelector('#k-fi');
+      if (!Vista.cambioDePeriodo) contar(r.querySelector('#k-calle'), 0, total);
+      else if (V.resumen.previo) { contar(pa, V.resumen.previo.pa, +pa.dataset.valor); contar(fi, V.resumen.previo.fi, +fi.dataset.valor); }
+      V.resumen.previo = { pa: +pa.dataset.valor, fi: +fi.dataset.valor };
       montarGraficaResumen(r, per, mapa);
     }
   };
@@ -233,16 +237,19 @@ V.ajustes = () => {
         ${segmento('letra', 'Tamaño de la letra', '', [['normal', 'Normal', 'font-size:1rem'], ['grande', 'Grande', 'font-size:1.125rem'], ['mas', 'Más grande', 'font-size:1.25rem']], letra)}
         ${segmento('tema', 'Apariencia', 'Automático sigue a su celular. Oscuro descansa la vista de noche. Tinta, azul y negro sobre blanco, se lee mejor al sol.', [['auto', `<span class="muestra auto" aria-hidden="true"></span>Automático`], ['color', `<span class="muestra color" aria-hidden="true"></span>Color`], ['oscuro', `<span class="muestra oscuro" aria-hidden="true"></span>Oscuro`], ['tinta', `<span class="muestra tinta" aria-hidden="true"></span>Tinta`]], tema, 'cuatro')}
         ${segmento('movimiento', 'Animaciones', 'Pocas: las pantallas cambian sin animaciones.', [['completo', 'Todas'], ['reducido', 'Pocas']], mov)}
-        ${interruptor('ocultar', 'Ocultar montos al abrir', 'Para cuando hay gente en el mostrador', t.ocultarAlAbrir)}
+        ${interruptor('ocultar', 'Ocultar montos', 'Para cuando hay gente en el mostrador. Sigue así al volver a abrir Fiao.', Vista.oculto)}
         ${interruptor('voz', 'Voz de Fiao', 'Una frase corta después de cada acción', t.voz !== false)}</section>
       <section class="tarjeta" aria-labelledby="t-tono"><h2 class="titulo-seccion" id="t-tono">Cómo suenan sus mensajes</h2>
         <div class="segmento" role="radiogroup" aria-labelledby="t-tono" data-grupo="tono">${Object.entries(TONOS_CORTOS).map(([k, n]) => `<button type="button" role="radio" aria-checked="${k === tono}" data-valor="${k}">${n}</button>`).join('')}</div>
         <div class="burbuja" id="a-ejemplo" style="font-size:1rem;line-height:1.45" aria-live="polite">${vistaMensaje(ejemploMensaje(tono))}</div>
         <a class="btn-link izq" href="#mensajes">${Object.keys(t.mensajes || {}).length ? 'Ver mis mensajes propios' : 'Escribir mis propios mensajes'}</a></section>
       <section class="tarjeta" aria-labelledby="t-copia"><h2 class="titulo-seccion" id="t-copia">Copia de respaldo</h2>
+        ${lineaGuardado()}
         ${dc === null ? `<span class="estado hoy">${ic('reloj', 16, 2.4)}Aún no ha guardado una copia</span>` : dc >= 7 ? `<span class="estado hoy">${ic('reloj', 16, 2.4)}Última copia: hace ${dc} días</span>` : `<span class="estado ok">${ic('ok', 16, 2.6)}Última copia: ${dc === 0 ? 'hoy' : dc === 1 ? 'ayer' : `hace ${dc} días`}</span>`}
         <button type="button" class="btn-sec" data-accion="copia">${ic('descargar', 22, 2.2)}Guardar copia ahora</button>
-        <p class="ayuda" style="display:flex;flex-wrap:wrap;align-items:center;gap:0 .25rem">Una por semana es lo ideal. ${porQue('celular', '¿Por qué?')}</p></section>
+        <p class="ayuda" style="display:flex;flex-wrap:wrap;align-items:center;gap:0 .25rem">Una por semana es lo ideal. ${porQue('celular', '¿Por qué?')}</p>
+        <button type="button" class="btn-sec" data-accion="excel">${ic('archivo', 22, 2.2)}Exportar a Excel</button>
+        <p class="ayuda">Todos los fiados y pagos en una tabla, para abrir en Excel o en Google Sheets.</p></section>
       <ul class="lista">
         ${enlace('tienda', 'tienda', 'Su tienda y cómo le pagan')}
         ${enlace('guia', 'idea', 'Ver cómo funciona Fiao')}
@@ -269,9 +276,11 @@ V.ajustes = () => {
       r.querySelectorAll('[data-interruptor]').forEach(b => b.addEventListener('click', async () => {
         const k = b.dataset.interruptor;
         if (k === 'voz') { t.voz = t.voz === false; b.setAttribute('aria-checked', t.voz); await guardarTienda(t); vibrar(10); if (t.voz) Voz.decir('cambios'); else Voz.callar(); return; }
-        t.ocultarAlAbrir = !t.ocultarAlAbrir; b.setAttribute('aria-checked', t.ocultarAlAbrir); await guardarTienda(t); vibrar(10);
+        /* 2.3.1 · Se aplica de una vez (como el ojo de la Libreta) y queda para la próxima vez que abra Fiao. */
+        t.ocultarAlAbrir = !Vista.oculto; Vista.oculto = t.ocultarAlAbrir; b.setAttribute('aria-checked', t.ocultarAlAbrir); await guardarTienda(t); vibrar(10); avisar(Vista.oculto ? 'Montos ocultos.' : 'Montos visibles.', { icono: Vista.oculto ? 'ojoNo' : 'ojo' });
       }));
       r.querySelector('[data-accion="copia"]').addEventListener('click', async () => { if (await guardarCopia()) mostrarRuta({ animar: false }); });
+      r.querySelector('[data-accion="excel"]').addEventListener('click', exportarExcel);
       r.querySelector('[data-accion="instalar"]')?.addEventListener('click', instalar);
       r.querySelector('[data-accion="pasos"]')?.addEventListener('click', async () => { t.ocultarPasos = false; await guardarTienda(t); ir('inicio'); });
       r.querySelector('[data-accion="borrar"]').addEventListener('click', async () => {

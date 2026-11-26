@@ -122,7 +122,7 @@ function htmlPeriodoResumen(per, mapa) {
   return `<div class="periodos" role="group" aria-label="Periodo">${pestanas}</div>
     ${filaRango}
     ${navegar}
-    <div class="kpis"><div class="kpi verde"><span>Recuperó</span><b>${monto(kp.pa)}</b></div><div class="kpi"><span>Fió</span><b>${monto(kp.fi)}</b></div></div>
+    <div class="kpis"><div class="kpi verde"><span>Recuperó</span><b id="k-pa" data-valor="${kp.pa}">${monto(kp.pa)}</b></div><div class="kpi"><span>Fió</span><b id="k-fi" data-valor="${kp.fi}">${monto(kp.fi)}</b></div></div>
     <div class="balance"><span class="ic">${ic(balance.ic, 22, 2.6)}</span><div><b>${balance.t}</b><span>${balance.s}</span></div></div>
     <section class="tarjeta grafica" aria-labelledby="t-gr"><h2 class="titulo-seccion" id="t-gr">${titulo}</h2>
       <div class="leyenda-gr" aria-hidden="true"><span><i class="l-fio"></i>Fió</span><span><i class="l-pag"></i>Recuperó</span></div>
