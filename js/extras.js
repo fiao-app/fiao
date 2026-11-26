@@ -3,6 +3,7 @@
 
 /* Lo nuevo de cada versión, en palabras del tendero. El detalle técnico está en el README. */
 const NOVEDADES = [
+  ['2.3.2', '26 de noviembre', ['«Quién debe más» en naranja, el color de lo fiado.', 'Enviar el recibo como imagen pide el celular primero, igual que el recibo por mensaje.']],
   ['2.3.1', '26 de noviembre', ['Exporte su libreta a Excel desde Ajustes.', 'Ajustes confirma que todo está guardado en el celular.', 'Ocultar montos funciona de una vez, sin volver a abrir.', 'Los avisos de abajo se leen bien en el tema Oscuro.']],
   ['2.3.0', '26 de noviembre', ['Fiao abre al instante, aun con mala señal.', 'En el Resumen, deslice el dedo sobre la gráfica o use las flechas para ver cada día.', 'El Resumen dice qué parte de lo fiado ya volvió.', 'Nuevas: esta pantalla y la de Accesibilidad.']],
   ['2.2.0', '26 de noviembre', ['Tema Oscuro para descansar la vista de noche.', 'Apariencia Automática: Fiao sigue a su celular.']],

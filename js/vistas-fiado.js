@@ -242,7 +242,8 @@ function avisoTrasMov(m, { clienteNuevo = false } = {}) {
 
 /* ═════ Recibo por WhatsApp: celular, permiso y datos de pago, justo cuando hacen falta ═════ */
 async function enviarRecibo(c, m, o = {}) {
-  if (!c.cel && !o.imagen) return pedirCelular(c, m);
+  /* 2.3.2 · «Como imagen» sigue el mismo camino que «Enviar recibo»: celular, permiso y después WhatsApp. */
+  if (!c.cel) return pedirCelular(c, m, o);
   if (c.permiso?.estado === 'no') return ir(`mostrar-${m.id}`);
   if (!permisoOk(c)) return abrirPermiso(c, () => enviarRecibo(c, m, o), m);
   const t = tienda();
@@ -252,7 +253,7 @@ async function enviarRecibo(c, m, o = {}) {
   m.enviado = new Date().toISOString(); await guardarMov(m); await registrarContacto(c.id, 'recibo', m.id);
   avisar('Abrimos WhatsApp con el recibo listo.');
 }
-function pedirCelular(c, m) {
+function pedirCelular(c, m, o = {}) {
   const n = esc(nombreCorto(c.nombre));
   abrirHoja(`${cabHoja(`¿Cuál es el celular de ${n}?`)}<form id="h-cel" novalidate style="display:flex;flex-direction:column;gap:.875rem">
     <div class="campo"><label for="h-celular" class="vh">Celular con WhatsApp</label><div class="con-prefijo"><span class="prefijo" aria-hidden="true">+57</span><input class="entrada" id="h-celular" type="tel" inputmode="tel" maxlength="${LIMITES.cel}" placeholder="10 números" autocomplete="off"></div></div>
@@ -263,7 +264,7 @@ function pedirCelular(c, m) {
     d.querySelector('#h-cel').addEventListener('submit', async ev => {
       ev.preventDefault(); const v = inp.value.replace(/\D/g, '').replace(/^57(?=3\d{9}$)/, '');
       if (v.length !== 10 || (!/^3/.test(v) && !tienda().demo)) { const e = d.querySelector('.error'); e.textContent = 'El celular tiene 10 números y empieza por 3.'; e.hidden = false; temblar(inp); inp.focus(); return; }
-      c.cel = v; await guardarCliente(c); enviarRecibo(c, m);
+      c.cel = v; await guardarCliente(c); enviarRecibo(c, m, o);
     });
   });
 }
