@@ -3,6 +3,7 @@
 
 /* Lo nuevo de cada versión, en palabras del tendero. El detalle técnico está en el README. */
 const NOVEDADES = [
+  ['2.5.0', '26 de noviembre', ['Dígale a Fiao ahora confirma y corrige hablando: «sí», «no, cuatro mil», «a Yesid».', 'Entiende varias cosas a la vez, aprende precios y apodos, pone fechas y cupos, agrega clientes y responde más preguntas.']],
   ['2.4.0', '26 de noviembre', ['Dígale a Fiao: mantenga presionado «Fiar» y dígale «Fíale cinco mil a Keyla». Actívelo en Ajustes.', 'También entiende pagos, preguntas como «¿Quién me debe más?» y «Recuérdale a Yesid».']],
   ['2.3.4', '26 de noviembre', ['«Palabras de Fiao» explica 23 palabras de la app, también las nuevas.', 'Enviar el recibo por WhatsApp marca el paso en Primeros pasos.']],
   ['2.3.3', '26 de noviembre', ['Los botones que abren WhatsApp llevan su logo.']],

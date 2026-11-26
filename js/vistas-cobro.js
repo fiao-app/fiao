@@ -243,6 +243,7 @@ V.ajustes = () => {
         ${interruptor('asistente', 'Hablarle a Fiao', 'Mantenga presionado «Fiar» y dígale qué hacer: «Fíale cinco mil a Keyla».', !!t.asistente)}
         ${t.asistente ? interruptor('asistenteVoz', 'Responder en voz alta', 'Fiao le lee las cifras con la voz del celular.', t.asistenteVoz !== false) : ''}
         ${t.asistente ? `<button type="button" class="btn-sec" data-accion="asistente">${ic('microfono', 22, 2.2)}Probar ahora</button>` : ''}
+        ${t.asistente && (Object.keys(t.alias || {}).length || Object.keys(t.precios || {}).length) ? `<p class="ayuda">Fiao aprendió ${Object.keys(t.alias || {}).length} ${Object.keys(t.alias || {}).length === 1 ? 'apodo' : 'apodos'} y ${Object.keys(t.precios || {}).length} ${Object.keys(t.precios || {}).length === 1 ? 'precio' : 'precios'} de lo que usted le dijo.</p><button type="button" class="btn-link" data-accion="olvidar-apodos">Olvidar apodos y precios</button>` : ''}
         <p class="ayuda">Su voz la convierte en texto el servicio de su celular (Google o Apple). Lo que dice se entiende y se guarda solo en este celular.</p></section>
       <section class="tarjeta" aria-labelledby="t-tono"><h2 class="titulo-seccion" id="t-tono">Cómo suenan sus mensajes</h2>
         <div class="segmento" role="radiogroup" aria-labelledby="t-tono" data-grupo="tono">${Object.entries(TONOS_CORTOS).map(([k, n]) => `<button type="button" role="radio" aria-checked="${k === tono}" data-valor="${k}">${n}</button>`).join('')}</div>
