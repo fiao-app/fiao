@@ -329,6 +329,15 @@ function interpretar(texto, ctx = null) {
   if (RX.ir.test(t)) { const r = RUTAS_VOZ.find(([rx]) => rx.test(t)); if (r) return { ...base, tipo: 'ir', ruta: r[1] }; }
   if (!monto && (elegido || dudosos) && RX.ficha.test(t)) return conCliente('ficha');
 
+  /* «Lucho y Carlos se llevaron 2000 cada uno» → lo mismo a cada uno */
+  if (!pregunta && monto && /\b(cada uno|cada una|a cada uno|a cada una|los dos|las dos|los tres|las tres)\b/.test(t)) {
+    const varios = cands.filter(x => x.p >= 50);
+    if (varios.length >= 2) {
+      const tipo = RX.pago.test(t) && !RX.fiar.test(t.replace(/\bpag\w*/g, '')) ? 'pago' : 'fiar';
+      const medio = (MEDIOS_VOZ.find(([rx]) => rx.test(t)) || [null, 'efectivo'])[1];
+      return { ...base, tipo: 'lote', ordenes: varios.map(x => ({ tipo, c: x.c, oidos: [], monto: tipo === 'pago' ? Math.min(monto.monto, Math.max(saldoDe(x.c.id), 0)) || monto.monto : monto.monto, que: '', medio, items: [], aprender: [] })) };
+    }
+  }
   /* Varias cosas a la vez y productos con precio */
   if (!pregunta) { const p = partir(texto, ctxC); if (p) return { ...base, ...p }; }
 
@@ -351,7 +360,12 @@ function interpretar(texto, ctx = null) {
       else return { ...r, tipo: 'falta', que: 'cliente', para: tipo };
     }
     r.c = c;
-    if (tipo === 'pago' && todo) r.monto = saldoDe(c.id);
+    if (tipo === 'pago') {
+      const s0 = Math.max(0, saldoDe(c.id)), fr = fraccionDe(t);
+      if (todo && monto && /\bmenos\b/.test(t)) r.monto = Math.max(0, s0 - monto.monto);
+      else if (fr && s0 > 0 && !(monto && !/\bpor ciento|%/.test(t))) { r.monto = redondearPlata(s0 * fr); r.parte = fr; }
+      else if (todo) r.monto = s0;
+    }
     if (!r.monto && tipo === 'fiar' && que) {
       const k = claveProducto(que), pr = precioDe(k.clave);
       if (pr) { r.monto = pr.p * k.cant; r.items = [{ que, cant: k.cant, unit: pr.p, total: r.monto, fuente: 'memoria' }]; }
@@ -391,13 +405,26 @@ function queLlevo(texto, pal, monto, elegido) {
 }
 /** «Fíale una gaseosa a Keyla» (sin monto): lo que sobra después de quitar verbos, cliente y relleno. */
 function productoDicho(pal, ignorar, elegido) {
-  const w = pal.filter((x, i) => !ignorar.has(i) && !(elegido && elegido.usadas.has(i)) && !VERBO.test(x) && !MEDIO_P.test(x) && !['a', 'al', 'por', 'pesos', 'fiao', 'que', 'hoy', 'ahora', 'ya', 'porfa', 'favor', 'tambien', 'mas', 'le', 'se', 'me'].includes(x));
+  const w = pal.filter((x, i) => !ignorar.has(i) && !(elegido && elegido.usadas.has(i)) && !VERBO.test(x) && !MEDIO_P.test(x) && !['a', 'al', 'por', 'pesos', 'fiao', 'que', 'hoy', 'ahora', 'ya', 'porfa', 'favor', 'tambien', 'mas', 'le', 'se', 'me', 'otros', 'otro', 'otra', 'otras'].includes(x));
   while (w.length && ['de', 'del', 'en', 'con', 'y'].includes(w[0])) w.shift();
   while (w.length && ['de', 'del', 'en', 'con', 'y', 'un', 'una'].includes(w[w.length - 1])) w.pop();
   if (!w.some(x => x.length >= 3 && !(x in NUM_PALABRAS))) return '';
   const s = w.join(' ');
   return s.charAt(0).toUpperCase() + s.slice(1, LIMITES.que);
 }
+/** «la mitad», «la tercera parte», «un cuarto», «el 30 por ciento» → la parte del saldo (o null). */
+function fraccionDe(t) {
+  if (/\b(la mitad|mitad|medio saldo)\b/.test(t)) return 1 / 2;
+  if (/\b(la tercera parte|un tercio|tercera parte)\b/.test(t)) return 1 / 3;
+  if (/\b(la cuarta parte|un cuarto|cuarta parte)\b/.test(t)) return 1 / 4;
+  if (/\b(dos terceras partes|dos tercios)\b/.test(t)) return 2 / 3;
+  if (/\b(tres cuartas partes|tres cuartos)\b/.test(t)) return 3 / 4;
+  const m = t.match(/\b(\d{1,3})\s*(por ciento|porciento|%)/) || t.match(/\b([a-z]+(?: y [a-z]+)?) por ciento\b/);
+  if (m) { const n = /^\d+$/.test(m[1]) ? +m[1] : m[1].split(' y ').reduce((a, x) => a + (NUM_PALABRAS[x] ?? NaN), 0); if (n > 0 && n <= 100) return n / 100; }
+  return null;
+}
+/** Redondea a múltiplos de 50, como se cobra en la tienda. */
+function redondearPlata(x) { return Math.max(50, Math.round(x / 50) * 50); }
 /** Para «Fíale mil a Pedro» cuando Pedro no existe: la palabra con mayúscula o la que va después de «a». */
 function nombreNuevo(texto, pal, monto) {
   const sinComa = texto.split(/[,;]/)[0];
@@ -432,16 +459,16 @@ function partir(texto, ctxC) {
   const grupos = []; let cur = null, tipoAnt = null, hayCliente = false;
   for (const s of trozos) {
     const toks = []; s.forEach((r, ri) => palabrasDe(r).forEach(n => toks.push({ n, ri })));
-    const pal = toks.map(x => x.n), tx = pal.join(' ');
-    const m = montoEn(pal);
-    const ign = new Set(m ? Array.from({ length: m.hasta - m.desde + 1 }, (_, k) => m.desde + k) : []);
+    const pal = toks.map(x => x.n), tx = pal.join(' '), tx0 = p => p.join(' ');
+    const m0 = montoEn(pal), m = m0 && fraccionDe(tx0(pal)) && /por ciento|porciento/.test(tx0(pal)) ? null : m0;
+    const ign = new Set(m0 ? Array.from({ length: m0.hasta - m0.desde + 1 }, (_, k) => m0.desde + k) : []);
     const { elegido, dudosos } = escoger(clientesEn(pal, ign));
     if (dudosos) return null;
     const tipoSeg = RX.pago.test(tx) && !/\b(fiale|fia|fiar|anotale|apuntale|se llevo)\b/.test(tx) ? 'pago' : RX.fiar.test(tx) ? 'fiar' : null;
     const medio = (MEDIOS_VOZ.find(([rx]) => rx.test(tx)) || [])[1];
     /* Producto: lo que sobra */
     const sobra = new Set(); toks.forEach((x, i) => {
-      if (ign.has(i) || (elegido && elegido.usadas.has(i)) || VERBO.test(x.n) || MEDIO_P.test(x.n) || ['a', 'al', 'por', 'pesos', 'peso', 'fiao', 'que', 'hoy', 'ahora', 'ya', 'porfa', 'favor', 'tambien', 'mas', 'todo'].includes(x.n)) return;
+      if (ign.has(i) || (elegido && elegido.usadas.has(i)) || VERBO.test(x.n) || MEDIO_P.test(x.n) || ['a', 'al', 'por', 'pesos', 'peso', 'fiao', 'que', 'hoy', 'ahora', 'ya', 'porfa', 'favor', 'tambien', 'mas', 'todo', 'otros', 'otro', 'otra', 'otras', 'debia', 'debe', 'lo'].includes(x.n)) return;
       sobra.add(i);
     });
     let idx = [...sobra].sort((a, b) => a - b);
@@ -456,7 +483,8 @@ function partir(texto, ctxC) {
       else if (!cur.c) { cur.c = elegido.c; cur.oidos = [...elegido.usadas].map(i => pal[i]); }
     } else if (!cur) { cur = { c: null, oidos: [], tipo: tipoSeg || tipoAnt, monto: 0, items: [], medio: medio || 'efectivo' }; grupos.push(cur); }
     if (tipoSeg && !cur.tipo) cur.tipo = tipoSeg;
-    if (/\b(todo|todito|al dia|lo que debe)\b/.test(tx) && !m) cur.todo = true;
+    if (/\b(todo|todito|al dia|lo que debe|lo que debia)\b/.test(tx) && !m) cur.todo = true;
+    const fr = fraccionDe(tx); if (fr) cur.fraccion = fr;
     if (medio) cur.medio = medio;
     tipoAnt = cur.tipo || tipoAnt;
     if (m && item) {
@@ -474,7 +502,8 @@ function partir(texto, ctxC) {
     if (g.tipo !== 'fiar' || g.monto || g.items.some(x => x.total)) return;
     g.items.forEach(x => { const k = claveProducto(x.que), pr = precioDe(k.clave); if (pr) Object.assign(x, { unit: pr.p, total: pr.p * k.cant, fuente: 'memoria' }); });
   });
-  const totalDe = g => g.tipo === 'pago' && g.todo && g.c && !g.monto ? Math.max(0, saldoDe(g.c.id)) : g.monto + g.items.reduce((s, x) => s + (x.total || 0), 0);
+  const totalDe = g => g.tipo === 'pago' && g.fraccion && g.c ? redondearPlata(Math.max(0, saldoDe(g.c.id)) * g.fraccion)
+    : g.tipo === 'pago' && g.todo && g.c && !g.monto ? Math.max(0, saldoDe(g.c.id)) : g.monto + g.items.reduce((s, x) => s + (x.total || 0), 0);
   const queDe = g => {
     const s = g.items.map((x, i) => { const q = i ? x.que.charAt(0).toLowerCase() + x.que.slice(1) : x.que; return x.total && (g.items.filter(y => y.total).length > 1 || g.monto) ? `${q} (${pesos(x.total)})` : q; }).join(', ');
     return s ? (s.charAt(0).toUpperCase() + s.slice(1)).slice(0, LIMITES.que) : '';
@@ -507,6 +536,8 @@ function entenderConfirmacion(texto, r, ctx) {
     const ign = new Set(m ? Array.from({ length: m.hasta - m.desde + 1 }, (_, k) => m.desde + k) : []);
     const { elegido } = escoger(clientesEn(pal, ign));
     const nuevo = { ...r, texto: r.texto }; let cambio = false;
+    const frc = r.tipo === 'pago' && r.c ? fraccionDe(s) : null;
+    if (frc && !(m && !/por ciento|%/.test(s))) { nuevo.monto = redondearPlata(Math.max(0, saldoDe(r.c.id)) * frc); nuevo.parte = frc; return nuevo; }
     if (m && !(m.monto === r.monto && !/\b(mas|menos|sumale|agregale|quitale|restale)\b/.test(s))) {
       nuevo.monto = /\b(mas|sumale|agregale)\b/.test(s) ? (r.monto || 0) + m.monto : /\b(menos|quitale|restale)\b/.test(s) ? Math.max(0, (r.monto || 0) - m.monto) : m.monto;
       nuevo.items = null; nuevo.aprender = null; cambio = true;
@@ -620,8 +651,38 @@ function clausulas(texto) {
   const corte = new RegExp(`[.;?](?=\\s|$)|,?\\s+y\\s+(?:luego|despu[eé]s|tambi[eé]n|adem[aá]s)\\s+|,?\\s+(?:luego|despu[eé]s|adem[aá]s)\\s+|,?\\s+y\\s+(?=(?:a\\s+\\S+\\s+)?${VERB})|,\\s*(?=${VERB})`, 'i');
   return texto.split(corte).map(x => (x || '').trim()).filter(x => x && /\p{L}/u.test(x));
 }
+/**
+ * Dictado sin comas: «Carlos se llevó 2000 Yesid pagó todo y Keyla se llevó otros 2000».
+ * Corta donde empieza un nombre de cliente que va seguido de lo que hizo («Yesid pagó», «Don Édgar abonó»),
+ * siempre que lo de antes ya sea una orden completa. «…a Keyla» (cliente al final) no se corta: eso lo resuelve el lote.
+ */
+const SUJETO_SIGUE = /^(se|le|ya|pago|pagaron|abono|abonaron|cancelo|trajo|dio|debe|debia|quiere|quedo|lleva|llevo|saco|fio|paga|pagara|me|necesita|pidio|tambien)$/;
+const PREPOS = new Set(['a', 'al', 'de', 'del', 'le', 'para', 'con', 'que', 'por', 'como', 'es', 'el', 'la']);
+function esNombreCliente(w) {
+  if (!w || w.length < 3 || RELLENO.has(w) || TRATOS.has(w) || VERBO.test(w) || w in NUM_PALABRAS || w in MULT_PALABRAS || cifra(w) !== null) return false;
+  const alias = (Datos.tienda && tienda().alias) || {};
+  if (alias[w]) return true;
+  return clientes().some(c => palabrasDe(c.nombre).some(n => n.length > 2 && !TRATOS.has(n) && parecidoF(w, n) >= 0.8));
+}
+function cortarPorCliente(f) {
+  const raw = f.split(/\s+/).filter(Boolean), n = raw.map(w => palabrasDe(w)[0] || '');
+  const cortes = [0];
+  for (let i = 1; i < raw.length; i++) {
+    if (!esNombreCliente(n[i]) || esNombreCliente(n[i - 1])) continue;
+    let ini = i;
+    if (['don', 'dona', 'profe', 'seno', 'senor', 'senora'].includes(n[i - 1])) ini = i - 1;
+    if (PREPOS.has(n[ini - 1] || '') && !['y', 'e'].includes(n[ini - 1])) continue;
+    let j = i; while (j + 1 < raw.length && esNombreCliente(n[j + 1])) j++;
+    if (!SUJETO_SIGUE.test(n[j + 1] || '')) continue;
+    const antes = n.slice(cortes.at(-1), ini).filter(w => !['y', 'e'].includes(w));
+    if (!antes.length || !(antes.some(w => VERBO.test(w) || RX.pago.test(w) || RX.fiar.test(w)) || montoEn(antes))) continue;
+    cortes.push(ini);
+  }
+  if (cortes.length < 2) return [f];
+  return cortes.map((c, k) => raw.slice(c, cortes[k + 1]).join(' ').replace(/[\s,;]+(y|e)$/i, '').replace(/^(y|e)\s+/i, '').trim()).filter(Boolean);
+}
 function interpretarPlan(texto, ctx) {
-  const cl = clausulas(texto);
+  const cl = clausulas(texto).flatMap(cortarPorCliente);
   if (cl.length < 2) return null;
   let c = ctx, pasos = [];
   for (const f of cl) {
@@ -1107,7 +1168,7 @@ const Asistente = {
         <span class="asis-quien">${pago ? 'de' : 'a'} <b>${n}</b></span>
         ${items ? `<ul class="asis-desglose">${items.map(x => `<li><span>${esc(x.que)}${x.cant > 1 ? ` · ${x.cant} × ${pesos(x.unit)}` : ''}</span><b>${pesos(x.total)}</b></li>`).join('')}</ul>${items.some(x => x.fuente === 'memoria') ? '<span class="asis-detalle">Con el precio de la última vez</span>' : ''}`
           : !pago && r.que ? `<span class="asis-detalle">${esc(r.que)}</span>` : ''}
-        ${pago ? `<span class="asis-detalle">${MEDIO_TXT[r.medio] || ''}${r.monto > saldo ? ` · debía ${pesos(saldo)}` : ''}</span>` : ''}
+        ${pago ? `<span class="asis-detalle">${MEDIO_TXT[r.medio] || ''}${r.parte ? ` · ${({ 0.5: 'la mitad', [1 / 3]: 'la tercera parte', 0.25: 'la cuarta parte', [2 / 3]: 'dos terceras partes', 0.75: 'tres cuartas partes' })[r.parte] || `el ${Math.round(r.parte * 100)} %`} de ${pesos(saldo)}` : ''}${r.monto > saldo ? ` · debía ${pesos(saldo)}` : ''}</span>` : ''}
         <span class="asis-queda">${queda > 0 ? `Queda debiendo ${pesos(queda)}` : 'Queda al día'}</span>
         ${!pago && r.fecha ? `<span class="asis-detalle">${ic('calendario', 18, 2.2)} Paga el ${esc(fechaLarga(diaDe(r.fecha)))}</span>` : ''}
         ${pasa ? `<span class="pildora atencion">${ic('atencion', 18, 2.2)}Pasa el cupo por ${pesos(pasa)}</span>` : ''}

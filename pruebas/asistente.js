@@ -39,7 +39,8 @@ const FRASES = [
   ['Keyla paga el viernes', 'fecha', 'Keyla'], ['Ponle cupo de 50 mil a Keyla', 'cupo', 'Keyla'], ['Quítale el cupo a Keyla', 'cupo', 'Keyla'],
   ['Agrega a Pedro Pérez, celular 300 123 4567', 'cliente', 'Pedro Pérez'], ['El celular de Yesid es 3101234567', 'celular', 'Yesid'],
   ['Envíale el recibo a Keyla', 'recibo', 'Keyla'], ['Atiende Doña Rosa', 'atiende'], ['busca a Lucho', 'ficha', 'Lucho'],
-  ['Mándale un recordatorio a Yesid', 'recordar', 'Yesid'], ['Don Édgar abonó cincuenta mil y Keyla pagó todo', 'lote'], ['fíale 3 mil a Keyla para el viernes', 'fiar', 'Keyla', 3000], ['Keyla, cinco mil', 'fiar', 'Keyla', 5000], ['dame el resumen', 'ir'], ['Fíale una luca y media a Keyla', 'fiar', 'Keyla', 1500]
+  ['Mándale un recordatorio a Yesid', 'recordar', 'Yesid'], ['Don Édgar pagó la mitad', 'pago', 'Don Édgar', 59200], ['Don Edgar pagó todo menos 10 mil', 'pago', 'Don Édgar', 108400],
+  ['Luz Marina pagó el 50 por ciento', 'pago', 'Luz Marina', 21000], ['Lucho y Carlos se llevaron 2000 cada uno', 'lote'], ['Don Édgar abonó cincuenta mil y Keyla pagó todo', 'lote'], ['fíale 3 mil a Keyla para el viernes', 'fiar', 'Keyla', 3000], ['Keyla, cinco mil', 'fiar', 'Keyla', 5000], ['dame el resumen', 'ir'], ['Fíale una luca y media a Keyla', 'fiar', 'Keyla', 1500]
 ];
 (async () => {
   const b = await chromium.launch();
@@ -196,6 +197,8 @@ const FRASES = [
       p3: plan('Yesid pagó 10 mil por Nequi, cuánto debe ahora'), p4: plan('¿Cuánto debe Keyla? ¿Y cuánto hay en la calle?'),
       p5: plan('anótale 2 mil a Lucho y después dime quién me debe más'), noPlan: plan('Fíale 5 mil a Keyla y 3 mil a Yesid'),
       noPlan2: plan('Fíale cinco mil a Keyla, una gaseosa'),
+      dict1: plan('Carlos se llevó 2000 Yesid pagó todo lo que debía y Keila se llevó otros 2000'),
+      dict2: plan('Don Édgar abonó 20 mil Keyla se llevó un pan de mil y Yesid pagó la mitad'),
       lineas: lineasPerfil(K).length >= 2, saludo: saludoDelDia().length > 10, sug: sugerencias().length >= 1,
       freno: frenoAlFiar(clientes().find(c => c.nombre === 'Yesid'), 5000).includes('atrasado'),
       prox: isoDia(proximoDia(5, new Date(2026, 10, 26)))
@@ -210,6 +213,8 @@ const FRASES = [
   t('plan: pago + pregunta', c26.p3 === 'pago:Yesid+saldo:Yesid', c26.p3);
   t('plan: dos preguntas', c26.p4 === 'saldo:Keyla+calle:', c26.p4);
   t('plan: «y después dime…»', c26.p5 === 'fiar:Lucho+quien:', c26.p5);
+  t('dictado sin comas: tres órdenes', c26.dict1 === 'fiar:Carlos+pago:Yesid+fiar:Keyla', c26.dict1);
+  t('dictado sin comas con «la mitad»', c26.dict2 === 'pago:Don Édgar+fiar:Keyla+pago:Yesid', c26.dict2);
   t('no parte lo que es un lote o un detalle', c26.noPlan === 'null' && c26.noPlan2 === 'null');
   t('saludo, sugerencias, perfil y freno', c26.lineas && c26.saludo && c26.sug && c26.freno);
   t('próximo viernes', c26.prox === '2026-11-27');
