@@ -1308,3 +1308,13 @@ html[data-movimiento="reducido"] .asis-mic-chico.escucha { animation: none; box-
 .asis-cel { font-family: var(--letra-titulo); font-size: 1.5rem; font-weight: 800; letter-spacing: 0.02em; }
 html[data-tema="tinta"] .asis-oido { background: #FFFFFF; box-shadow: inset 0 0 0 2px #111111; }
 html[data-tema="tinta"] .asis-mic-chico { background: #1D3BA8; }
+
+/* ───── 2.6.0 · Dígale a Fiao propone y conoce ───── */
+.asis-hoy { margin: 0; padding: 0.75rem 1rem; border-radius: 1rem; background: var(--azul-fondo-2); color: var(--tinta); font-size: 1.0625rem; line-height: 1.4; font-weight: 600; }
+.asis-sugerencias { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; }
+.asis-sugerencias .chip { min-height: 2.75rem; font-size: 1rem; }
+.asis-freno { white-space: normal; text-align: left; line-height: 1.3; }
+.asis-sugfecha { align-self: center; min-height: 2.75rem; font-size: 1rem; white-space: normal; text-align: left; line-height: 1.25; }
+.asis-sugfecha[aria-pressed="true"] { background: var(--azul); border-color: var(--azul); color: var(--blanco); }
+html[data-tema="tinta"] .asis-hoy { background: #FFFFFF; box-shadow: inset 0 0 0 2px #111111; }
+html[data-tema="tinta"] .asis-sugfecha[aria-pressed="true"] { background: #1D3BA8; border-color: #1D3BA8; }

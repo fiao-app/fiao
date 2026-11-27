@@ -204,7 +204,10 @@ const RX = {
   cuando: /\b(cuando|que dia)\b/,
   llevo: /\bque\b.*\b(se llevo|llevo|ha fiado|fio|ha llevado|lleva|saco|ha sacado|le fie)\b/,
   ausentes: /\b(no viene|no ha vuelto|no vuelve|perdid[oa]s?|desaparecid[oa]s?|hace rato|hace tiempo|no aparece)\b/,
-  pagan: /\bquien(es)?\b.*\bpaga(n)?\b/
+  pagan: /\bquien(es)?\b.*\bpaga(n)?\b/,
+  perfil: /\b(como es|hablame de|cuentame de|cuentame sobre|que sabes de|que me dices de|informacion de|info de|perfil de|como paga|como se porta|como le va a)\b/,
+  cierre: /\b(cierre|cerrar|cerremos|cerramos|cierra|cierro)\b( (del|el) dia| (la )?caja| (la )?tienda| por hoy)?\b|\bcomo cerramos\b|\bcomo me fue hoy\b/,
+  siempre: /\blo (mismo )?de (siempre|costumbre|todos los dias|cada vez)\b|\blo que siempre lleva\b|\blo usual\b/
 };
 const VERBO = /^(fiale|fia|fie|fiar|fiado|fiele|fiarle|fiare|anotale|anota|anotar|anotame|apuntale|apunta|apuntar|se|llevo|lleva|llevaron|le|di|dale|ponle|pon|cargale|carga|agregale|sumale|suma|pago|pagaron|abono|abonaron|cancelo|trajo|me|dio|dieron|enviale|pidele|fijale|mandale|pial|fiel|file|vale)$/;
 const MEDIOS_VOZ = [[/\bnequi\b/, 'nequi'], [/\b(bre ?b|breb|llave|bre-b)\b/, 'breb'], [/\b(daviplata|transferencia|bancolombia|consignacion)\b/, 'otro'], [/\b(efectivo|billete|cash|en mano)\b/, 'efectivo']];
@@ -295,6 +298,15 @@ function interpretar(texto, ctx = null) {
     }
   }
 
+  if (RX.cierre.test(t) && !elegido && !monto) return { ...base, tipo: 'cierre' };
+  if (RX.perfil.test(t) && (elegido || dudosos || ctxC)) return conCliente('perfil');
+  if (RX.siempre.test(t) && !monto && (elegido || dudosos || ctxC)) {
+    const x = conCliente('fiar');
+    if (x.tipo !== 'fiar') return x;
+    const h = perfilDe(x.c).habitual;
+    return h ? { ...x, monto: h.monto, que: h.que, medio: 'efectivo', siempre: true } : { ...x, tipo: 'sinCostumbre' };
+  }
+
   if (pregunta) {
     if (RX.pagan.test(t) && !elegido) return { ...base, tipo: 'pagan', dia: /\bmanana\b/.test(t) ? 'manana' : 'hoy' };
     if (RX.ausentes.test(t) && !elegido) return { ...base, tipo: 'ausentes' };
@@ -349,7 +361,8 @@ function interpretar(texto, ctx = null) {
   }
   if (pregunta && RX.calle.test(t)) return { ...base, tipo: 'calle' };
   if (elegido && !monto && RX.debe.test(t)) return { ...conC(elegido.c), tipo: 'saldo' };
-  return { ...base, tipo: 'nada' };
+  /* Entendió a medias: se queda con el cliente o el monto para ofrecer opciones */
+  return { ...base, tipo: 'nada', c: elegido ? elegido.c : null, monto: monto ? monto.monto : null, oidos };
 }
 /** Lo que se llevó: lo que va después de una coma, o después de «de / en» tras el monto. */
 function queLlevo(texto, pal, monto, elegido) {
@@ -514,6 +527,139 @@ function entenderConfirmacion(texto, r, ctx) {
   return ['nada', 'falta'].includes(x.tipo) ? null : x;
 }
 
+/* ───── 5b · Conoce a cada cliente: lo aprende solo de su historial ───── */
+const DIAS_NOMBRE = ['domingos', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábados'];
+function perfilDe(c) {
+  const ms = movsDe(c.id).filter(m => !m.anulado && m.tipo !== 'saldo');
+  const pagos = ms.filter(m => m.tipo === 'pago'), fiados = ms.filter(m => m.tipo === 'fiado');
+  let diaPago = null;
+  if (pagos.length >= 3) {
+    const cuenta = [0, 0, 0, 0, 0, 0, 0]; pagos.forEach(m => { cuenta[new Date(m.fecha).getDay()]++; });
+    const max = Math.max(...cuenta);
+    if (max >= 3 && max / pagos.length >= 0.5) diaPago = cuenta.indexOf(max);
+  }
+  const conteo = new Map();
+  fiados.forEach(m => {
+    if (!m.que) return;
+    const k = normalizar(m.que).trim(), x = conteo.get(k);
+    if (x) x.n++; else conteo.set(k, { que: m.que, n: 1, monto: m.monto });
+  });
+  const habitual = [...conteo.values()].filter(x => x.n >= 2).sort((a, b) => b.n - a.n)[0] || null;
+  const promFiado = fiados.length ? Math.round(fiados.reduce((s, m) => s + m.monto, 0) / fiados.length) : 0;
+  const dias = [...new Set(ms.map(m => isoDia(new Date(m.fecha))))].sort();
+  const cadaCuanto = dias.length >= 3 ? Math.max(1, Math.round((Date.parse(dias.at(-1)) - Date.parse(dias.at(0))) / 864e5 / (dias.length - 1))) : null;
+  const ultimo = ms.length ? new Date(ms.at(0).fecha) : null;
+  const sinVenir = ultimo ? diasEntre(new Date(ultimo.getFullYear(), ultimo.getMonth(), ultimo.getDate()), new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate())) : null;
+  const conDato = pagos.filter(m => typeof m.aTiempo === 'boolean');
+  const puntual = conDato.length >= 3 ? Math.round(100 * conDato.filter(m => m.aTiempo).length / conDato.length) : null;
+  return { diaPago, habitual, promFiado, cadaCuanto, sinVenir, puntual, nFiados: fiados.length, nPagos: pagos.length, ultimoPago: pagos.at(0) || null };
+}
+/** El próximo día de la semana `d` (si hoy es ese día, el de la otra semana). */
+function proximoDia(d, desde = new Date()) {
+  const h = new Date(desde.getFullYear(), desde.getMonth(), desde.getDate());
+  let n = (d - h.getDay() + 7) % 7; if (n === 0) n = 7;
+  return sumarDias(h, n);
+}
+/** Líneas cortas de lo que Fiao sabe de un cliente (hechos, nunca juicios). */
+function lineasPerfil(c) {
+  const p = perfilDe(c), s = saldoDe(c.id), e = estadoDe(c), out = [];
+  out.push(s > 0 ? `Debe ${pesos(s)}${e.tipo === 'atrasado' ? `, ${e.dias} ${e.dias === 1 ? 'día' : 'días'} de atraso` : ''}.` : 'Está al día.');
+  if (p.diaPago !== null) out.push(`Suele pagar los ${DIAS_NOMBRE[p.diaPago]}.`);
+  if (p.puntual !== null) out.push(`Ha pagado a tiempo ${p.puntual} de cada 100 veces.`);
+  if (p.habitual) out.push(`Lo que más lleva: ${p.habitual.que.toLowerCase()} (${pesos(p.habitual.monto)}).`);
+  else if (p.promFiado) out.push(`En promedio le fía ${pesos(p.promFiado)}.`);
+  if (p.cadaCuanto) out.push(`Viene cada ${p.cadaCuanto === 1 ? 'día' : `${p.cadaCuanto} días`}${p.sinVenir ? `; la última vez fue hace ${p.sinVenir} ${p.sinVenir === 1 ? 'día' : 'días'}` : '; vino hoy'}.`);
+  return out;
+}
+
+/* ───── 5c · Propone: el saludo del día y lo que conviene hacer ───── */
+function saludoDelDia() {
+  const hoy = isoDia(new Date());
+  const pagan = clientes().filter(c => c.proximaFecha === hoy && saldoDe(c.id) > 0);
+  const atrasados = aQuienRevisar().filter(x => x.tipo === 'atrasado').sort((a, b) => saldoDe(b.c.id) - saldoDe(a.c.id));
+  const partes = [];
+  if (pagan.length) {
+    const nombres = pagan.slice(0, 3).map(c => nombreCorto(c.nombre));
+    const lista = nombres.length > 1 ? `${nombres.slice(0, -1).join(', ')} y ${nombres.at(-1)}` : nombres[0];
+    partes.push(`Hoy ${pagan.length === 1 ? 'paga' : 'pagan'} ${lista}${pagan.length > 3 ? ` y ${pagan.length - 3} más` : ''}: ${pesos(pagan.reduce((s, c) => s + saldoDe(c.id), 0))}.`);
+  } else partes.push('Hoy nadie tiene fecha de pago.');
+  if (atrasados.length) { const a = atrasados[0], e = estadoDe(a.c); partes.push(`${nombreCorto(a.c.nombre)} va ${e.dias} ${e.dias === 1 ? 'día' : 'días'} atrasado${atrasados.length > 1 ? ` y hay ${atrasados.length - 1} más` : ''}.`); }
+  return partes.join(' ');
+}
+/** Hasta tres cosas que conviene hacer ahora, como botones. */
+function sugerencias() {
+  const out = [], hoy = isoDia(new Date()), hora = new Date().getHours();
+  const atr = aQuienRevisar().filter(x => x.tipo === 'atrasado').map(x => x.c).sort((a, b) => saldoDe(b.id) - saldoDe(a.id));
+  const recordable = atr.find(c => c.cel && permisoOk(c) && !recordadoHoy(c.id));
+  if (recordable && puedeRecordarAhora()) out.push({ texto: `Recordarle a ${nombreCorto(recordable.nombre)}`, frase: `Recuérdale a ${recordable.nombre}` });
+  if (clientes().some(c => c.proximaFecha === hoy && saldoDe(c.id) > 0)) out.push({ texto: '¿Quién paga hoy?', frase: '¿Quién paga hoy?' });
+  if (hora >= 17) out.push({ texto: 'Cerrar el día', frase: 'cierre del día' });
+  if (aQuienRevisar().some(x => x.tipo === 'ausente')) out.push({ texto: '¿Quién no viene?', frase: '¿Quién no viene hace rato?' });
+  out.push({ texto: '¿Quién me debe más?', frase: '¿Quién me debe más?' });
+  return out.slice(0, 3);
+}
+function htmlPropone() {
+  if (!clientes().length) return '';
+  return `<p class="asis-hoy">${esc(saludoDelDia())}</p>
+    <div class="asis-sugerencias" role="group" aria-label="Sugerencias">${sugerencias().map((x, i) => `<button type="button" class="chip" data-sug="${i}">${esc(x.texto)}</button>`).join('')}</div>`;
+}
+/** Freno antes de fiar: hechos, no juicios. */
+function frenoAlFiar(c, montoNuevo) {
+  const e = estadoDe(c), p = perfilDe(c), s = saldoDe(c.id);
+  if (e.tipo === 'atrasado' && e.dias >= 3) return `${nombreCorto(c.nombre)} va ${e.dias} días atrasado y debe ${pesos(s)}.`;
+  if (p.nFiados >= 3 && p.promFiado && montoNuevo >= 3 * p.promFiado) return `Es más del triple de lo que suele llevar (${pesos(p.promFiado)}).`;
+  if (p.ultimoPago && s > 0 && p.nPagos >= 2) { const d = diasEntre(new Date(p.ultimoPago.fecha), new Date()); if (d >= 30) return `No paga hace ${d} días y debe ${pesos(s)}.`; }
+  return '';
+}
+
+/* ───── 5d · Varias órdenes distintas en una frase: «fíale 5 mil a Keyla y recuérdale a Yesid» ───── */
+const PASO_OK = new Set(['fiar', 'pago', 'nuevo', 'fecha', 'cupo', 'cliente', 'celular', 'recordar', 'recibo', 'saldo', 'cuando', 'calle', 'quien', 'hoy', 'llevo', 'cupoq', 'pagan', 'ausentes', 'perfil', 'periodo', 'cierre', 'atiende']);
+const PREGUNTAS = new Set(['saldo', 'cuando', 'calle', 'quien', 'hoy', 'llevo', 'cupoq', 'pagan', 'ausentes', 'perfil', 'periodo', 'cierre']);
+function clausulas(texto) {
+  const VERB = '(?:recu[eé]rd|env[ií]|p[oó]n|cambi|qu[ií]t|agreg|ab[oó]n|pag[oó]|f[ií]a|f[ií]e|an[oó]t|ap[uú]nt|d[ií]me|d[ií]game|cu[aá]nt|qui[eé]n|cu[aá]nd|mu[eé]str|busc|abr|cobr|esc[rí]ib|m[aá]nd|tamb)';
+  const corte = new RegExp(`[.;?](?=\\s|$)|,?\\s+y\\s+(?:luego|despu[eé]s|tambi[eé]n|adem[aá]s)\\s+|,?\\s+(?:luego|despu[eé]s|adem[aá]s)\\s+|,?\\s+y\\s+(?=(?:a\\s+\\S+\\s+)?${VERB})|,\\s*(?=${VERB})`, 'i');
+  return texto.split(corte).map(x => (x || '').trim()).filter(x => x && /\p{L}/u.test(x));
+}
+function interpretarPlan(texto, ctx) {
+  const cl = clausulas(texto);
+  if (cl.length < 2) return null;
+  let c = ctx, pasos = [];
+  for (const f of cl) {
+    const r = interpretar(f, c);
+    if (r.tipo === 'lote') { pasos.push(...r.ordenes.map(o => ({ ...o, texto: f }))); c = { tipo: 'fiar', c: r.ordenes.at(-1).c, cuando: Date.now() }; continue; }
+    if (!PASO_OK.has(r.tipo)) return null;
+    pasos.push(r);
+    if (r.c) c = { tipo: r.tipo, c: r.c, monto: r.monto, que: r.que, medio: r.medio, cuando: Date.now() };
+  }
+  if (pasos.filter(x => ['recordar', 'recibo'].includes(x.tipo)).length > 1) return null;
+  /* Lo que abre WhatsApp va de último */
+  pasos.sort((a, b) => (['recordar', 'recibo'].includes(a.tipo) ? 1 : 0) - (['recordar', 'recibo'].includes(b.tipo) ? 1 : 0));
+  return { tipo: 'plan', texto, pasos };
+}
+/** La respuesta de una pregunta en una línea (para el plan y para leer en voz). */
+function textoRespuesta(r) {
+  const n = r.c ? nombreCorto(r.c.nombre) : '';
+  switch (r.tipo) {
+    case 'saldo': { const s = saldoDe(r.c.id); return s > 0 ? `${n} le debe ${pesos(s)}.` : `${n} no le debe nada.`; }
+    case 'cuando': { const e = estadoDe(r.c); return e.tipo === 'nada' ? `${n} no le debe nada.` : e.tipo === 'sinFecha' ? `${n} no tiene día de pago.` : e.tipo === 'atrasado' ? `${n} va ${e.dias} días atrasado.` : e.tipo === 'hoy' ? `${n} paga hoy.` : `${n} paga ${elDia(e.fecha)}.`; }
+    case 'calle': return `Tiene ${pesos(totalEnLaCalle())} en la calle.`;
+    case 'quien': { const l = quienesDebenMas(3); return l.length ? `Más deben: ${l.map(x => `${nombreCorto(x.c.nombre)} ${pesos(x.s)}`).join(', ')}.` : 'Nadie le debe.'; }
+    case 'hoy': { const x = datosCuadre(); return `Hoy fió ${pesos(x.h.fiado)} y cobró ${pesos(x.h.pagos)}.`; }
+    case 'cierre': return textoCierre();
+    case 'perfil': return lineasPerfil(r.c).slice(0, 2).join(' ');
+    case 'cupoq': { const s = Math.max(0, saldoDe(r.c.id)); return !r.c.cupo ? `${n} no tiene cupo.` : `A ${n} le quedan ${pesos(Math.max(0, r.c.cupo - s))} de cupo.`; }
+    case 'llevo': { const m = movsDe(r.c.id).find(x => x.tipo === 'fiado' && !x.anulado); return m ? `Lo último de ${n}: ${m.que || 'sin detalle'}, ${pesos(m.monto)}.` : `${n} no tiene fiados.`; }
+    case 'pagan': { const dia = isoDia(sumarDias(new Date(), r.dia === 'manana' ? 1 : 0)); const l = clientes().filter(c => c.proximaFecha === dia && saldoDe(c.id) > 0); return l.length ? `Pagan: ${l.map(c => nombreCorto(c.nombre)).join(', ')}.` : 'Nadie paga ese día.'; }
+    case 'ausentes': { const l = aQuienRevisar().filter(x => x.tipo === 'ausente'); return l.length ? `No vienen hace rato: ${l.slice(0, 4).map(x => nombreCorto(x.c.nombre)).join(', ')}.` : 'Nadie se ha perdido.'; }
+    default: return resumenOrden(r) + '.';
+  }
+}
+function textoCierre() {
+  const x = datosCuadre();
+  const man = x.manana.map(c => nombreCorto(c.nombre));
+  return `Hoy fió ${pesos(x.h.fiado)} y cobró ${pesos(x.h.pagos)}. En la calle quedan ${pesos(x.calle)}.${man.length ? ` Mañana ${man.length === 1 ? 'paga' : 'pagan'} ${man.slice(0, 3).join(', ')}${man.length > 3 ? ` y ${man.length - 3} más` : ''}.` : ' Mañana nadie tiene fecha.'}`;
+}
+
 /* ───── 6 · La voz del navegador (si está) ───── */
 const Oido = {
   clase: window.SpeechRecognition || window.webkitSpeechRecognition || null,
@@ -564,7 +710,7 @@ function leerEnVoz(texto, luego = null) {
 function ejemplosVoz(n = 3) {
   const nn = clientes().slice(0, 2).map(c => nombreCorto(c.nombre));
   const a = nn[0] || 'Keyla', b = nn[1] || 'Yesid';
-  const todos = [`«Fíale cinco mil a ${a}»`, `«${b} pagó diez mil por Nequi»`, '«¿Quién me debe más?»', `«¿Cuándo paga ${b}?»`, `«Fíale 3 mil a ${a} y 2 mil a ${b}»`, `«${a} paga el viernes»`, '«¿Cuánto me pagaron esta semana?»', `«Recuérdale a ${b}»`];
+  const todos = [`«Fíale cinco mil a ${a}»`, `«${b} pagó diez mil por Nequi»`, '«¿Quién me debe más?»', `«Fíale lo de siempre a ${a}»`, `«¿Cómo es ${b}?»`, `«Fíale 2 mil a ${a} y recuérdale a ${b}»`, `«¿Cuándo paga ${b}?»`, `«Fíale 3 mil a ${a} y 2 mil a ${b}»`, `«${a} paga el viernes»`, '«¿Cuánto me pagaron esta semana?»', `«Recuérdale a ${b}»`];
   return todos.slice(0, n);
 }
 const AVISO_VOZ = 'Su voz la convierte en texto el servicio de su celular (Google o Apple). Lo que dice se entiende y se guarda solo en este celular.';
@@ -593,6 +739,8 @@ function resumenOrden(r) {
     pagan: () => `quién paga ${r.dia === 'manana' ? 'mañana' : 'hoy'}`, ausentes: () => 'quién no viene hace rato', recordar: () => `recordarle a ${n}`,
     deshacer: () => 'deshacer lo último', fecha: () => `nueva fecha de pago para ${n}`, cupo: () => `cambiar el cupo de ${n}`,
     falta: () => r.c ? ({ fiar: `fiarle a ${n}`, pago: `pago de ${n}`, cupo: `cambiar el cupo de ${n}` }[r.para] || '') : '',
+    perfil: () => `qué sé de ${n}`, cierre: () => 'el cierre del día', plan: () => `${r.pasos.length} cosas en una sola orden`,
+    sinCostumbre: () => `fiarle a ${n} lo de siempre`,
     cliente: () => `agregar a ${n}`, celular: () => `guardar el celular de ${n}`, yaEsta: () => `agregar a ${n}`, recibo: () => `enviarle el recibo a ${n}`, atiende: () => 'cambiar quién atiende'
   }[r.tipo];
   return s ? mayuscula(s()) : '';
@@ -608,11 +756,13 @@ const Asistente = {
     c.querySelectorAll('[data-asis="otra"]').forEach(b => b.addEventListener('click', () => this.sinVoz || !Oido.hay() ? this.pasoEscribir() : this.pasoEscuchar()));
     c.querySelectorAll('[data-asis="escribir"]').forEach(b => b.addEventListener('click', () => this.pasoEscribir()));
     c.querySelectorAll('[data-asis="cerrar"]').forEach(b => b.addEventListener('click', () => cerrarHoja()));
+    const sug = c.querySelector('.asis-sugerencias') ? sugerencias() : [];
+    c.querySelectorAll('[data-sug]').forEach(b => b.addEventListener('click', () => { this.porVoz = false; this.entender([sug[+b.dataset.sug].frase]); }));
   },
   recordar(r) { if (r.c) this.ctx = { tipo: r.tipo, c: r.c, monto: r.monto, que: r.que, medio: r.medio, cuando: Date.now() }; },
   pasoEscuchar() {
     this.pend = null;
-    this.pintar(`<button type="button" class="asis-mic escucha" data-asis="mic" aria-label="Escuchando. Toque para terminar">${ic('microfono', 40, 2.2)}</button>
+    this.pintar(`${htmlPropone()}<button type="button" class="asis-mic escucha" data-asis="mic" aria-label="Escuchando. Toque para terminar">${ic('microfono', 40, 2.2)}</button>
       <p class="asis-estado">Le escucho…</p>
       <p class="asis-texto" aria-live="polite"></p>
       <p class="ayuda asis-ejemplos">Por ejemplo: ${ejemplosVoz().join(' · ')}</p>
@@ -641,7 +791,7 @@ const Asistente = {
   },
   pasoEscribir(nota = '', valor = '') {
     this.pend = null;
-    this.pintar(`${nota ? `<p class="asis-nota">${esc(nota)}</p>` : ''}
+    this.pintar(`${nota ? `<p class="asis-nota">${esc(nota)}</p>` : valor ? '' : htmlPropone()}
       <form class="asis-form" novalidate><label class="leyenda" for="asis-orden">¿Qué hago?</label>
         <input class="entrada" id="asis-orden" autocomplete="off" enterkeyhint="go" maxlength="160" placeholder="Ej.: Fíale cinco mil a Keyla" value="${esc(valor)}">
         <p class="ayuda">${Oido.hay() && !this.sinVoz ? '' : 'Puede dictarla con el micrófono de su teclado. '}Por ejemplo: ${ejemplosVoz().join(' · ')}</p>
@@ -659,6 +809,7 @@ const Asistente = {
   },
   /** Prueba las alternativas del reconocedor y se queda con la primera que se entiende completa. */
   entender(alts) {
+    for (const a of alts.slice(0, 1)) { const plan = interpretarPlan(a, this.ctx); if (plan) return this.responder(plan); }
     let r = null;
     for (const a of alts) { const x = interpretar(a, this.ctx); if (!r || (r.tipo === 'nada' && x.tipo !== 'nada') || (['falta', 'elegir'].includes(r.tipo) && !['falta', 'elegir', 'nada'].includes(x.tipo))) r = x; if (!['nada', 'falta', 'elegir'].includes(x.tipo)) break; }
     this.responder(r);
@@ -696,6 +847,12 @@ const Asistente = {
   alResponder(alts, pend) {
     if (this.pend !== pend) return;
     let x = null;
+    const t0 = normalizar(alts[0] || '');
+    if (pend.r.tipo === 'fiar' && /^(si|dale|listo|ok|claro|bueno|de una)\b/.test(t0)) {
+      const f = fechaEn(t0);
+      if (f) pend.r.fecha = isoDia(f); else if (/\b(fecha|ese dia|esa fecha|ponsela|ponle)\b/.test(t0) && pend.r.sugFecha) pend.r.fecha = pend.r.sugFecha;
+      if (f || pend.r.fecha) return pend.ejecutar();
+    }
     for (const a of alts) { x = entenderConfirmacion(a, pend.r, this.ctx); if (x) break; }
     if (x === 'si') return pend.ejecutar();
     if (x === 'no') { this.pend = null; cerrarHoja(); return avisar('Listo, no anoté nada.', { icono: 'ok' }); }
@@ -808,6 +965,16 @@ const Asistente = {
         hablar(`Hoy fió ${pesos(x.h.fiado)} y cobró ${pesos(x.h.pagos)}.`);
         return listo(esc(t), `<span>${x.h.nFiado} ${x.h.nFiado === 1 ? 'fiado' : 'fiados'} y ${x.h.nPagos} ${x.h.nPagos === 1 ? 'pago' : 'pagos'}.</span>`, `<a class="btn" href="#cuadre">Ver el cuadre de hoy</a>`);
       }
+      case 'perfil': {
+        const l = lineasPerfil(r.c); hablar(`${nombreCorto(r.c.nombre)}. ` + l.join(' '));
+        return listo(`Lo que sé de ${n(r.c)}:`, `<ul class="asis-lista">${l.map(x => `<li>${esc(x)}</li>`).join('')}</ul>`, `<a class="btn" href="#cliente-${r.c.id}">Ver la cuenta de ${n(r.c)}</a>`);
+      }
+      case 'cierre': {
+        const t = textoCierre(); hablar(t);
+        return listo('Cierre del día', `<span>${esc(t)}</span>`, `<a class="btn" href="#cuadre">Ver el cuadre de hoy</a>`);
+      }
+      case 'sinCostumbre': return listo(`${n(r.c)} todavía no tiene un «lo de siempre».`, '<span>Lo aprendo cuando le fíe lo mismo dos veces con su detalle.</span>');
+      case 'plan': return this.confirmarPlan(r);
       case 'recordar': return this.confirmarRecordar(r);
       case 'recibo': return this.confirmarRecibo(r);
       case 'fecha': return this.confirmarFecha(r);
@@ -828,11 +995,74 @@ const Asistente = {
         return avisar(Vista.oculto ? 'Montos ocultos.' : 'Montos visibles.', { icono: Vista.oculto ? 'ojoNo' : 'ojo' });
       case 'deshacer': return this.confirmarDeshacer(r);
       default:
+        if (r.c || r.monto) return this.aMedias(r);
         return this.pintar(`${this.dicho(r)}<div class="asis-respuesta"><b>No le entendí bien.</b><span>Sé fiar, anotar pagos, poner fechas y cupos, agregar clientes, recordar y responder preguntas. Pruebe así:</span>
           <ul class="asis-lista">${ejemplosVoz(6).map(e => `<li>${e}</li>`).join('')}</ul></div>
           <button type="button" class="btn" data-asis="otra">${ic('microfono', 22, 2.2)}Intentar otra vez</button>
           <button type="button" class="btn-link" data-asis="escribir">Escribirlo</button>`);
     }
+  },
+  /** Entendió el cliente o el monto, pero no qué hacer: ofrece las opciones en vez de rendirse. */
+  aMedias(r) {
+    const c = r.c, n = c ? esc(nombreCorto(c.nombre)) : '', m = r.monto;
+    const ops = c ? [
+      { t: m ? `Fiarle ${pesos(m)}` : 'Fiarle', r: { ...r, tipo: m ? 'fiar' : 'falta', que: m ? '' : 'monto', para: 'fiar', medio: 'efectivo' } },
+      { t: m ? `Anotar pago de ${pesos(m)}` : 'Anotar un pago', r: { ...r, tipo: m ? 'pago' : 'falta', que: m ? '' : 'monto', para: 'pago', medio: 'efectivo' } },
+      { t: '¿Cuánto debe?', r: { ...r, tipo: 'saldo' } },
+      { t: 'Lo que sé de ' + nombreCorto(c.nombre), r: { ...r, tipo: 'perfil' } }
+    ] : [
+      { t: `Fiar ${pesos(m)}`, r: { ...r, tipo: 'falta', que: 'cliente', para: 'fiar', monto: m } },
+      { t: `Anotar pago de ${pesos(m)}`, r: { ...r, tipo: 'falta', que: 'cliente', para: 'pago', monto: m } }
+    ];
+    this.pintar(`<p class="asis-dicho">Oí: «${esc(r.texto)}»</p><div class="asis-respuesta"><b>${c ? `¿Qué hago con ${n}?` : `¿Qué hago con ${pesos(m)}?`}</b></div>
+      <div class="asis-opciones">${ops.map((o, i) => `<button type="button" class="btn-sec" data-op="${i}">${esc(o.t)}</button>`).join('')}</div>
+      <button type="button" class="btn-link" data-asis="otra">Decirlo otra vez</button>`, el => {
+      el.querySelectorAll('[data-op]').forEach(b => b.addEventListener('click', () => this.responder(ops[+b.dataset.op].r)));
+    });
+    if (this.porVoz) leerEnVoz(c ? `¿Qué hago con ${nombreCorto(c.nombre)}?` : `¿Qué hago con ${pesos(m)}?`);
+  },
+  /** Varias órdenes distintas: una tarjeta con todos los pasos; las preguntas se responden ahí mismo. */
+  confirmarPlan(r) {
+    const acciones = r.pasos.filter(p => !PREGUNTAS.has(p.tipo));
+    const linea = p => {
+      if (PREGUNTAS.has(p.tipo)) return `<li><span><span>${esc(textoRespuesta(p))}</span><small>Respuesta</small></span></li>`;
+      const det = p.tipo === 'fiar' || p.tipo === 'pago' || p.tipo === 'nuevo' ? pesos(p.monto) : p.tipo === 'fecha' ? fechaCorta(diaDe(p.fecha)) : p.tipo === 'cupo' ? (p.cupo ? pesos(p.cupo) : 'sin cupo') : '';
+      return `<li><span><span>${esc(resumenOrden({ ...p, monto: p.monto }))}</span>${p.que ? `<small>${esc(p.que)}</small>` : ''}</span>${det ? `<b>${esc(det)}</b>` : ''}</li>`;
+    };
+    this.pintar(`${this.dicho(r)}<div class="asis-tarjeta lote"><span class="asis-tipo">${r.pasos.length} pasos</span><ul class="asis-desglose asis-filas">${r.pasos.map(linea).join('')}</ul></div>
+      ${acciones.length ? `<button type="button" class="btn fiar" data-asis="si">${ic('ok', 24, 2.6)}${acciones.length === 1 ? 'Sí, hacerlo' : `Sí, hacer los ${acciones.length}`}</button>${this.oido()}` : ''}
+      <button type="button" class="btn-sec" data-asis="corregir">Corregir lo que dije</button>
+      <button type="button" class="btn-link" data-asis="cerrar">${acciones.length ? 'Cancelar' : 'Listo'}</button>`);
+    const preguntas = r.pasos.filter(p => PREGUNTAS.has(p.tipo)).map(textoRespuesta).join(' ');
+    if (!acciones.length) { if (!Vista.oculto) leerEnVoz(preguntas); this.caja().querySelector('[data-asis="corregir"]')?.addEventListener('click', () => this.pasoEscribir('', r.texto)); return; }
+    const ejecutar = async () => {
+      this.pend = null; const b = this.caja()?.querySelector('[data-asis="si"]'); if (b) b.disabled = true;
+      let hechos = 0, whats = null, ultimo = null;
+      for (const p of acciones) {
+        if (p.tipo === 'fiar') { ultimo = await registrarFiado({ c: p.c, monto: p.monto, que: p.que || '' }); guardarPrecios(p.aprender); if (p.fecha) { p.c.proximaFecha = p.fecha; await guardarCliente(p.c); } }
+        else if (p.tipo === 'pago') { const s = saldoDe(p.c.id); if (s <= 0) continue; ultimo = await registrarPago({ c: p.c, monto: Math.min(p.monto, s), medio: p.medio || 'efectivo', recibio: tienda().atiendeAhora }); }
+        else if (p.tipo === 'nuevo') { const c = clienteNuevo(p.nombre, ''); await guardarCliente(c); ultimo = await registrarFiado({ c, monto: p.monto, que: p.que || '' }); }
+        else if (p.tipo === 'fecha') { if (saldoDe(p.c.id) <= 0) continue; p.c.proximaFecha = p.fecha; await guardarCliente(p.c); }
+        else if (p.tipo === 'cupo') { p.c.cupo = p.cupo; await guardarCliente(p.c); }
+        else if (p.tipo === 'cliente') { await guardarCliente(clienteNuevo(p.nombre, p.cel || '')); }
+        else if (p.tipo === 'celular') { p.c.cel = p.cel; await guardarCliente(p.c); }
+        else if (p.tipo === 'atiende') { if (!p.persona) continue; const t = tienda(); t.atiendeAhora = p.persona; await guardarTienda(t); }
+        else if (p.tipo === 'recordar' || p.tipo === 'recibo') { whats = p; continue; }
+        hechos++;
+      }
+      const ult = [...acciones].reverse().find(p => p.c); if (ult) this.recordar(ult);
+      cerrarHoja(); mostrarRuta({ animar: false }); if (ultimo) emitir('anotado');
+      if (whats) {
+        const c = whats.c, e = estadoDe(c);
+        if (whats.tipo === 'recordar' && c.cel && permisoOk(c) && e.saldo > 0 && puedeRecordarAhora() && !recordadoHoy(c.id)) { abrirWhatsApp(c.cel, mensajeRecordatorio(c, e)); await registrarContacto(c.id, 'recordatorio'); hechos++; }
+        else if (whats.tipo === 'recibo') { const m = movsDe(c.id).find(x => x.tipo !== 'saldo' && !x.anulado); if (m) { setTimeout(() => enviarRecibo(c, m), 320); hechos++; } }
+        else { avisar(`Listo: ${hechos} ${hechos === 1 ? 'cosa hecha' : 'cosas hechas'}. A ${nombreCorto(c.nombre)} no se le puede recordar ahora.`, { icono: 'atencion' }); return; }
+      }
+      avisar(`Listo: ${hechos} ${hechos === 1 ? 'cosa hecha' : 'cosas hechas'}.`, { icono: 'ok' });
+    };
+    this.caja().querySelector('[data-asis="si"]').addEventListener('click', ejecutar);
+    const voz = (preguntas ? preguntas + ' ' : '') + acciones.map(p => resumenOrden(p)).join('; ') + `. ¿Lo hago?`;
+    this.esperar(r, ejecutar, voz);
   },
   /** Después de elegir el cliente en una lista, sigue con lo que se había pedido. */
   seguirCon(r, cl) {
@@ -868,6 +1098,10 @@ const Asistente = {
     const queda = pago ? saldo - montoReal : saldo + montoReal;
     const pasa = !pago && c.cupo && queda > c.cupo ? queda - c.cupo : 0;
     const items = !pago && r.items && r.items.length ? r.items : null;
+    const freno = !pago ? frenoAlFiar(c, montoReal) : '';
+    const perfil = !pago ? perfilDe(c) : null;
+    const sugFecha = !pago && !r.fecha && perfil.diaPago !== null ? isoDia(proximoDia(perfil.diaPago)) : null;
+    const fechaHoy = sugFecha && c.proximaFecha === sugFecha && saldo > 0;
     this.pintar(`${this.dicho({ ...r, monto: montoReal })}<div class="asis-tarjeta ${pago ? 'pago' : 'fiado'}">
         <span class="asis-tipo">${pago ? 'Pago' : 'Fiado'}</span><b class="asis-monto">${pesos(montoReal)}</b>
         <span class="asis-quien">${pago ? 'de' : 'a'} <b>${n}</b></span>
@@ -876,7 +1110,9 @@ const Asistente = {
         ${pago ? `<span class="asis-detalle">${MEDIO_TXT[r.medio] || ''}${r.monto > saldo ? ` · debía ${pesos(saldo)}` : ''}</span>` : ''}
         <span class="asis-queda">${queda > 0 ? `Queda debiendo ${pesos(queda)}` : 'Queda al día'}</span>
         ${!pago && r.fecha ? `<span class="asis-detalle">${ic('calendario', 18, 2.2)} Paga el ${esc(fechaLarga(diaDe(r.fecha)))}</span>` : ''}
-        ${pasa ? `<span class="pildora atencion">${ic('atencion', 18, 2.2)}Pasa el cupo por ${pesos(pasa)}</span>` : ''}</div>
+        ${pasa ? `<span class="pildora atencion">${ic('atencion', 18, 2.2)}Pasa el cupo por ${pesos(pasa)}</span>` : ''}
+        ${freno ? `<span class="pildora atencion asis-freno">${ic('atencion', 18, 2.2)}${esc(freno)}</span>` : ''}</div>
+      ${sugFecha && !fechaHoy ? `<button type="button" class="chip asis-sugfecha" aria-pressed="false" data-fecha="${sugFecha}">${ic('calendario', 18, 2.2)}Suele pagar los ${DIAS_NOMBRE[perfil.diaPago]}: poner el ${esc(fechaCorta(diaDe(sugFecha)))}</button>` : ''}
       <button type="button" class="btn ${pago ? 'verde' : 'fiar'}" data-asis="si">${ic('ok', 24, 2.6)}Sí, anótelo</button>
       ${this.oido()}
       <button type="button" class="btn-sec" data-asis="corregir">Corregir lo que dije</button>
@@ -890,7 +1126,10 @@ const Asistente = {
       cerrarHoja(); mostrarRuta({ animar: false }); emitir(pago ? 'pagado' : 'anotado'); avisoTrasMov(m);
     };
     this.caja().querySelector('[data-asis="si"]').addEventListener('click', ejecutar);
-    this.esperar(r, ejecutar, `${pago ? 'Pago' : 'Fiado'} de ${pesos(montoReal)} ${pago ? 'de' : 'a'} ${nombreCorto(c.nombre)}. ¿Lo anoto?`);
+    const chipF = this.caja().querySelector('.asis-sugfecha');
+    chipF?.addEventListener('click', () => { const on = chipF.getAttribute('aria-pressed') !== 'true'; chipF.setAttribute('aria-pressed', on); r.fecha = on ? chipF.dataset.fecha : null; });
+    r.sugFecha = sugFecha && !fechaHoy ? sugFecha : null;
+    this.esperar(r, ejecutar, `${pago ? 'Pago' : 'Fiado'} de ${pesos(montoReal)} ${pago ? 'de' : 'a'} ${nombreCorto(c.nombre)}.${freno ? ` Ojo: ${freno}` : ''}${r.sugFecha ? ` Suele pagar los ${DIAS_NOMBRE[perfil.diaPago]}.` : ''} ¿Lo anoto?`);
   },
   confirmarLote(r) {
     const k = r.ordenes.length;
@@ -1054,6 +1293,16 @@ function clienteNuevo(nombre, cel) {
   document.addEventListener('click', ev => { if (largo && ev.target.closest('.nav .fiar')) { ev.stopImmediatePropagation(); ev.preventDefault(); largo = false; } }, true);
   document.addEventListener('contextmenu', ev => { if (ev.target.closest('.nav .fiar') && activo()) ev.preventDefault(); });
   document.addEventListener('click', ev => { if (ev.target.closest('[data-accion="asistente"]')) { cerrarHoja(); setTimeout(() => abrirAsistente(), 300); } });
+  /* El saludo del día: la primera vez que se abre la Libreta cada día, si el asistente está encendido */
+  const saludar = (intentos = 0) => {
+    if (!Datos.tienda) { if (intentos < 40) setTimeout(() => saludar(intentos + 1), 500); return; }
+    const t = tienda(), hoy = isoDia(new Date());
+    if (!t.asistente || t.saludoDia === hoy || !clientes().length) return;
+    if (!['', '#', '#inicio'].includes(location.hash) || document.querySelector('#hoja[open]')) return;
+    t.saludoDia = hoy; guardarTienda(t);
+    avisar(saludoDelDia(), { icono: 'calendario', ms: 9000, voz: false, acciones: [{ texto: 'Hablarle', fuerte: true, fn: () => abrirAsistente() }] });
+  };
+  window.addEventListener('load', () => setTimeout(saludar, 1800));
   document.addEventListener('click', async ev => {
     if (!ev.target.closest('[data-accion="olvidar-apodos"]')) return;
     const t = tienda(); t.alias = {}; t.precios = {}; await guardarTienda(t); mostrarRuta({ animar: false }); avisar('Listo: Fiao olvidó los apodos y precios aprendidos.', { icono: 'ok' });

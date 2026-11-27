@@ -183,6 +183,65 @@ const FRASES = [
   // Seguidilla con contexto: después de Pedro, «¿cuánto debe?»
   t('seguidilla: «¿y Yesid?» repite la pregunta', await p.evaluate(() => { const k = clientes().find(c => c.nombre === 'Keyla'); return interpretar('¿y Yesid?', { tipo: 'cuando', c: k, cuando: Date.now() }).tipo === 'cuando'; }));
 
+  // 6c · 2.6.0: conoce, propone y varias órdenes distintas
+  const c26 = await p.evaluate(() => {
+    const K = clientes().find(c => c.nombre === 'Keyla');
+    const plan = s => { const r = interpretarPlan(s, null); return r ? r.pasos.map(x => x.tipo + ':' + (x.c ? nombreCorto(x.c.nombre) : '')).join('+') : 'null'; };
+    return {
+      perfil: interpretar('¿Cómo es Yesid?').tipo, perfil2: interpretar('háblame de Keyla').tipo,
+      siempre: (r => r.tipo + ':' + (r.monto > 0) + ':' + !!r.que)(interpretar('Fíale lo de siempre a Keyla')),
+      cierre: interpretar('cierre del día').tipo,
+      medias: (r => r.tipo + ':' + (r.c && r.c.nombre))(interpretar('Keyla')),
+      p1: plan('Fíale 5 mil a Keyla y recuérdale a Yesid'), p2: plan('Fíale 3 mil a Keyla y ponle fecha el viernes'),
+      p3: plan('Yesid pagó 10 mil por Nequi, cuánto debe ahora'), p4: plan('¿Cuánto debe Keyla? ¿Y cuánto hay en la calle?'),
+      p5: plan('anótale 2 mil a Lucho y después dime quién me debe más'), noPlan: plan('Fíale 5 mil a Keyla y 3 mil a Yesid'),
+      noPlan2: plan('Fíale cinco mil a Keyla, una gaseosa'),
+      lineas: lineasPerfil(K).length >= 2, saludo: saludoDelDia().length > 10, sug: sugerencias().length >= 1,
+      freno: frenoAlFiar(clientes().find(c => c.nombre === 'Yesid'), 5000).includes('atrasado'),
+      prox: isoDia(proximoDia(5, new Date(2026, 10, 26)))
+    };
+  });
+  t('perfil: «¿Cómo es…?» y «háblame de…»', c26.perfil === 'perfil' && c26.perfil2 === 'perfil');
+  t('«lo de siempre» toma el producto y el monto habituales', c26.siempre === 'fiar:true:true', c26.siempre);
+  t('cierre del día', c26.cierre === 'cierre');
+  t('a medias: se queda con el cliente', c26.medias === 'nada:Keyla');
+  t('plan: fiar + recordar', c26.p1 === 'fiar:Keyla+recordar:Yesid', c26.p1);
+  t('plan: fiar + fecha (mismo cliente por contexto)', c26.p2 === 'fiar:Keyla+fecha:Keyla', c26.p2);
+  t('plan: pago + pregunta', c26.p3 === 'pago:Yesid+saldo:Yesid', c26.p3);
+  t('plan: dos preguntas', c26.p4 === 'saldo:Keyla+calle:', c26.p4);
+  t('plan: «y después dime…»', c26.p5 === 'fiar:Lucho+quien:', c26.p5);
+  t('no parte lo que es un lote o un detalle', c26.noPlan === 'null' && c26.noPlan2 === 'null');
+  t('saludo, sugerencias, perfil y freno', c26.lineas && c26.saludo && c26.sug && c26.freno);
+  t('próximo viernes', c26.prox === '2026-11-27');
+  // Plan en pantalla: ejecuta los dos pasos
+  await p.evaluate(() => { Oido.clase = null; abrirAsistente(); }); await p.waitForTimeout(500);
+  t('la hoja propone: saludo y sugerencias', await p.locator('.asis-hoy').count() === 1 && await p.locator('.asis-sugerencias .chip').count() >= 1);
+  l0 = await sal('Lucho');
+  await p.fill('#asis-orden', 'Fíale 2 mil a Lucho y ponle cupo de 90 mil'); await p.keyboard.press('Enter'); await p.waitForTimeout(400);
+  t('plan: tarjeta con 2 pasos', await p.locator('.asis-filas li').count() === 2, await p.locator('.asis').innerText());
+  await p.locator('[data-asis="si"]').click(); await p.waitForTimeout(900);
+  t('plan: hizo los dos', await sal('Lucho') === l0 + 2000 && await p.evaluate(() => clientes().find(c => c.nombre === 'Lucho').cupo === 90000));
+  // A medias: «Keyla» sola → opciones
+  await p.evaluate(() => abrirAsistente()); await p.waitForTimeout(500);
+  await p.fill('#asis-orden', 'Keyla'); await p.keyboard.press('Enter'); await p.waitForTimeout(300);
+  t('a medias: ofrece opciones con Keyla', await p.locator('[data-op]').count() === 4);
+  await p.locator('[data-op="3"]').click(); await p.waitForTimeout(300);
+  t('a medias → perfil', /Lo que sé de Keyla/.test(await p.locator('.asis-respuesta').innerText()));
+  // Freno y fecha sugerida: Lucho paga siempre los viernes
+  await p.evaluate(async () => {
+    const L = clientes().find(c => c.nombre === 'Lucho'), viernes = [-7, -14, -21].map(k => { const d = proximoDia(5); d.setDate(d.getDate() + k * 1); d.setHours(10); return d; });
+    for (const d of viernes) await guardarMov({ id: uid(), clienteId: L.id, tipo: 'pago', monto: 1000, medio: 'efectivo', fecha: d.toISOString(), correcciones: [], anulado: false });
+    L.proximaFecha = isoDia(sumarDias(new Date(), 2)); await guardarCliente(L); invalidarIndice(); abrirAsistente();
+  }); await p.waitForTimeout(500);
+  await p.fill('#asis-orden', 'Fíale mil a Lucho'); await p.keyboard.press('Enter'); await p.waitForTimeout(400);
+  t('fecha sugerida por su costumbre', await p.locator('.asis-sugfecha').count() === 1, await p.locator('.asis').innerText());
+  await p.locator('.asis-sugfecha').click(); await p.locator('[data-asis="si"]').click(); await p.waitForTimeout(900);
+  t('al tocarla, queda la fecha del viernes', await p.evaluate(() => diaDe(clientes().find(c => c.nombre === 'Lucho').proximaFecha).getDay() === 5), await p.evaluate(() => clientes().find(c => c.nombre === 'Lucho').proximaFecha + ' saldo ' + saldoDe(clientes().find(c => c.nombre === 'Lucho').id)));
+  await p.evaluate(() => abrirAsistente()); await p.waitForTimeout(500);
+  await p.fill('#asis-orden', 'Fíale mil a Yesid'); await p.keyboard.press('Enter'); await p.waitForTimeout(400);
+  t('freno al fiar a quien va atrasado', await p.locator('.asis-freno').count() === 1);
+  await p.keyboard.press('Escape'); await p.waitForTimeout(300);
+
   // 7 · Preguntas y errores de voz
   await p.evaluate(() => { Oido.clase = class { start() { setTimeout(() => this.onerror({ error: 'not-allowed' }), 100); } stop() {} abort() {} }; Asistente.sinVoz = false; abrirAsistente(); }); await p.waitForTimeout(600);
   t('sin permiso del micrófono: pasa a escribir', await p.locator('#asis-orden').count() === 1);
