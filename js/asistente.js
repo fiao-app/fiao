@@ -751,8 +751,20 @@ const Oido = {
   clase: window.SpeechRecognition || window.webkitSpeechRecognition || null,
   r: null,
   hay() { return !!this.clase; },
-  escuchar({ parcial = () => {}, final, error, fin }) {
+  eco: '',
+  /** ¿Lo que se oyó es la misma voz de Fiao? («lo hago», «sí, no o corrija»…) */
+  esEco(texto) {
+    const n = normalizar(texto || '').replace(/[^\p{L}\p{N}\s]/gu, ' ').replace(/\s+/g, ' ').trim();
+    if (!n || !this.eco) return false;
+    const palabras = n.split(' ');
+    if (palabras.length >= 2 && this.eco.includes(n)) return true;
+    return palabras.length >= 4 && parecido(n, this.eco.slice(-n.length)) >= 0.8;
+  },
+  escuchar(h) {
+    const { parcial = () => {}, final, error, fin } = h;
     if (!this.clase) { error('no-hay'); return; }
+    /* Si el tendero toca el micrófono mientras Fiao habla, Fiao se calla para escucharlo */
+    try { if (speechSynthesis.speaking) speechSynthesis.cancel(); } catch (e) { /* nada */ }
     try { this.r?.abort(); } catch (e) { /* nada */ }
     let r;
     try { r = new this.clase(); } catch (e) { error('no-arranca'); return; }
@@ -764,6 +776,11 @@ const Oido = {
       if (!vivo()) return;
       const res = ev.results[ev.results.length - 1];
       const alts = Array.from(res).map(a => a.transcript.trim());
+      if (this.esEco(alts[0])) {
+        /* Se oyó a sí mismo: se descarta y se vuelve a escuchar (hasta dos veces) */
+        if (res.isFinal) { h._eco = (h._eco || 0) + 1; if (h._eco <= 2) { this.r = null; try { r.abort(); } catch (e) { /* nada */ } setTimeout(() => this.escuchar(h), 250); } else { this.r = null; try { r.abort(); } catch (e) { /* nada */ } fin(''); } }
+        return;
+      }
       ultimo = alts[0];
       if (res.isFinal) final(alts); else parcial(ultimo);
     };
@@ -783,10 +800,21 @@ function leerEnVoz(texto, luego = null) {
     const u = new SpeechSynthesisUtterance(texto.replace(/\$/g, '').replace(/(\d)\.(\d{3})/g, '$1$2') + ''); u.lang = 'es-CO'; u.rate = 1;
     const vs = speechSynthesis.getVoices(); const v = vs.find(x => /^es(-|_)CO/i.test(x.lang)) || vs.find(x => /^es(-|_)(US|MX|419)/i.test(x.lang)) || vs.find(x => /^es/i.test(x.lang));
     if (v) u.voice = v;
+    Oido.eco = normalizar(texto).replace(/[^\p{L}\p{N}\s]/gu, ' ').replace(/\s+/g, ' ').trim();
     if (luego) {
-      let hecho = false; const una = () => { if (!hecho) { hecho = true; luego(); } };
-      u.onend = () => setTimeout(una, 250); u.onerror = una;
-      setTimeout(una, Math.max(2500, texto.length * 85));
+      /* El micrófono se abre solo cuando Fiao terminó de hablar de verdad, y un momento después:
+         si no, en Android el reconocedor oye la propia voz de Fiao («…¿lo hago?» → «lo hago»). */
+      let hecho = false, inicio = Date.now(), quietos = 0;
+      const una = () => { if (!hecho) { hecho = true; setTimeout(luego, 700); } };
+      const vigilar = () => {
+        if (hecho) return;
+        if (Date.now() - inicio > texto.length * 160 + 8000) return una();
+        quietos = speechSynthesis.speaking || speechSynthesis.pending ? 0 : quietos + 1;
+        if (quietos >= 3 && Date.now() - inicio > 600) return una();
+        setTimeout(vigilar, 150);
+      };
+      u.onend = () => { quietos = Math.max(quietos, 1); }; u.onerror = () => { quietos = Math.max(quietos, 1); };
+      setTimeout(vigilar, 300);
     }
     speechSynthesis.speak(u);
   } catch (e) { if (luego) setTimeout(luego, 150); }
@@ -847,7 +875,7 @@ const Asistente = {
   },
   recordar(r) { if (r.c) this.ctx = { tipo: r.tipo, c: r.c, monto: r.monto, que: r.que, medio: r.medio, cuando: Date.now() }; },
   pasoEscuchar() {
-    this.pend = null;
+    this.pend = null; Oido.eco = '';
     this.pintar(`${htmlPropone()}<button type="button" class="asis-mic escucha" data-asis="mic" aria-label="Escuchando. Toque para terminar">${ic('microfono', 40, 2.2)}</button>
       <p class="asis-estado">Le escucho…</p>
       <p class="asis-texto" aria-live="polite"></p>

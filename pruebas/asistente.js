@@ -294,6 +294,15 @@ const FRASES = [
   t('por voz: dice el precio y confirma', await sal('Keyla') === k0b + 1500 && await sal('Yesid') === y0b - 10000, `${k0b} ${await sal('Keyla')} ${y0b} ${await sal('Yesid')}`);
   await p.keyboard.press('Escape'); await p.waitForTimeout(300);
 
+  // 6e · Eco: el micrófono no se queda con la propia voz de Fiao
+  t('eco: reconoce su propia voz', await p.evaluate(() => { Oido.eco = normalizar('Pago de 32500 de Jhon Jairo; fiar 4000 a Lucía. ¿Lo hago?').replace(/[^\p{L}\p{N}\s]/gu, ' ').replace(/\s+/g, ' ').trim(); return Oido.esEco('lo hago') && Oido.esEco('¿Lo hago?') && !Oido.esEco('sí') && !Oido.esEco('no, tres mil') && !Oido.esEco('sí, anótelo'); }));
+  await p.evaluate(async () => { const t = tienda(); t.asistenteVoz = true; await guardarTienda(t); });
+  l0 = await sal('Lucho');
+  await decir(['Fíale dos mil a Lucho', 'lo anoto', 'sí'], 4500);
+  t('eco: descarta «lo anoto» y espera el «sí»', await sal('Lucho') === l0 + 2000, String(await sal('Lucho') - l0));
+  await p.evaluate(async () => { const t = tienda(); t.asistenteVoz = false; await guardarTienda(t); });
+  await p.keyboard.press('Escape'); await p.waitForTimeout(300);
+
   // 7 · Preguntas y errores de voz
   await p.evaluate(() => { Oido.clase = class { start() { setTimeout(() => this.onerror({ error: 'not-allowed' }), 100); } stop() {} abort() {} }; Asistente.sinVoz = false; abrirAsistente(); }); await p.waitForTimeout(600);
   t('sin permiso del micrófono: pasa a escribir', await p.locator('#asis-orden').count() === 1);
