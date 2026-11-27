@@ -129,7 +129,7 @@ const FRASES = [
     window.__frases = [];
     Oido.clase = class { start() { const f = window.__frases.shift(); setTimeout(() => { if (f) this.onresult({ results: [Object.assign([{ transcript: f }], { isFinal: true })] }); this.onend(); }, 120); } stop() {} abort() {} };
   });
-  const sal = n => p.evaluate(n => saldoDe(clientes().find(c => c.nombre === n).id), n);
+  const sal = n => p.evaluate(n => saldoDe(clientes().find(c => c.nombre === n || c.nombre.startsWith(n + ',')).id), n);
   const decir = async (frases, espera = 1600) => { await p.evaluate(f => { window.__frases = f; Asistente.sinVoz = false; abrirAsistente(); }, frases); await p.waitForTimeout(espera); };
   const yAntes = await sal('Yesid');
   await p.evaluate(() => { window.__frases = ['Yesid pagó diez mil por Nequi']; abrirAsistente(); }); await p.waitForTimeout(60);
@@ -245,6 +245,53 @@ const FRASES = [
   await p.evaluate(() => abrirAsistente()); await p.waitForTimeout(500);
   await p.fill('#asis-orden', 'Fíale mil a Yesid'); await p.keyboard.press('Enter'); await p.waitForTimeout(400);
   t('freno al fiar a quien va atrasado', await p.locator('.asis-freno').count() === 1);
+  await p.keyboard.press('Escape'); await p.waitForTimeout(300);
+
+  // 6d · 2.7.0: tareas distintas en una frase, con lo que falte preguntado en la tarjeta
+  const mix = await p.evaluate(() => {
+    const sh = s => { const pl = interpretarPlan(s, null); let r = pl || interpretar(s);
+      if (r.tipo === 'fiar' && r.items && r.items.some(x => !x.total)) r = { tipo: 'plan', pasos: [r] };
+      if (r.tipo === 'lote') r = { tipo: 'plan', pasos: r.ordenes };
+      return r.tipo === 'plan' ? r.pasos.map(x => x.tipo + ':' + (x.c ? nombreCorto(x.c.nombre) : x.nombre || '') + ((x.faltaMonto || (x.items || []).some(i => !i.total)) ? '?' : '')).join('+') : r.tipo; };
+    return [
+      ['Carlos pagó la mitad y Lucía se llevó una libra de queso', 'pago:Carlos+fiar:Lucía?'],
+      ['Keyla se llevó una gaseosa y Yesid pagó 10 mil', 'fiar:Keyla?+pago:Yesid'],
+      ['Yesid pagó 10 mil y Keyla se llevó una mogolla', 'pago:Yesid+fiar:Keyla?'],
+      ['Lucho se llevó dos mogollas, Keyla pagó todo y recuérdale a Yesid', 'fiar:Lucho?+pago:Keyla+recordar:Yesid'],
+      ['Fíale una libra de arroz a Keyla y dime cuánto debe', 'fiar:Keyla?+saldo:Keyla'],
+      ['Keyla pagó la mitad y se llevó una gaseosa', 'pago:Keyla+fiar:Keyla?'],
+      ['Yesid se llevó un pan de mil y una leche', 'fiar:Yesid?'],
+      ['Carlos trajo 5 mil, Lucía se llevó tres huevos y anótale a Keyla una gaseosa de 2500', 'pago:Carlos+fiar:Lucía?+fiar:Keyla'],
+      ['Anótale a Lucía una libra de cuajada y a Carlos dos mogollas', 'fiar:Lucía?+fiar:Carlos?'],
+      ['Keyla pagó 10 mil y le fié 5 mil más', 'pago:Keyla+fiar:Keyla'],
+      ['Agrega a Pedro y fíale 3 mil', 'nuevo:Pedro'],
+      ['Fíale 5 mil a Camilo y recuérdale a Keyla', 'nuevo:Camilo+recordar:Keyla'],
+      ['Ponle cupo de 50 mil a Keyla y fíale 2 mil', 'cupo:Keyla+fiar:Keyla'],
+      ['Lucía se llevó lo de siempre y Carlos pagó la mitad', 'fiar:Lucía?+pago:Carlos'],
+      ['Yesid pagó y Keyla se llevó 3 mil', 'pago:Yesid?+fiar:Keyla'],
+      ['Keyla se llevó 3 mil de pan y 2 mil de leche y Yesid abonó 5 mil', 'fiar:Keyla+pago:Yesid'],
+      ['Cuánto debe Keyla y fíale 2 mil', 'saldo:Keyla+fiar:Keyla'],
+      ['Fíale a Keyla una gaseosa y a Yesid una mogolla', 'fiar:Keyla?+fiar:Yesid?']
+    ].map(([f, e]) => [f, e, sh(f)]);
+  });
+  mix.forEach(([f, e, g]) => t(`mezcla: «${f}»`, e === g, g));
+  t('promesa dentro de un pago', await p.evaluate(() => { const r = interpretar('Don Édgar pagó 20 mil por Nequi y quedó de pagar el resto el viernes'); return r.tipo === 'pago' && diaDe(r.nuevaFecha).getDay() === 5; }));
+  t('el nombre del cliente nuevo no queda como detalle', await p.evaluate(() => interpretar('Fíale 5 mil a Pedro').que === ''));
+  // En pantalla: escribe el precio que falta
+  await p.evaluate(() => { Oido.clase = null; abrirAsistente(); }); await p.waitForTimeout(500);
+  const ca0 = await sal('Carlos'), lu0 = await sal('Lucía');
+  await p.fill('#asis-orden', 'Carlos pagó la mitad y Lucía se llevó una libra de queso'); await p.keyboard.press('Enter'); await p.waitForTimeout(400);
+  t('tarjeta con el campo del precio', await p.locator('.asis-precio input').count() === 1, await p.locator('.asis').innerText());
+  await p.locator('[data-asis="si"]').click(); await p.waitForTimeout(300);
+  t('sin precio no anota: lo pide', await p.locator('.asis-error:not([hidden])').count() === 1 && await sal('Lucía') === lu0);
+  await p.fill('.asis-precio input', '8.000'); await p.locator('[data-asis="si"]').click(); await p.waitForTimeout(900);
+  t('anota el pago de la mitad y el queso', await sal('Lucía') === lu0 + 8000 && await sal('Carlos') < ca0, `${lu0} ${await sal('Lucía')} ${ca0} ${await sal('Carlos')}`);
+  t('aprende el precio del queso', await p.evaluate(() => { const r = interpretar('Fíale una libra de queso a Keyla'); return r.tipo === 'fiar' && r.monto === 8000; }));
+  // Por voz: pregunta el precio y escucha la respuesta
+  await p.evaluate(() => { window.__frases = []; Oido.clase = class { start() { const f = window.__frases.shift(); setTimeout(() => { if (f) this.onresult({ results: [Object.assign([{ transcript: f }], { isFinal: true })] }); this.onend(); }, 120); } stop() {} abort() {} }; });
+  const y0b = await sal('Yesid'), k0b = await sal('Keyla');
+  await decir(['Yesid pagó 10 mil y Keyla se llevó una arepa', 'mil quinientos', 'sí'], 3200);
+  t('por voz: dice el precio y confirma', await sal('Keyla') === k0b + 1500 && await sal('Yesid') === y0b - 10000, `${k0b} ${await sal('Keyla')} ${y0b} ${await sal('Yesid')}`);
   await p.keyboard.press('Escape'); await p.waitForTimeout(300);
 
   // 7 · Preguntas y errores de voz

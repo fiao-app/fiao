@@ -9,7 +9,7 @@ Pruebas automáticas que se corren antes de publicar cada versión.
 | `correcciones.js` | Fechas de Colombia en las cifras de hoy, versión visible, filtros accesibles, guía modal, anillo de foco y área de toque |
 | `correcciones-231.js` | Avisos legibles en Color, Oscuro y Tinta; «En la calle» fija al cambiar de periodo; Ocultar montos al instante; versión en la bienvenida; «Todo guardado»; exportar a Excel |
 | `recibo-imagen.js` | «Enviar recibo» y «Como imagen» siguen el mismo camino: celular, permiso y después WhatsApp o la imagen |
-| `asistente.js` | «Dígale a Fiao»: 70 frases → órdenes, varias órdenes en una frase, a medias, perfil, saludo, sugerencias, freno, fecha sugerida, contexto, fechas, confirmar y corregir hablando, lotes, precios y apodos aprendidos, apagado de fábrica, interruptores de Ajustes, mantener presionado «Fiar», voz simulada, sin voz (escribir), confirmar antes de guardar, deshacer, preguntas |
+| `asistente.js` | «Dígale a Fiao»: 70 frases → órdenes, varias órdenes en una frase, 18 mezclas de tareas distintas con datos que faltan (en pantalla y por voz), a medias, perfil, saludo, sugerencias, freno, fecha sugerida, contexto, fechas, confirmar y corregir hablando, lotes, precios y apodos aprendidos, apagado de fábrica, interruptores de Ajustes, mantener presionado «Fiar», voz simulada, sin voz (escribir), confirmar antes de guardar, deshacer, preguntas |
 | `primeros-pasos.js` | Enviar el recibo por WhatsApp marca «Mostrar o enviar un recibo» en Primeros pasos |
 | `accesibilidad.js` | axe (WCAG 2.2 AA y buenas prácticas) en 29 vistas, toques menores de 44 px, letra menor de 14 px, desbordes y errores de JavaScript |
 

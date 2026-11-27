@@ -226,7 +226,8 @@ function celEn(texto) {
 function nombreTras(texto) {
   const m = texto.match(/(?:cliente|clienta|agrega(?:r)?(?: a| al| una| un)?|registra(?:r)? a|crea(?:r)?(?: a| el| un)?(?: cliente)?|añade a|anade a)\s+(?:(?:que se llama|llamad[oa]|de nombre)\s+)?([A-Za-zÁÉÍÓÚÑáéíóúñ]+(?:\s+(?!con\b|celular\b|cel\b|numero\b|número\b|y\b|de\b)[A-Za-zÁÉÍÓÚÑáéíóúñ]+)?)/i);
   if (!m) return '';
-  const n = m[1].trim(), k = normalizar(n.split(/\s+/)[0]);
+  const n = m[1].trim().split(/\s+/).filter(w => !VERBO.test(normalizar(w)) && !RX.fiar.test(normalizar(w))).join(' '), k = normalizar(n.split(/\s+/)[0] || '');
+  if (!n) return '';
   if (['cliente', 'clienta', 'a', 'al', 'un', 'una', 'nuevo', 'nueva', 'que'].includes(k)) return '';
   return n.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 }
@@ -304,7 +305,7 @@ function interpretar(texto, ctx = null) {
     const x = conCliente('fiar');
     if (x.tipo !== 'fiar') return x;
     const h = perfilDe(x.c).habitual;
-    return h ? { ...x, monto: h.monto, que: h.que, medio: 'efectivo', siempre: true } : { ...x, tipo: 'sinCostumbre' };
+    return h ? { ...x, monto: h.monto, que: h.que, medio: 'efectivo', siempre: true } : { ...x, tipo: 'falta', que: 'monto', para: 'fiar', producto: '', sinCostumbre: true };
   }
 
   if (pregunta) {
@@ -350,12 +351,16 @@ function interpretar(texto, ctx = null) {
     let que = tipo === 'fiar' ? queLlevo(texto, pal, monto, elegido) : '';
     if (tipo === 'fiar' && !que) que = productoDicho(pal, ignorar, elegido);
     if (/^para\b/.test(normalizar(que)) && fechaEn(normalizar(que))) que = '';
+    const fp = tipo === 'pago' && /\b(resto|lo demas|lo que falta|lo que le falta|el saldo|queda de|quedo de|quedo en|paga|pagara|pagaria|termina de)\b/.test(t) ? fechaEn(t) : null;
     const fq = tipo === 'fiar' && /\b(para el|para la|para manana|para pasado|paga el|paga la|paga manana|me paga)\b/.test(t) ? fechaEn(t) : null;
-    const r = { ...base, tipo, monto: monto ? monto.monto : null, medio, todo, que, oidos, fecha: fq ? isoDia(fq) : null };
+    const r = { ...base, tipo, monto: monto ? monto.monto : null, medio, todo, que, oidos, fecha: fq ? isoDia(fq) : null, nuevaFecha: fp && fp > new Date() ? isoDia(fp) : null };
     if (dudosos) return { ...r, tipo: 'elegir', para: tipo, opciones: dudosos };
     let c = elegido ? elegido.c : null;
     if (!c) {
-      if (tipo === 'fiar') { const n = nombreNuevo(texto, pal, monto); if (n) return { ...r, tipo: 'nuevo', nombre: n, oidos: palabrasDe(n) }; }
+      if (tipo === 'fiar') {
+        const n = nombreNuevo(texto, pal, monto);
+        if (n) { const nn = palabrasDe(n); const q = (r.que || '').split(/\s+/).filter(w => !nn.includes(normalizar(w))).join(' ').trim(); return { ...r, tipo: 'nuevo', nombre: n, oidos: nn, que: q.length > 1 ? q.charAt(0).toUpperCase() + q.slice(1) : '' }; }
+      }
       if (ctxC) c = ctxC;
       else return { ...r, tipo: 'falta', que: 'cliente', para: tipo };
     }
@@ -509,7 +514,13 @@ function partir(texto, ctxC) {
     return s ? (s.charAt(0).toUpperCase() + s.slice(1)).slice(0, LIMITES.que) : '';
   };
   if (grupos.length >= 2) {
-    if (!grupos.every(g => g.c && totalDe(g) > 0)) return null;
+    const conFalta = g => g.tipo === 'fiar' && !g.monto && g.items.some(x => !x.total);
+    if (!grupos.every(g => g.c && (totalDe(g) > 0 || conFalta(g)))) return null;
+    if (grupos.some(conFalta)) {
+      return { tipo: 'lote', ordenes: grupos.map(g => conFalta(g)
+        ? { tipo: 'fiar', c: g.c, oidos: g.oidos, monto: totalDe(g), que: '', medio: 'efectivo', items: g.items, aprender: g.items.filter(x => x.clave) }
+        : { tipo: g.tipo, c: g.c, oidos: g.oidos, monto: g.tipo === 'pago' ? Math.min(totalDe(g), Math.max(saldoDe(g.c.id), 0)) || totalDe(g) : totalDe(g), que: g.tipo === 'fiar' ? queDe(g) : '', medio: g.medio, items: g.items.filter(x => x.total), aprender: g.items.filter(x => x.clave) }) };
+    }
     const ordenes = grupos.map(g => ({ tipo: g.tipo, c: g.c, oidos: g.oidos, monto: g.tipo === 'pago' ? Math.min(totalDe(g), Math.max(saldoDe(g.c.id), 0)) || totalDe(g) : totalDe(g), que: g.tipo === 'fiar' ? queDe(g) : '', medio: g.medio, items: g.items.filter(x => x.total), aprender: g.items.filter(x => x.clave) }));
     return { tipo: 'lote', ordenes };
   }
@@ -517,6 +528,8 @@ function partir(texto, ctxC) {
   if (g.tipo !== 'fiar') return null;
   const conPrecio = g.items.filter(x => x.total);
   const todosConPrecio = g.items.length && conPrecio.length === g.items.length;
+  /* «un pan de mil y una leche»: lo que tiene precio se suma, lo que no se pregunta */
+  if (g.c && !g.monto && g.items.length >= 2 && !todosConPrecio) return { tipo: 'fiar', c: g.c, oidos: g.oidos, monto: totalDe(g), que: '', medio: 'efectivo', items: g.items, aprender: conPrecio.filter(x => x.clave) };
   if (!(conPrecio.length >= 2 || (conPrecio.length >= 1 && g.monto > 0) || (!g.monto && todosConPrecio))) return null;
   const c = g.c;
   if (!c) return null;
@@ -647,8 +660,8 @@ function frenoAlFiar(c, montoNuevo) {
 const PASO_OK = new Set(['fiar', 'pago', 'nuevo', 'fecha', 'cupo', 'cliente', 'celular', 'recordar', 'recibo', 'saldo', 'cuando', 'calle', 'quien', 'hoy', 'llevo', 'cupoq', 'pagan', 'ausentes', 'perfil', 'periodo', 'cierre', 'atiende']);
 const PREGUNTAS = new Set(['saldo', 'cuando', 'calle', 'quien', 'hoy', 'llevo', 'cupoq', 'pagan', 'ausentes', 'perfil', 'periodo', 'cierre']);
 function clausulas(texto) {
-  const VERB = '(?:recu[eé]rd|env[ií]|p[oó]n|cambi|qu[ií]t|agreg|ab[oó]n|pag[oó]|f[ií]a|f[ií]e|an[oó]t|ap[uú]nt|d[ií]me|d[ií]game|cu[aá]nt|qui[eé]n|cu[aá]nd|mu[eé]str|busc|abr|cobr|esc[rí]ib|m[aá]nd|tamb)';
-  const corte = new RegExp(`[.;?](?=\\s|$)|,?\\s+y\\s+(?:luego|despu[eé]s|tambi[eé]n|adem[aá]s)\\s+|,?\\s+(?:luego|despu[eé]s|adem[aá]s)\\s+|,?\\s+y\\s+(?=(?:a\\s+\\S+\\s+)?${VERB})|,\\s*(?=${VERB})`, 'i');
+  const VERB = '(?:recu[eé]rd|env[ií]|p[oó]n|cambi|qu[ií]t|agreg|ab[oó]n|pag[oó]|f[ií]a|f[ií][eé]|an[oó]t|ap[uú]nt|llev[oó]|traj|qued[oó] de|d[ií]me|d[ií]game|cu[aá]nt|qui[eé]n|cu[aá]nd|mu[eé]str|busc|abr|cobr|esc[rí]ib|m[aá]nd|tamb)';
+  const corte = new RegExp(`[.;?](?=\\s|$)|,?\\s+y\\s+(?:luego|despu[eé]s|tambi[eé]n|adem[aá]s)\\s+|,?\\s+(?:luego|despu[eé]s|adem[aá]s)\\s+|,?\\s+y\\s+(?=(?:(?:a\\s+\\S+|le|se|me|ya)\\s+)?${VERB})|,\\s*(?=${VERB})`, 'i');
   return texto.split(corte).map(x => (x || '').trim()).filter(x => x && /\p{L}/u.test(x));
 }
 /**
@@ -684,9 +697,21 @@ function cortarPorCliente(f) {
 function interpretarPlan(texto, ctx) {
   const cl = clausulas(texto).flatMap(cortarPorCliente);
   if (cl.length < 2) return null;
-  let c = ctx, pasos = [];
+  let c = ctx; const pasos = [];
+  let nuevoNombre = null, nuevoCel = '';
   for (const f of cl) {
-    const r = interpretar(f, c);
+    let r = interpretar(f, c);
+    /* «Agrega a Pedro y fíale 3 mil»: el fiado es para el cliente que se acaba de agregar */
+    if (nuevoNombre && ((r.tipo === 'falta' && r.que === 'cliente') || (['fiar', 'nuevo'].includes(r.tipo) && !r.c))) {
+      const i = pasos.findIndex(x => x.tipo === 'cliente' && x.nombre === nuevoNombre);
+      if (r.para === 'fiar' || r.tipo === 'fiar' || r.tipo === 'nuevo') { const q = r.tipo === 'falta' ? (r.producto || '') : (r.que || ''); if (i >= 0) pasos.splice(i, 1); r = { ...r, tipo: 'nuevo', nombre: nuevoNombre, cel: nuevoCel, monto: r.monto, que: q && normalizar(q) !== normalizar(nuevoNombre) ? q : '' }; }
+    }
+    if (r.tipo === 'cliente') { nuevoNombre = r.nombre; nuevoCel = r.cel || ''; }
+    /* Un paso al que le falta el precio o el monto no tumba la orden: se pregunta en la tarjeta */
+    if (r.tipo === 'falta' && r.que === 'monto' && r.c && ['fiar', 'pago'].includes(r.para)) {
+      r = r.para === 'fiar' && r.producto ? { ...r, tipo: 'fiar', monto: 0, que: '', items: [{ que: r.producto, cant: claveProducto(r.producto).cant, total: null }] } : { ...r, tipo: r.para, monto: null, que: '', faltaMonto: true };
+    }
+    if (r.tipo === 'nuevo' && !r.monto) return null;
     if (r.tipo === 'lote') { pasos.push(...r.ordenes.map(o => ({ ...o, texto: f }))); c = { tipo: 'fiar', c: r.ordenes.at(-1).c, cuando: Date.now() }; continue; }
     if (!PASO_OK.has(r.tipo)) return null;
     pasos.push(r);
@@ -793,14 +818,14 @@ function resumenOrden(r) {
   const n = r.c ? nombreCorto(r.c.nombre) : r.nombre || '';
   const RANGO = { ayer: 'ayer', semana: 'esta semana', mes: 'este mes', quincena: 'esta quincena' };
   const s = {
-    fiar: () => `fiar ${pesos(r.monto)} a ${n}`, pago: () => `pago de ${pesos(r.monto)} de ${n}`, nuevo: () => `fiar ${pesos(r.monto)} a ${n} (nuevo)`,
+    fiar: () => r.monto ? `fiar ${pesos(r.monto)} a ${n}` : `fiar a ${n}`, pago: () => r.monto ? `pago de ${pesos(r.monto)} de ${n}` : `pago de ${n}`, nuevo: () => r.monto ? `fiar ${pesos(r.monto)} a ${n} (nuevo)` : `agregar a ${n} y fiarle`,
     lote: () => `${r.ordenes.length} cosas para anotar`, saldo: () => `cuánto le debe ${n}`, calle: () => 'cuánto hay en la calle',
     quien: () => r.atrasados ? 'quién está atrasado' : 'quién le debe más', hoy: () => 'cómo va hoy', cuando: () => `cuándo paga ${n}`,
     llevo: () => `qué se ha llevado ${n}`, cupoq: () => `el cupo de ${n}`, periodo: () => `cuánto ${r.cual === 'fiado' ? 'fió' : 'le pagaron'}${r.c ? ` a ${n}` : ''} ${RANGO[r.rango]}`,
     pagan: () => `quién paga ${r.dia === 'manana' ? 'mañana' : 'hoy'}`, ausentes: () => 'quién no viene hace rato', recordar: () => `recordarle a ${n}`,
     deshacer: () => 'deshacer lo último', fecha: () => `nueva fecha de pago para ${n}`, cupo: () => `cambiar el cupo de ${n}`,
     falta: () => r.c ? ({ fiar: `fiarle a ${n}`, pago: `pago de ${n}`, cupo: `cambiar el cupo de ${n}` }[r.para] || '') : '',
-    perfil: () => `qué sé de ${n}`, cierre: () => 'el cierre del día', plan: () => `${r.pasos.length} cosas en una sola orden`,
+    perfil: () => `qué sé de ${n}`, cierre: () => 'el cierre del día', plan: () => r.pasos.length === 1 ? resumenOrden(r.pasos[0]).toLowerCase() : `${r.pasos.length} cosas en una sola orden`,
     sinCostumbre: () => `fiarle a ${n} lo de siempre`,
     cliente: () => `agregar a ${n}`, celular: () => `guardar el celular de ${n}`, yaEsta: () => `agregar a ${n}`, recibo: () => `enviarle el recibo a ${n}`, atiende: () => 'cambiar quién atiende'
   }[r.tipo];
@@ -873,6 +898,8 @@ const Asistente = {
     for (const a of alts.slice(0, 1)) { const plan = interpretarPlan(a, this.ctx); if (plan) return this.responder(plan); }
     let r = null;
     for (const a of alts) { const x = interpretar(a, this.ctx); if (!r || (r.tipo === 'nada' && x.tipo !== 'nada') || (['falta', 'elegir'].includes(r.tipo) && !['falta', 'elegir', 'nada'].includes(x.tipo))) r = x; if (!['nada', 'falta', 'elegir'].includes(x.tipo)) break; }
+    if (r && r.tipo === 'fiar' && r.items && r.items.some(x => !x.total)) r = { tipo: 'plan', texto: r.texto, pasos: [r] };
+    if (r && r.tipo === 'lote' && r.ordenes.some(o => o.items && o.items.some(x => !x.total))) r = { tipo: 'plan', texto: r.texto, pasos: r.ordenes };
     this.responder(r);
   },
   dicho(r) {
@@ -1082,27 +1109,64 @@ const Asistente = {
     });
     if (this.porVoz) leerEnVoz(c ? `¿Qué hago con ${nombreCorto(c.nombre)}?` : `¿Qué hago con ${pesos(m)}?`);
   },
-  /** Varias órdenes distintas: una tarjeta con todos los pasos; las preguntas se responden ahí mismo. */
+  /** Varias órdenes distintas: una tarjeta con todos los pasos; las preguntas se responden ahí mismo
+      y lo que falte (un precio, un monto) se pregunta en la misma tarjeta, por voz o escrito. */
   confirmarPlan(r) {
     const acciones = r.pasos.filter(p => !PREGUNTAS.has(p.tipo));
+    /* Lo que falta: un precio por producto sin valor, o el monto de un paso que no lo dijo */
+    const faltan = [];
+    acciones.forEach(p => {
+      if (p._base === undefined) { p._base = p.monto || 0; p._apr0 = p.aprender || []; }
+      if (p.faltaMonto) faltan.push({ p, item: null, pregunta: p.tipo === 'pago' ? `¿Cuánto pagó ${nombreCorto(p.c.nombre)}?` : `¿Cuánto le fía a ${p.c ? nombreCorto(p.c.nombre) : p.nombre}?` });
+      (p.items || []).forEach(x => { if (!x.total) faltan.push({ p, item: x, pregunta: `¿Cuánto vale ${x.cant > 1 ? `cada ${claveProducto(x.que).clave.split(' ')[0] || 'uno'}` : x.que.toLowerCase()}?` }); });
+    });
+    const detalle = p => (p.items || []).filter(x => x.total).map(x => `${x.que} ${pesos(x.total)}${x.fuente === 'memoria' ? ' (precio de la última vez)' : ''}`).join(' · ') || p.que || '';
     const linea = p => {
       if (PREGUNTAS.has(p.tipo)) return `<li><span><span>${esc(textoRespuesta(p))}</span><small>Respuesta</small></span></li>`;
-      const det = p.tipo === 'fiar' || p.tipo === 'pago' || p.tipo === 'nuevo' ? pesos(p.monto) : p.tipo === 'fecha' ? fechaCorta(diaDe(p.fecha)) : p.tipo === 'cupo' ? (p.cupo ? pesos(p.cupo) : 'sin cupo') : '';
-      return `<li><span><span>${esc(resumenOrden({ ...p, monto: p.monto }))}</span>${p.que ? `<small>${esc(p.que)}</small>` : ''}</span>${det ? `<b>${esc(det)}</b>` : ''}</li>`;
+      const det = ['fiar', 'pago', 'nuevo'].includes(p.tipo) ? (p.monto ? pesos(p.monto) : '') : p.tipo === 'fecha' ? fechaCorta(diaDe(p.fecha)) : p.tipo === 'cupo' ? (p.cupo ? pesos(p.cupo) : 'sin cupo') : '';
+      const mis = faltan.map((f, i) => ({ f, i })).filter(x => x.f.p === p);
+      const extra = p.tipo === 'pago' && p.nuevaFecha ? `Lo demás, el ${fechaCorta(diaDe(p.nuevaFecha))}` : '';
+      return `<li${mis.length ? ' class="asis-falta"' : ''}><span><span>${esc(resumenOrden({ ...p, monto: mis.length ? 0 : p.monto }))}</span>${detalle(p) && p.tipo !== 'pago' ? `<small>${esc(detalle(p))}</small>` : ''}${extra ? `<small>${esc(extra)}</small>` : ''}
+        ${mis.map(({ f, i }) => `<span class="asis-precio"><label for="asis-f${i}">${esc(f.item && f.item.cant > 1 ? `${f.item.que}: ${f.pregunta}` : f.pregunta)}</label><span class="con-prefijo"><span class="prefijo" aria-hidden="true">$</span><input class="entrada" id="asis-f${i}" data-f="${i}" inputmode="numeric" autocomplete="off" placeholder="Ej.: 2.500"></span></span>`).join('')}</span>${det && !mis.length ? `<b>${esc(det)}</b>` : ''}</li>`;
     };
-    this.pintar(`${this.dicho(r)}<div class="asis-tarjeta lote"><span class="asis-tipo">${r.pasos.length} pasos</span><ul class="asis-desglose asis-filas">${r.pasos.map(linea).join('')}</ul></div>
+    this.pintar(`${this.dicho(r)}<div class="asis-tarjeta lote"><span class="asis-tipo">${r.pasos.length === 1 ? (faltan.length ? 'Falta un dato' : '1 paso') : `${r.pasos.length} pasos`}</span><ul class="asis-desglose asis-filas">${r.pasos.map(linea).join('')}</ul>
+        <p class="error asis-error" role="alert" hidden></p></div>
       ${acciones.length ? `<button type="button" class="btn fiar" data-asis="si">${ic('ok', 24, 2.6)}${acciones.length === 1 ? 'Sí, hacerlo' : `Sí, hacer los ${acciones.length}`}</button>${this.oido()}` : ''}
       <button type="button" class="btn-sec" data-asis="corregir">Corregir lo que dije</button>
       <button type="button" class="btn-link" data-asis="cerrar">${acciones.length ? 'Cancelar' : 'Listo'}</button>`);
+    const caja = this.caja();
     const preguntas = r.pasos.filter(p => PREGUNTAS.has(p.tipo)).map(textoRespuesta).join(' ');
-    if (!acciones.length) { if (!Vista.oculto) leerEnVoz(preguntas); this.caja().querySelector('[data-asis="corregir"]')?.addEventListener('click', () => this.pasoEscribir('', r.texto)); return; }
+    if (!acciones.length) { if (!Vista.oculto) leerEnVoz(preguntas); caja.querySelector('[data-asis="corregir"]')?.addEventListener('click', () => this.pasoEscribir('', r.texto)); return; }
+    const leerMonto = v => { const t = (v || '').trim(); if (!t) return null; const m = montoEn(palabrasDe(t)); if (m) return m.monto; const c = cifra(t.replace(/\s|\$/g, '')); return c && c > 0 ? c : null; };
+    /* Llena lo que falta con los valores escritos (o dichos) */
+    const completar = () => {
+      for (let i = 0; i < faltan.length; i++) {
+        const inp = caja.querySelector(`[data-f="${i}"]`), v = leerMonto(inp && inp.value);
+        if (!v) { const e = caja.querySelector('.asis-error'); e.textContent = `Falta: ${faltan[i].pregunta.replace(/^¿|\?$/g, '').toLowerCase()}.`; e.hidden = false; inp?.focus(); return false; }
+      }
+      faltan.forEach((f, i) => {
+        const v = leerMonto(caja.querySelector(`[data-f="${i}"]`).value);
+        if (f.item) { f.item.unit = v; f.item.total = v * (f.item.cant || 1); f.item.fuente = 'dicho'; } else f.p.monto = v;
+      });
+      acciones.forEach(p => {
+        if (p.items && p.items.length && p.tipo !== 'pago' && !p.faltaMonto) {
+          const mias = faltan.filter(f => f.p === p && f.item);
+          p.monto = p._base + mias.reduce((s2, f) => s2 + f.item.total, 0);
+          p.aprender = [...p._apr0, ...mias.map(f => ({ clave: claveProducto(f.item.que).clave, unit: f.item.unit })).filter(x => x.clave && x.clave.split(' ').length <= 3)];
+          const con = p.items.filter(x => x.total);
+          p.que = (con.length > 1 ? con.map((x, i) => `${i ? x.que.charAt(0).toLowerCase() + x.que.slice(1) : x.que} (${pesos(x.total)})`).join(', ') : (con[0] ? con[0].que : p.que || '')).slice(0, LIMITES.que);
+        }
+      });
+      return true;
+    };
     const ejecutar = async () => {
-      this.pend = null; const b = this.caja()?.querySelector('[data-asis="si"]'); if (b) b.disabled = true;
+      if (!completar()) return;
+      this.pend = null; const b = caja.querySelector('[data-asis="si"]'); if (b) b.disabled = true;
       let hechos = 0, whats = null, ultimo = null;
       for (const p of acciones) {
-        if (p.tipo === 'fiar') { ultimo = await registrarFiado({ c: p.c, monto: p.monto, que: p.que || '' }); guardarPrecios(p.aprender); if (p.fecha) { p.c.proximaFecha = p.fecha; await guardarCliente(p.c); } }
-        else if (p.tipo === 'pago') { const s = saldoDe(p.c.id); if (s <= 0) continue; ultimo = await registrarPago({ c: p.c, monto: Math.min(p.monto, s), medio: p.medio || 'efectivo', recibio: tienda().atiendeAhora }); }
-        else if (p.tipo === 'nuevo') { const c = clienteNuevo(p.nombre, ''); await guardarCliente(c); ultimo = await registrarFiado({ c, monto: p.monto, que: p.que || '' }); }
+        if (p.tipo === 'fiar') { if (!p.monto) continue; ultimo = await registrarFiado({ c: p.c, monto: p.monto, que: p.que || '' }); guardarPrecios(p.aprender); if (p.fecha) { p.c.proximaFecha = p.fecha; await guardarCliente(p.c); } }
+        else if (p.tipo === 'pago') { const s2 = saldoDe(p.c.id); if (s2 <= 0 || !p.monto) continue; ultimo = await registrarPago({ c: p.c, monto: Math.min(p.monto, s2), medio: p.medio || 'efectivo', recibio: tienda().atiendeAhora, nuevaFecha: p.nuevaFecha ? diaDe(p.nuevaFecha) : null }); }
+        else if (p.tipo === 'nuevo') { const c = clienteNuevo(p.nombre, p.cel || ''); await guardarCliente(c); ultimo = await registrarFiado({ c, monto: p.monto, que: p.que || '' }); p.c = c; }
         else if (p.tipo === 'fecha') { if (saldoDe(p.c.id) <= 0) continue; p.c.proximaFecha = p.fecha; await guardarCliente(p.c); }
         else if (p.tipo === 'cupo') { p.c.cupo = p.cupo; await guardarCliente(p.c); }
         else if (p.tipo === 'cliente') { await guardarCliente(clienteNuevo(p.nombre, p.cel || '')); }
@@ -1121,9 +1185,42 @@ const Asistente = {
       }
       avisar(`Listo: ${hechos} ${hechos === 1 ? 'cosa hecha' : 'cosas hechas'}.`, { icono: 'ok' });
     };
-    this.caja().querySelector('[data-asis="si"]').addEventListener('click', ejecutar);
-    const voz = (preguntas ? preguntas + ' ' : '') + acciones.map(p => resumenOrden(p)).join('; ') + `. ¿Lo hago?`;
-    this.esperar(r, ejecutar, voz);
+    caja.querySelector('[data-asis="si"]').addEventListener('click', ejecutar);
+    const resumenVoz = () => (preguntas ? preguntas + ' ' : '') + acciones.map(p => resumenOrden(p)).join('; ') + `. ¿Lo hago?`;
+    if (!faltan.length) return this.esperar(r, ejecutar, resumenVoz());
+    /* Pregunta lo que falta, uno por uno: por voz si se habló; si no, los campos ya están a la vista */
+    this.pend = { r, ejecutar }; this.pendAnterior = null;
+    caja.querySelector('[data-asis="corregir"]')?.addEventListener('click', () => { this.pend = null; this.pasoEscribir('', r.texto); });
+    caja.querySelector('[data-asis="responder"]')?.addEventListener('click', () => this.escucharRespuesta());
+    if (!this.porVoz) { setTimeout(() => caja.querySelector('[data-f="0"]')?.focus(), 250); return; }
+    const fila = caja.querySelector('.asis-oido-txt'), mic = caja.querySelector('.asis-mic-chico');
+    const pedir = (i, intento = 0) => {
+      if (this.pend?.r !== r) return;
+      if (i >= faltan.length) { if (completar()) { leerEnVoz(resumenVoz(), () => { if (this.pend?.r === r) this.escucharRespuesta(); }); } return; }
+      const inp = caja.querySelector(`[data-f="${i}"]`);
+      if (inp && leerMonto(inp.value)) return pedir(i + 1);
+      const q = faltan[i].item && faltan[i].item.cant > 1 ? `${faltan[i].item.que}: ${faltan[i].pregunta}` : faltan[i].pregunta;
+      if (fila) fila.textContent = q;
+      leerEnVoz(q, () => {
+        if (this.pend?.r !== r) return;
+        mic?.classList.add('escucha');
+        Oido.escuchar({
+          parcial: x => { if (fila) fila.textContent = `«${x}»`; },
+          final: alts => {
+            mic?.classList.remove('escucha');
+            const t0 = normalizar(alts[0] || '');
+            if (/^(no|cancela|cancelar|olvidalo|dejalo)\b/.test(t0)) { this.pend = null; cerrarHoja(); return avisar('Listo, no anoté nada.', { icono: 'ok' }); }
+            const v = alts.map(leerMonto).find(Boolean);
+            if (v && inp) { inp.value = v.toLocaleString('es-CO'); return pedir(i + 1); }
+            if (intento < 1) return pedir(i, intento + 1);
+            if (fila) fila.textContent = 'Escríbalo en el campo y toque «Sí».';
+          },
+          error: () => { mic?.classList.remove('escucha'); if (fila) fila.textContent = 'Escríbalo en el campo y toque «Sí».'; inp?.focus(); },
+          fin: u => { if (!u) { mic?.classList.remove('escucha'); if (fila) fila.textContent = 'Escríbalo en el campo y toque «Sí».'; } }
+        });
+      });
+    };
+    pedir(0);
   },
   /** Después de elegir el cliente en una lista, sigue con lo que se había pedido. */
   seguirCon(r, cl) {
@@ -1170,6 +1267,7 @@ const Asistente = {
           : !pago && r.que ? `<span class="asis-detalle">${esc(r.que)}</span>` : ''}
         ${pago ? `<span class="asis-detalle">${MEDIO_TXT[r.medio] || ''}${r.parte ? ` · ${({ 0.5: 'la mitad', [1 / 3]: 'la tercera parte', 0.25: 'la cuarta parte', [2 / 3]: 'dos terceras partes', 0.75: 'tres cuartas partes' })[r.parte] || `el ${Math.round(r.parte * 100)} %`} de ${pesos(saldo)}` : ''}${r.monto > saldo ? ` · debía ${pesos(saldo)}` : ''}</span>` : ''}
         <span class="asis-queda">${queda > 0 ? `Queda debiendo ${pesos(queda)}` : 'Queda al día'}</span>
+        ${pago && r.nuevaFecha && queda > 0 ? `<span class="asis-detalle">${ic('calendario', 18, 2.2)} Lo demás, el ${esc(fechaLarga(diaDe(r.nuevaFecha)))}</span>` : ''}
         ${!pago && r.fecha ? `<span class="asis-detalle">${ic('calendario', 18, 2.2)} Paga el ${esc(fechaLarga(diaDe(r.fecha)))}</span>` : ''}
         ${pasa ? `<span class="pildora atencion">${ic('atencion', 18, 2.2)}Pasa el cupo por ${pesos(pasa)}</span>` : ''}
         ${freno ? `<span class="pildora atencion asis-freno">${ic('atencion', 18, 2.2)}${esc(freno)}</span>` : ''}</div>
@@ -1180,7 +1278,7 @@ const Asistente = {
       <button type="button" class="btn-link" data-asis="cerrar">Cancelar</button>`, () => {});
     const ejecutar = async () => {
       this.pend = null; const b = this.caja()?.querySelector('[data-asis="si"]'); if (b) b.disabled = true;
-      const m = pago ? await registrarPago({ c, monto: montoReal, medio: r.medio, recibio: tienda().atiendeAhora }) : await registrarFiado({ c, monto: montoReal, que: r.que || '' });
+      const m = pago ? await registrarPago({ c, monto: montoReal, medio: r.medio, recibio: tienda().atiendeAhora, nuevaFecha: r.nuevaFecha ? diaDe(r.nuevaFecha) : null }) : await registrarFiado({ c, monto: montoReal, que: r.que || '' });
       if (!pago) guardarPrecios(r.aprender);
       if (!pago && r.fecha) { c.proximaFecha = r.fecha; await guardarCliente(c); }
       this.recordar({ ...r, monto: montoReal });

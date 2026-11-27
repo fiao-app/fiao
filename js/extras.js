@@ -3,6 +3,7 @@
 
 /* Lo nuevo de cada versión, en palabras del tendero. El detalle técnico está en el README. */
 const NOVEDADES = [
+  ['2.7.0', '26 de noviembre', ['Dígale a Fiao hace tareas distintas en una frase y pregunta lo que falta: «Carlos pagó la mitad y Lucía se llevó una libra de queso» → «¿Cuánto vale la libra de queso?».']],
   ['2.6.1', '26 de noviembre', ['Dígale a Fiao entiende el dictado de corrido, sin pausas, y hace cuentas: «Don Édgar pagó la mitad».']],
   ['2.6.0', '26 de noviembre', ['Dígale a Fiao entiende varias órdenes en una frase: «Fíale 5 mil a Keyla y recuérdale a Yesid».', 'Propone: le saluda con quién paga hoy, le avisa antes de fiar a quien va atrasado y sugiere la fecha de pago.', 'Conoce a cada cliente: «¿Cómo es Keyla?» y «Fíale lo de siempre a Keyla».']],
   ['2.5.0', '26 de noviembre', ['Dígale a Fiao ahora confirma y corrige hablando: «sí», «no, cuatro mil», «a Yesid».', 'Entiende varias cosas a la vez, aprende precios y apodos, pone fechas y cupos, agrega clientes y responde más preguntas.']],
