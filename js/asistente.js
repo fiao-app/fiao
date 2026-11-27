@@ -792,14 +792,26 @@ const Oido = {
   cancelar() { const r = this.r; this.r = null; try { r?.abort(); } catch (e) { /* nada */ } }
 };
 /** Fiao lee la respuesta con la voz del celular (si el tendero no la apagó). `luego` corre al terminar de hablar. */
+/* iPhone (Safari y app instalada): la voz del celular solo arranca si la primera frase sale justo después
+   de un toque. Con el primer toque se «desbloquea» con una frase muda; después ya puede hablar sola. */
+let vozDesbloqueada = false;
+function desbloquearVoz() {
+  if (vozDesbloqueada || !('speechSynthesis' in window)) return;
+  try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; u.lang = 'es-MX'; speechSynthesis.speak(u); vozDesbloqueada = true; } catch (e) { /* nada */ }
+}
+['touchend', 'pointerup', 'click', 'keydown'].forEach(ev => document.addEventListener(ev, () => { if (Datos.tienda && tienda().asistente) desbloquearVoz(); }, { capture: true, passive: true }));
+if ('speechSynthesis' in window) { try { speechSynthesis.getVoices(); speechSynthesis.addEventListener?.('voiceschanged', () => speechSynthesis.getVoices()); } catch (e) { /* nada */ } }
 function leerEnVoz(texto, luego = null) {
   const t = tienda();
   if (t.asistenteVoz === false || !('speechSynthesis' in window)) { if (luego) setTimeout(luego, 150); return; }
   try {
-    speechSynthesis.cancel();
+    /* En Safari, callar y hablar en el mismo instante pierde la frase: si había algo sonando, se espera un momento */
+    const sonando = speechSynthesis.speaking || speechSynthesis.pending;
+    if (sonando) speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(texto.replace(/\$/g, '').replace(/(\d)\.(\d{3})/g, '$1$2') + ''); u.lang = 'es-CO'; u.rate = 1;
     const vs = speechSynthesis.getVoices(); const v = vs.find(x => /^es(-|_)CO/i.test(x.lang)) || vs.find(x => /^es(-|_)(US|MX|419)/i.test(x.lang)) || vs.find(x => /^es/i.test(x.lang));
-    if (v) u.voice = v;
+    /* Si el celular no tiene voz de Colombia, se usa la que tenga en español (en iPhone, pedir es-CO sin voz puede callarlo) */
+    if (v) { u.voice = v; u.lang = v.lang; } else if (vs.length) u.lang = 'es-MX';
     Oido.eco = normalizar(texto).replace(/[^\p{L}\p{N}\s]/gu, ' ').replace(/\s+/g, ' ').trim();
     if (luego) {
       /* El micrófono se abre solo cuando Fiao terminó de hablar de verdad, y un momento después:
@@ -814,9 +826,11 @@ function leerEnVoz(texto, luego = null) {
         setTimeout(vigilar, 150);
       };
       u.onend = () => { quietos = Math.max(quietos, 1); }; u.onerror = () => { quietos = Math.max(quietos, 1); };
-      setTimeout(vigilar, 300);
+      setTimeout(vigilar, sonando ? 450 : 300);
     }
-    speechSynthesis.speak(u);
+    if (sonando) setTimeout(() => speechSynthesis.speak(u), 120); else speechSynthesis.speak(u);
+    /* Safari a veces queda en pausa después de usar el micrófono */
+    setTimeout(() => { try { if (speechSynthesis.paused) speechSynthesis.resume(); } catch (e) { /* nada */ } }, 200);
   } catch (e) { if (luego) setTimeout(luego, 150); }
 }
 
