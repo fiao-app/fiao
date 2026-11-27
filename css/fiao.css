@@ -1325,3 +1325,6 @@ html[data-tema="tinta"] .asis-sugfecha[aria-pressed="true"] { background: #1D3BA
 .asis-precio label { font-size: 0.9375rem; font-weight: 600; color: var(--tinta); }
 .asis-precio .entrada { min-height: 3rem; font-size: 1.125rem; }
 .asis-error { margin: 0.25rem 0 0; text-align: left; }
+html[data-tema="tinta"] .pildora-nueva { background: #111111; color: #FFFFFF; }
+/* Con el teclado abierto (iPhone y Android), el menú de abajo se esconde: si no, queda flotando a media pantalla */
+html.teclado-abierto .abajo { display: none; }

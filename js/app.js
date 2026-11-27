@@ -179,3 +179,18 @@ async function arrancar() {
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 }
 arrancar();
+
+/* Teclado abierto: el menú de abajo se esconde mientras se escribe (en iPhone quedaba flotando sobre la lista) */
+(() => {
+  const vv = window.visualViewport; if (!vv) return;
+  let alto = vv.height, ancho = vv.width;
+  const esCampo = el => !!el && (el.tagName === 'TEXTAREA' || el.isContentEditable || (el.tagName === 'INPUT' && !/^(checkbox|radio|button|submit|reset|range|color|file|image)$/.test(el.type)));
+  const revisar = () => {
+    if (Math.abs(vv.width - ancho) > 40) { ancho = vv.width; alto = vv.height; }
+    if (vv.height > alto) alto = vv.height;
+    document.documentElement.classList.toggle('teclado-abierto', esCampo(document.activeElement) && vv.height < alto * 0.8);
+  };
+  vv.addEventListener('resize', revisar);
+  document.addEventListener('focusin', () => setTimeout(revisar, 60));
+  document.addEventListener('focusout', () => setTimeout(revisar, 60));
+})();
